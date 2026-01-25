@@ -1,0 +1,793 @@
+// Tekka - C2C Fashion Marketplace Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// USER & AUTHENTICATION
+// ============================================
+
+model User {
+  id                    String    @id @default(cuid())
+  firebaseUid           String?   @unique @map("firebase_uid")
+  phoneNumber           String    @unique @map("phone_number")
+  email                 String?   @unique
+  passwordHash          String?   @map("password_hash")
+  displayName           String?   @map("display_name")
+  photoUrl              String?   @map("photo_url")
+  bio                   String?
+  location              String?
+  isOnboardingComplete  Boolean   @default(false) @map("is_onboarding_complete")
+  isPhoneVerified       Boolean   @default(false) @map("is_phone_verified")
+  isVerified            Boolean   @default(false) @map("is_verified")
+  isEmailVerified       Boolean   @default(false) @map("is_email_verified")
+  isIdentityVerified    Boolean   @default(false) @map("is_identity_verified")
+  isSuspended           Boolean   @default(false) @map("is_suspended")
+  suspendedReason       String?   @map("suspended_reason")
+  role                  UserRole  @default(USER)
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
+  lastActiveAt          DateTime? @map("last_active_at")
+  lastLoginAt           DateTime? @map("last_login_at")
+
+  // Settings
+  priceAlertsEnabled    Boolean   @default(true) @map("price_alerts_enabled")
+  language              String    @default("en")
+  defaultLocation       String?   @map("default_location")
+
+  // Notification preferences
+  pushEnabled           Boolean   @default(true) @map("push_enabled")
+  emailEnabled          Boolean   @default(true) @map("email_enabled")
+  marketingEnabled      Boolean   @default(false) @map("marketing_enabled")
+  messageNotifications  Boolean   @default(true) @map("message_notifications")
+  offerNotifications    Boolean   @default(true) @map("offer_notifications")
+  reviewNotifications   Boolean   @default(true) @map("review_notifications")
+  listingNotifications  Boolean   @default(true) @map("listing_notifications")
+  systemNotifications   Boolean   @default(true) @map("system_notifications")
+  doNotDisturb          Boolean   @default(false) @map("do_not_disturb")
+  dndStartHour          Int?      @map("dnd_start_hour")
+  dndEndHour            Int?      @map("dnd_end_hour")
+
+  // Security settings
+  pinEnabled            Boolean   @default(false) @map("pin_enabled")
+  biometricEnabled      Boolean   @default(false) @map("biometric_enabled")
+  loginAlerts           Boolean   @default(true) @map("login_alerts")
+  requireTransactionConfirmation Boolean @default(true) @map("require_transaction_confirmation")
+  transactionThreshold  Int?      @map("transaction_threshold")
+  twoFactorEnabled      Boolean   @default(false) @map("two_factor_enabled")
+  twoFactorMethod       String?   @map("two_factor_method") // sms, authenticatorApp
+  twoFactorSecret       String?   @map("two_factor_secret")
+  twoFactorBackupCodes  String[]  @default([]) @map("two_factor_backup_codes")
+  twoFactorEnabledAt    DateTime? @map("two_factor_enabled_at")
+  twoFactorPendingCode  String?   @map("two_factor_pending_code")
+  twoFactorCodeExpiry   DateTime? @map("two_factor_code_expiry")
+  twoFactorPendingSecret String?  @map("two_factor_pending_secret")
+  twoFactorPendingMethod String?  @map("two_factor_pending_method")
+
+  // Email verification
+  emailVerifiedAt       DateTime? @map("email_verified_at")
+
+  // Identity verification
+  identityVerifiedAt    DateTime? @map("identity_verified_at")
+  identityVerificationPending Boolean @default(false) @map("identity_verification_pending")
+
+  // Account deletion
+  accountDeletionScheduled Boolean @default(false) @map("account_deletion_scheduled")
+  accountDeletionDate   DateTime? @map("account_deletion_date")
+
+  // Privacy settings
+  profileVisibility     String    @default("public") @map("profile_visibility") // public, buyersOnly, private
+  showLocation          Boolean   @default(true) @map("show_location")
+  showPhoneNumber       Boolean   @default(false) @map("show_phone_number")
+  messagePermission     String    @default("everyone") @map("message_permission") // everyone, verifiedOnly, noOne
+  showOnlineStatus      Boolean   @default(true) @map("show_online_status")
+  showPurchaseHistory   Boolean   @default(false) @map("show_purchase_history")
+  showListingsCount     Boolean   @default(true) @map("show_listings_count")
+  appearInSearch        Boolean   @default(true) @map("appear_in_search")
+  allowProfileSharing   Boolean   @default(true) @map("allow_profile_sharing")
+
+  // Relations
+  listings              Listing[]
+  chatsAsBuyer          Chat[]    @relation("BuyerChats")
+  chatsAsSeller         Chat[]    @relation("SellerChats")
+  messagesSent          Message[]
+  offersAsBuyer         Offer[]   @relation("BuyerOffers")
+  offersAsSeller        Offer[]   @relation("SellerOffers")
+  reviewsGiven          Review[]  @relation("ReviewsGiven")
+  reviewsReceived       Review[]  @relation("ReviewsReceived")
+  savedItems            SavedItem[]
+  savedSearches         SavedSearch[]
+  priceAlerts           PriceAlert[]
+  quickReplyTemplates   QuickReplyTemplate[]
+  blockedUsers          BlockedUser[] @relation("BlockerUser")
+  blockedByUsers        BlockedUser[] @relation("BlockedUser")
+  reports               Report[]  @relation("ReporterUser")
+  reportsAgainst        Report[]  @relation("ReportedUser")
+  notifications         Notification[]
+  fcmTokens             FcmToken[]
+  purchases             Purchase[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MODERATOR
+}
+
+model FcmToken {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  token     String   @unique
+  platform  String   // android, ios, web
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("fcm_tokens")
+}
+
+model BlockedUser {
+  id          String   @id @default(cuid())
+  blockerId   String   @map("blocker_id")
+  blockedId   String   @map("blocked_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  blocker     User     @relation("BlockerUser", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked     User     @relation("BlockedUser", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@map("blocked_users")
+}
+
+// ============================================
+// CATEGORY SYSTEM (New Vinted-style hierarchy)
+// ============================================
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    // Display name: "Women", "Clothing", "Dresses"
+  slug        String    @unique // URL-safe: "women", "women-clothing", "women-dresses"
+  level       Int       // 1 = Main, 2 = Sub, 3 = ProductType
+  parentId    String?   @map("parent_id")
+  imageUrl    String?   @map("image_url")
+  iconName    String?   @map("icon_name") // For UI icons
+  sortOrder   Int       @default(0) @map("sort_order")
+  isActive    Boolean   @default(true) @map("is_active")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  attributes  CategoryAttribute[]
+  listings    Listing[]
+
+  @@index([parentId])
+  @@index([level])
+  @@index([isActive])
+  @@map("categories")
+}
+
+// ============================================
+// ATTRIBUTE DEFINITIONS
+// ============================================
+
+model AttributeDefinition {
+  id          String        @id @default(cuid())
+  name        String        // "Size", "Brand", "Color", "Screen Size"
+  slug        String        @unique // "size-clothing", "brand-fashion", "color"
+  type        AttributeType // SINGLE_SELECT, MULTI_SELECT, TEXT, NUMBER
+  isRequired  Boolean       @default(false) @map("is_required")
+  sortOrder   Int           @default(0) @map("sort_order")
+  isActive    Boolean       @default(true) @map("is_active")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  values      AttributeValue[]
+  categories  CategoryAttribute[]
+
+  @@map("attribute_definitions")
+}
+
+enum AttributeType {
+  SINGLE_SELECT  // Dropdown with one choice
+  MULTI_SELECT   // Multiple selections allowed
+  TEXT           // Free text input
+  NUMBER         // Numeric input
+}
+
+model AttributeValue {
+  id            String    @id @default(cuid())
+  attributeId   String    @map("attribute_id")
+  value         String    // "XS", "S", "M", "L", "Nike", "Red"
+  displayValue  String?   @map("display_value") // Optional display override
+  sortOrder     Int       @default(0) @map("sort_order")
+  isActive      Boolean   @default(true) @map("is_active")
+  metadata      Json?     // Additional data (e.g., hex color code)
+
+  attribute     AttributeDefinition @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@unique([attributeId, value])
+  @@index([attributeId])
+  @@map("attribute_values")
+}
+
+// Junction: Which attributes apply to which categories
+model CategoryAttribute {
+  id          String    @id @default(cuid())
+  categoryId  String    @map("category_id")
+  attributeId String    @map("attribute_id")
+  isRequired  Boolean   @default(false) @map("is_required") // Override per category
+  sortOrder   Int       @default(0) @map("sort_order")
+
+  category    Category            @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  attribute   AttributeDefinition @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, attributeId])
+  @@map("category_attributes")
+}
+
+// ============================================
+// LOCATION SYSTEM (City -> Division)
+// ============================================
+
+model City {
+  id        String     @id @default(cuid())
+  name      String     @unique // "Kampala", "Entebbe"
+  isActive  Boolean    @default(true) @map("is_active")
+  sortOrder Int        @default(0) @map("sort_order")
+
+  divisions Division[]
+  listings  Listing[]
+
+  @@map("cities")
+}
+
+model Division {
+  id        String   @id @default(cuid())
+  cityId    String   @map("city_id")
+  name      String   // "Makindye", "Nakawa", "Kawempe"
+  isActive  Boolean  @default(true) @map("is_active")
+  sortOrder Int      @default(0) @map("sort_order")
+
+  city      City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  listings  Listing[]
+
+  @@unique([cityId, name])
+  @@index([cityId])
+  @@map("divisions")
+}
+
+// ============================================
+// LISTINGS
+// ============================================
+
+model Listing {
+  id              String        @id @default(cuid())
+  sellerId        String        @map("seller_id")
+  title           String
+  description     String
+  price           Int           // Price in UGX (smallest unit)
+  originalPrice   Int?          @map("original_price") // For tracking price drops
+
+  // NEW: Category relation (replaces enum)
+  categoryId      String?       @map("category_id")
+
+  // NEW: Structured attributes storage
+  attributes      Json?         // {"size": "M", "brand": "Nike", "color": ["Red", "Blue"]}
+
+  // NEW: Structured location
+  cityId          String?       @map("city_id")
+  divisionId      String?       @map("division_id")
+
+  // LEGACY: Keep for backward compatibility (will be deprecated)
+  category        ListingCategory?
+  size            String?
+  brand           String?
+  color           String?
+  material        String?
+  location        String?       // Keep as fallback text location
+
+  // Core fields
+  condition       ItemCondition
+  imageUrls       String[]      @map("image_urls")
+  status          ListingStatus @default(PENDING)
+  viewCount       Int           @default(0) @map("view_count")
+  saveCount       Int           @default(0) @map("save_count")
+  rejectionReason String?       @map("rejection_reason")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  soldAt          DateTime?     @map("sold_at")
+  archivedAt      DateTime?     @map("archived_at")
+
+  // Relations
+  seller          User          @relation(fields: [sellerId], references: [id], onDelete: Cascade)
+  categoryRef     Category?     @relation(fields: [categoryId], references: [id])
+  cityRef         City?         @relation(fields: [cityId], references: [id])
+  divisionRef     Division?     @relation(fields: [divisionId], references: [id])
+  chats           Chat[]
+  offers          Offer[]
+  savedBy         SavedItem[]
+  priceAlerts     PriceAlert[]
+  reviews         Review[]
+  purchases       Purchase[]
+
+  @@index([sellerId])
+  @@index([categoryId])
+  @@index([cityId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("listings")
+}
+
+// LEGACY: Keep for backward compatibility
+enum ListingCategory {
+  DRESSES
+  TOPS
+  BOTTOMS
+  TRADITIONAL_WEAR
+  SHOES
+  ACCESSORIES
+  BAGS
+  OTHER
+}
+
+enum ItemCondition {
+  NEW
+  LIKE_NEW
+  GOOD
+  FAIR
+}
+
+enum ListingStatus {
+  DRAFT
+  PENDING
+  ACTIVE
+  SOLD
+  ARCHIVED
+  REJECTED
+}
+
+model SavedItem {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  listingId String   @map("listing_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, listingId])
+  @@map("saved_items")
+}
+
+// ============================================
+// CHAT & MESSAGING
+// ============================================
+
+model Chat {
+  id              String    @id @default(cuid())
+  buyerId         String    @map("buyer_id")
+  sellerId        String    @map("seller_id")
+  listingId       String    @map("listing_id")
+  lastMessage     String?   @map("last_message")
+  lastMessageAt   DateTime? @map("last_message_at")
+  buyerUnread     Int       @default(0) @map("buyer_unread")
+  sellerUnread    Int       @default(0) @map("seller_unread")
+  isArchivedBuyer Boolean   @default(false) @map("is_archived_buyer")
+  isArchivedSeller Boolean  @default(false) @map("is_archived_seller")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  buyer           User      @relation("BuyerChats", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller          User      @relation("SellerChats", fields: [sellerId], references: [id], onDelete: Cascade)
+  listing         Listing   @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  messages        Message[]
+  meetups         Meetup[]
+
+  @@unique([buyerId, sellerId, listingId])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@map("chats")
+}
+
+model Message {
+  id          String        @id @default(cuid())
+  chatId      String        @map("chat_id")
+  senderId    String        @map("sender_id")
+  content     String
+  type        MessageType   @default(TEXT)
+  imageUrl    String?       @map("image_url")
+  offerAmount Int?          @map("offer_amount")
+  meetupData  Json?         @map("meetup_data")
+  status      MessageStatus @default(SENT)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  readAt      DateTime?     @map("read_at")
+
+  // Relations
+  chat        Chat          @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender      User          @relation(fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
+  @@index([senderId])
+  @@map("messages")
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  OFFER
+  SYSTEM
+  MEETUP
+}
+
+enum MessageStatus {
+  SENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+model QuickReplyTemplate {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  text        String
+  category    String?
+  usageCount  Int      @default(0) @map("usage_count")
+  isDefault   Boolean  @default(false) @map("is_default")
+  createdAt   DateTime @default(now()) @map("created_at")
+  lastUsedAt  DateTime? @map("last_used_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("quick_reply_templates")
+}
+
+// ============================================
+// OFFERS & TRANSACTIONS
+// ============================================
+
+model Offer {
+  id              String      @id @default(cuid())
+  buyerId         String      @map("buyer_id")
+  sellerId        String      @map("seller_id")
+  listingId       String      @map("listing_id")
+  amount          Int         // Offer amount in UGX
+  originalPrice   Int         @map("original_price")
+  message         String?
+  status          OfferStatus @default(PENDING)
+  counterAmount   Int?        @map("counter_amount")
+  expiresAt       DateTime    @map("expires_at")
+  respondedAt     DateTime?   @map("responded_at")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  buyer           User        @relation("BuyerOffers", fields: [buyerId], references: [id], onDelete: Cascade)
+  seller          User        @relation("SellerOffers", fields: [sellerId], references: [id], onDelete: Cascade)
+  listing         Listing     @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([listingId])
+  @@map("offers")
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  COUNTERED
+  EXPIRED
+  WITHDRAWN
+}
+
+model Purchase {
+  id          String   @id @default(cuid())
+  buyerId     String   @map("buyer_id")
+  listingId   String   @map("listing_id")
+  finalPrice  Int      @map("final_price")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  buyer       User     @relation(fields: [buyerId], references: [id], onDelete: Cascade)
+  listing     Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@map("purchases")
+}
+
+// ============================================
+// MEETUPS
+// ============================================
+
+model Meetup {
+  id            String       @id @default(cuid())
+  chatId        String       @map("chat_id")
+  proposerId    String       @map("proposer_id")
+  locationName  String       @map("location_name")
+  locationAddress String?    @map("location_address")
+  latitude      Float?
+  longitude     Float?
+  scheduledAt   DateTime     @map("scheduled_at")
+  status        MeetupStatus @default(PROPOSED)
+  notes         String?
+  createdAt     DateTime     @default(now()) @map("created_at")
+  updatedAt     DateTime     @updatedAt @map("updated_at")
+
+  chat          Chat         @relation(fields: [chatId], references: [id], onDelete: Cascade)
+
+  @@index([chatId])
+  @@map("meetups")
+}
+
+enum MeetupStatus {
+  PROPOSED
+  ACCEPTED
+  DECLINED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+model SafeLocation {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  city        String
+  latitude    Float
+  longitude   Float
+  type        String   // mall, police_station, bank, etc.
+  isVerified  Boolean  @default(false) @map("is_verified")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("safe_locations")
+}
+
+// ============================================
+// REVIEWS
+// ============================================
+
+model Review {
+  id            String     @id @default(cuid())
+  reviewerId    String     @map("reviewer_id")
+  revieweeId    String     @map("reviewee_id")
+  listingId     String     @map("listing_id")
+  type          ReviewType
+  rating        Int        // 1-5
+  comment       String?
+  createdAt     DateTime   @default(now()) @map("created_at")
+  updatedAt     DateTime   @updatedAt @map("updated_at")
+
+  reviewer      User       @relation("ReviewsGiven", fields: [reviewerId], references: [id], onDelete: Cascade)
+  reviewee      User       @relation("ReviewsReceived", fields: [revieweeId], references: [id], onDelete: Cascade)
+  listing       Listing    @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@unique([reviewerId, listingId])
+  @@index([revieweeId])
+  @@map("reviews")
+}
+
+enum ReviewType {
+  BUYER
+  SELLER
+}
+
+// ============================================
+// SEARCH & ALERTS
+// ============================================
+
+model SavedSearch {
+  id                    String   @id @default(cuid())
+  userId                String   @map("user_id")
+  query                 String?
+  categoryId            String?  @map("category_id")
+  categoryName          String?  @map("category_name")
+  minPrice              Float?   @map("min_price")
+  maxPrice              Float?   @map("max_price")
+  location              String?
+  condition             String?
+  notificationsEnabled  Boolean  @default(true) @map("notifications_enabled")
+  newMatchCount         Int      @default(0) @map("new_match_count")
+  lastCheckedAt         DateTime @default(now()) @map("last_checked_at")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("saved_searches")
+}
+
+model PriceAlert {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  listingId         String   @map("listing_id")
+  listingTitle      String   @map("listing_title")
+  listingImageUrl   String?  @map("listing_image_url")
+  sellerName        String   @map("seller_name")
+  originalPrice     Int      @map("original_price")
+  newPrice          Int      @map("new_price")
+  priceDropAmount   Int      @map("price_drop_amount")
+  priceDropPercent  Float    @map("price_drop_percent")
+  isRead            Boolean  @default(false) @map("is_read")
+  isExpired         Boolean  @default(false) @map("is_expired")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing           Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("price_alerts")
+}
+
+// ============================================
+// REPORTS & MODERATION
+// ============================================
+
+model Report {
+  id              String       @id @default(cuid())
+  reporterId      String       @map("reporter_id")
+  reportedUserId  String?      @map("reported_user_id")
+  reportedListingId String?    @map("reported_listing_id")
+  reason          String
+  description     String?
+  status          ReportStatus @default(PENDING)
+  resolvedAt      DateTime?    @map("resolved_at")
+  resolvedBy      String?      @map("resolved_by")
+  resolution      String?
+  createdAt       DateTime     @default(now()) @map("created_at")
+  updatedAt       DateTime     @updatedAt @map("updated_at")
+
+  reporter        User         @relation("ReporterUser", fields: [reporterId], references: [id], onDelete: Cascade)
+  reportedUser    User?        @relation("ReportedUser", fields: [reportedUserId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@map("reports")
+}
+
+enum ReportStatus {
+  PENDING
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String           @map("user_id")
+  type        NotificationType
+  title       String
+  body        String
+  data        Json?
+  isRead      Boolean          @default(false) @map("is_read")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  MESSAGE
+  OFFER
+  OFFER_ACCEPTED
+  OFFER_DECLINED
+  OFFER_COUNTERED
+  OFFER_EXPIRED
+  LISTING_APPROVED
+  LISTING_REJECTED
+  LISTING_SOLD
+  PRICE_DROP
+  NEW_REVIEW
+  MEETUP_PROPOSED
+  MEETUP_ACCEPTED
+  SYSTEM
+}
+
+// ============================================
+// ADMIN & ANALYTICS
+// ============================================
+
+model AdminAction {
+  id          String   @id @default(cuid())
+  adminId     String   @map("admin_id")
+  action      String
+  targetType  String   @map("target_type") // user, listing, report
+  targetId    String   @map("target_id")
+  details     Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([adminId])
+  @@index([targetType, targetId])
+  @@map("admin_actions")
+}
+
+// ============================================
+// LOGIN SESSIONS
+// ============================================
+
+model LoginSession {
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  deviceName  String?  @map("device_name")
+  deviceType  String?  @map("device_type") // android, ios, web
+  ipAddress   String?  @map("ip_address")
+  location    String?
+  isCurrent   Boolean  @default(false) @map("is_current")
+  loginTime   DateTime @default(now()) @map("login_time")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("login_sessions")
+}
+
+// ============================================
+// IDENTITY VERIFICATION
+// ============================================
+
+model IdentityVerification {
+  id              String    @id @default(cuid())
+  userId          String    @unique @map("user_id")
+  state           String    @default("initial") // initial, underReview, verified, rejected
+  documentType    String?   @map("document_type") // nationalId, passport, drivingLicense
+  documentNumber  String?   @map("document_number")
+  fullName        String?   @map("full_name")
+  dateOfBirth     DateTime? @map("date_of_birth")
+  frontImageUrl   String?   @map("front_image_url")
+  backImageUrl    String?   @map("back_image_url")
+  selfieUrl       String?   @map("selfie_url")
+  rejectionReason String?   @map("rejection_reason")
+  submittedAt     DateTime? @map("submitted_at")
+  verifiedAt      DateTime? @map("verified_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@map("identity_verifications")
+}
+
+// ============================================
+// EMAIL VERIFICATION
+// ============================================
+
+model EmailVerification {
+  id        String   @id @default(cuid())
+  userId    String   @unique @map("user_id")
+  email     String
+  code      String
+  verified  Boolean  @default(false)
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([code])
+  @@map("email_verifications")
+}
+
+// ============================================
+// SCHEDULED ACCOUNT DELETIONS
+// ============================================
+
+model ScheduledDeletion {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  reason          String?
+  status          String   @default("PENDING") // PENDING, COMPLETED, CANCELLED
+  scheduledDate   DateTime @map("scheduled_date")
+  gracePeriodDays Int      @default(30) @map("grace_period_days")
+  requestedAt     DateTime @default(now()) @map("requested_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("scheduled_deletions")
+}

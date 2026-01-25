@@ -1,0 +1,246 @@
+name: Mobile CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile.yml'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/mobile/**'
+      - '.github/workflows/mobile.yml'
+  workflow_dispatch:
+  workflow_call:
+
+env:
+  WORKING_DIRECTORY: apps/mobile
+  FLUTTER_VERSION: '3.38.7'
+  JAVA_VERSION: '17'
+
+jobs:
+  analyze:
+    name: Analyze
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}
+
+      - name: Get dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: flutter pub get
+
+      - name: Run code generation
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Analyze code
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: flutter analyze --no-fatal-infos
+
+      - name: Check formatting
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: dart format --set-exit-if-changed lib/
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: [analyze]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}
+
+      - name: Get dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: flutter pub get
+
+      - name: Run code generation
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Run tests with coverage
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: flutter test --coverage || true
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          directory: ${{ env.WORKING_DIRECTORY }}/coverage
+          flags: mobile
+          fail_ci_if_error: false
+
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}
+
+      - name: Get dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: flutter pub get
+
+      - name: Run code generation
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build APK (debug)
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: flutter build apk --debug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk
+          path: ${{ env.WORKING_DIRECTORY }}/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 7
+
+  build-android-release:
+    name: Build Android Release
+    runs-on: ubuntu-latest
+    needs: [test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: 'gradle'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}
+
+      - name: Get dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: flutter pub get
+
+      - name: Run code generation
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build App Bundle
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: flutter build appbundle --release --no-tree-shake-icons || flutter build apk --release
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/build/app/outputs/bundle/release/*.aab
+            ${{ env.WORKING_DIRECTORY }}/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+  build-ios:
+    name: Build iOS
+    runs-on: macos-latest
+    needs: [test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}
+
+      - name: Get dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: flutter pub get
+
+      - name: Run code generation
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build iOS (no codesign)
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: flutter build ios --no-codesign --debug
+
+      - name: Upload iOS build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-debug-build
+          path: ${{ env.WORKING_DIRECTORY }}/build/ios/iphoneos
+          retention-days: 7
+
+  build-ios-release:
+    name: Build iOS Release
+    runs-on: macos-latest
+    needs: [test]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+          cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}
+
+      - name: Get dependencies
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: flutter pub get
+
+      - name: Run code generation
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: dart run build_runner build --delete-conflicting-outputs
+
+      - name: Build iOS Release (no codesign)
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: flutter build ios --no-codesign --release
+
+      - name: Upload iOS release build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release-build
+          path: ${{ env.WORKING_DIRECTORY }}/build/ios/iphoneos
+          retention-days: 30

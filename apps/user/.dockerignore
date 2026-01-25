@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+*.md
+.env*
+coverage
+.nyc_output
+*.log
+.DS_Store
+.eslintrc*
+.prettierrc*
+jest.config*
+jest.setup*
+src/__tests__

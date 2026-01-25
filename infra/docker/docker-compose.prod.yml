@@ -1,0 +1,127 @@
+services:
+  # ===========================================
+  # Backend API (api.tekka.ug)
+  # ===========================================
+  api:
+    init: true
+    image: ghcr.io/${GHCR_OWNER:-tekka}/tekka-api:latest
+    container_name: tekka-api
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      PORT: 4000
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_PRIVATE_KEY: ${FIREBASE_PRIVATE_KEY}
+      FIREBASE_CLIENT_EMAIL: ${FIREBASE_CLIENT_EMAIL}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      AT_API_KEY: ${AT_API_KEY}
+      AT_USERNAME: ${AT_USERNAME}
+      AT_SENDER_ID: ${AT_SENDER_ID}
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://tekka.ug,https://admin.tekka.ug}
+    networks:
+      - tekka-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"const net = require('net'); const s = net.connect(4000, 'localhost', () => { s.destroy(); process.exit(0); }); s.on('error', () => process.exit(1));\""]
+      interval: 30s
+      timeout: 10s
+      start_period: 15s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+
+  # ===========================================
+  # Admin Dashboard (admin.tekka.ug)
+  # ===========================================
+  admin:
+    image: ghcr.io/${GHCR_OWNER:-tekka}/tekka-admin:latest
+    container_name: tekka-admin
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - tekka-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3001 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+
+  # ===========================================
+  # User Dashboard (tekka.ug)
+  # ===========================================
+  user:
+    image: ghcr.io/${GHCR_OWNER:-tekka}/tekka-user:latest
+    container_name: tekka-user
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - tekka-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: '0.5'
+
+  # ===========================================
+  # Nginx Reverse Proxy
+  # ===========================================
+  nginx:
+    image: ghcr.io/${GHCR_OWNER:-tekka}/tekka-nginx:latest
+    container_name: tekka-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      api:
+        condition: service_healthy
+      admin:
+        condition: service_healthy
+      user:
+        condition: service_healthy
+    networks:
+      - tekka-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "nginx -t && kill -0 $(cat /var/run/nginx.pid)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+
+networks:
+  tekka-network:
+    driver: bridge

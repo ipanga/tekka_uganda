@@ -1,0 +1,108 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+dist/
+build/
+.next/
+out/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.example
+.env.development
+.env.production
+*.env
+
+# IDE and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Caching
+.cache/
+.turbo/
+.eslintcache
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Database
+*.db
+*.sqlite
+
+# Flutter / Dart
+tekka-mobile/.dart_tool/
+tekka-mobile/.packages
+tekka-mobile/build/
+tekka-mobile/.flutter-plugins
+tekka-mobile/.flutter-plugins-dependencies
+tekka-mobile/.metadata
+tekka-mobile/*.iml
+tekka-mobile/.pub-cache/
+tekka-mobile/.pub/
+
+# iOS
+tekka-mobile/ios/Pods/
+tekka-mobile/ios/.symlinks/
+tekka-mobile/ios/Flutter/Flutter.framework
+tekka-mobile/ios/Flutter/Flutter.podspec
+tekka-mobile/ios/Flutter/Generated.xcconfig
+tekka-mobile/ios/Flutter/app.flx
+tekka-mobile/ios/Flutter/engine/
+tekka-mobile/ios/Flutter/flutter_assets/
+tekka-mobile/ios/ServiceDefinitions.json
+tekka-mobile/ios/Runner/GeneratedPluginRegistrant.*
+*.xcworkspace
+*.xcuserdata
+
+# Android
+tekka-mobile/android/.gradle/
+tekka-mobile/android/app/debug/
+tekka-mobile/android/app/profile/
+tekka-mobile/android/app/release/
+tekka-mobile/android/local.properties
+tekka-mobile/android/key.properties
+tekka-mobile/android/app/*.keystore
+*.apk
+*.aab
+
+# Cloudinary / uploads
+uploads/
+*.cloudinary
+
+# Claude Code
+.claude/
+
+# BMAD artifacts (keep for reference but ignore generated outputs)
+_bmad-output/
+
+# OS files
+Thumbs.db
+ehthumbs.db
+
+# Secrets and credentials
+*.pem
+*.key
+credentials.json
+service-account.json
