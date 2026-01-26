@@ -9,7 +9,7 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy source code
+# Copy the source code
 COPY . .
 
 # Build arguments for environment variables
