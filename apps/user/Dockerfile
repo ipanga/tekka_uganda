@@ -9,7 +9,7 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci
 
-# Copy the source code
+# Copy source code
 COPY . .
 
 # Build arguments for environment variables
@@ -37,7 +37,9 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy standalone build
-COPY --from=builder /app/public ./public
+# Create public directory (may be empty in some setups)
+RUN mkdir -p ./public
+COPY --from=builder /app/public/ ./public/
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
