@@ -1,0 +1,9 @@
+# Tekka Marketplace - User Dashboard
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /messages/
+Disallow: /profile/edit
+Disallow: /settings/
+
+Sitemap: https://tekka.ug/sitemap.xml
