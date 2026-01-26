@@ -4,7 +4,7 @@ services:
   # ===========================================
   api:
     init: true
-    image: ghcr.io/${GHCR_OWNER:-tekka}/tekka-api:latest
+    image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-api:latest
     container_name: tekka-api
     environment:
       NODE_ENV: production
@@ -41,7 +41,7 @@ services:
   # Admin Dashboard (admin.tekka.ug)
   # ===========================================
   admin:
-    image: ghcr.io/${GHCR_OWNER:-tekka}/tekka-admin:latest
+    image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-admin:latest
     container_name: tekka-admin
     environment:
       NODE_ENV: production
@@ -68,7 +68,7 @@ services:
   # User Dashboard (tekka.ug)
   # ===========================================
   user:
-    image: ghcr.io/${GHCR_OWNER:-tekka}/tekka-user:latest
+    image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-user:latest
     container_name: tekka-user
     environment:
       NODE_ENV: production
@@ -95,7 +95,7 @@ services:
   # Nginx Reverse Proxy
   # ===========================================
   nginx:
-    image: ghcr.io/${GHCR_OWNER:-tekka}/tekka-nginx:latest
+    image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-nginx:latest
     container_name: tekka-nginx
     ports:
       - "80:80"
