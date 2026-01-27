@@ -128,6 +128,9 @@ services:
   # ===========================================
   # Certbot (SSL Certificate Management)
   # ===========================================
+  # Usage:
+  #   Initial: docker compose run --rm certbot certonly --webroot ...
+  #   Renewal: docker compose run --rm certbot renew
   certbot:
     image: certbot/certbot:latest
     container_name: tekka-certbot
@@ -136,9 +139,6 @@ services:
       - certbot-certs:/etc/letsencrypt:rw
     networks:
       - tekka-network
-    # Run once to obtain certificates, then exits
-    # Usage: docker compose -f infra/docker/docker-compose.prod.yml run --rm certbot certonly ...
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     profiles:
       - certbot
 
