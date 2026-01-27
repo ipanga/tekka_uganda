@@ -1,8 +1,13 @@
+# Load environment variables from project root
+# Usage: docker compose -f infra/docker/docker-compose.prod.yml up -d
+
 services:
   # ===========================================
   # Backend API (api.tekka.ug)
   # ===========================================
   api:
+    env_file:
+      - ../../.env
     init: true
     image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-api:latest
     container_name: tekka-api
@@ -41,6 +46,8 @@ services:
   # Admin Dashboard (admin.tekka.ug)
   # ===========================================
   admin:
+    env_file:
+      - ../../.env
     image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-admin:latest
     container_name: tekka-admin
     environment:
@@ -68,6 +75,8 @@ services:
   # User Dashboard (tekka.ug)
   # ===========================================
   user:
+    env_file:
+      - ../../.env
     image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-user:latest
     container_name: tekka-user
     environment:
