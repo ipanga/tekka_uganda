@@ -57,6 +57,9 @@ tekka/
 ### Infrastructure
 - **Containerization**: Docker
 - **Database**: PostgreSQL (cloud-hosted)
+- **Reverse Proxy**: Nginx (Docker container)
+- **SSL/TLS**: Let's Encrypt via Certbot (Docker-based)
+- **CI/CD**: GitHub Actions + GHCR (image-based deployment)
 
 ## Development Setup
 
@@ -110,8 +113,35 @@ docker-compose build
 
 ### Deploy
 ```bash
-docker-compose up -d
+docker-compose -f infra/docker/docker-compose.prod.yml up -d
 ```
+
+### SSL/HTTPS Setup (First-time)
+
+The production stack uses Let's Encrypt certificates via Certbot (Docker-based).
+
+1. **Initialize SSL certificates:**
+   ```bash
+   cd /opt/tekka
+   ./infra/scripts/init-ssl.sh
+   ```
+
+   For testing, use staging certificates:
+   ```bash
+   ./infra/scripts/init-ssl.sh --staging
+   ```
+
+2. **Manual renewal (if needed):**
+   ```bash
+   docker compose -f infra/docker/docker-compose.prod.yml run --rm certbot renew
+   docker compose -f infra/docker/docker-compose.prod.yml exec nginx nginx -s reload
+   ```
+
+3. **Automatic renewal (recommended):**
+   Add to crontab (`crontab -e`):
+   ```
+   0 0,12 * * * /opt/tekka/infra/scripts/renew-ssl.sh >> /var/log/tekka-ssl-renew.log 2>&1
+   ```
 
 ### Environment Variables
 
@@ -122,6 +152,7 @@ Key variables:
 - `NEXT_PUBLIC_FIREBASE_*`: Firebase Client SDK credentials (frontends)
 - `DATABASE_URL`: PostgreSQL connection string
 - `JWT_SECRET`: JWT signing key
+- `VPS_SSH_PASSPHRASE`: SSH key passphrase for CI/CD deployment
 
 ## Security Considerations
 
