@@ -100,6 +100,9 @@ services:
     ports:
       - "80:80"
       - "443:443"
+    volumes:
+      - certbot-webroot:/var/www/certbot:ro
+      - certbot-certs:/etc/letsencrypt:ro
     depends_on:
       api:
         condition: service_healthy
@@ -122,6 +125,27 @@ services:
           memory: 128M
           cpus: '0.25'
 
+  # ===========================================
+  # Certbot (SSL Certificate Management)
+  # ===========================================
+  certbot:
+    image: certbot/certbot:latest
+    container_name: tekka-certbot
+    volumes:
+      - certbot-webroot:/var/www/certbot:rw
+      - certbot-certs:/etc/letsencrypt:rw
+    networks:
+      - tekka-network
+    # Run once to obtain certificates, then exits
+    # Usage: docker compose -f infra/docker/docker-compose.prod.yml run --rm certbot certonly ...
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    profiles:
+      - certbot
+
 networks:
   tekka-network:
     driver: bridge
+
+volumes:
+  certbot-webroot:
+  certbot-certs:
