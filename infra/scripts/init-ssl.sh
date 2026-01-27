@@ -2,9 +2,9 @@
 # =============================================================================
 # Tekka SSL Initialization Script
 # =============================================================================
-# This script initializes SSL certificates for the Tekka production stack.
-# It creates dummy certificates first (so Nginx can start), then obtains
-# real Let's Encrypt certificates using Certbot.
+# This script obtains SSL certificates from Let's Encrypt.
+# The Nginx container automatically starts in HTTP-only mode when no
+# certificates exist, then switches to HTTPS mode after reload.
 #
 # Usage: ./init-ssl.sh [--staging]
 #   --staging: Use Let's Encrypt staging environment (for testing)
@@ -21,7 +21,6 @@ set -e
 DOMAINS="tekka.ug www.tekka.ug api.tekka.ug admin.tekka.ug"
 EMAIL="ipanga@outlook.fr"
 COMPOSE_FILE="infra/docker/docker-compose.prod.yml"
-RSA_KEY_SIZE=4096
 
 # Colors for output
 RED='\033[0;31m'
@@ -37,57 +36,34 @@ if [ "$1" == "--staging" ]; then
 fi
 
 echo -e "${GREEN}=== Tekka SSL Initialization ===${NC}"
+echo -e "${YELLOW}Note: Environment variable warnings can be ignored during SSL setup.${NC}"
 
-# Step 1: Create required directories and dummy certificates
-echo -e "\n${GREEN}[1/5] Creating directory structure and dummy certificates...${NC}"
+# Step 1: Ensure nginx is running (will auto-start in HTTP-only mode)
+echo -e "\n${GREEN}[1/4] Starting Nginx in HTTP-only mode...${NC}"
+docker compose -f $COMPOSE_FILE up -d --no-deps nginx
 
-# Create directories
-docker compose -f $COMPOSE_FILE run --rm --entrypoint "" certbot sh -c "
-    mkdir -p /etc/letsencrypt/live/tekka.ug
-    mkdir -p /var/www/certbot
-"
-
-# Check if real certificates already exist
-if docker compose -f $COMPOSE_FILE run --rm --entrypoint "" certbot sh -c "test -f /etc/letsencrypt/live/tekka.ug/fullchain.pem && test -s /etc/letsencrypt/live/tekka.ug/fullchain.pem" 2>/dev/null; then
-    echo -e "${YELLOW}Existing certificates found. Skipping dummy certificate creation.${NC}"
-else
-    echo "Creating dummy certificates for initial Nginx startup..."
-    docker compose -f $COMPOSE_FILE run --rm --entrypoint "" certbot sh -c "
-        openssl req -x509 -nodes -newkey rsa:${RSA_KEY_SIZE} -days 1 \
-            -keyout /etc/letsencrypt/live/tekka.ug/privkey.pem \
-            -out /etc/letsencrypt/live/tekka.ug/fullchain.pem \
-            -subj '/CN=tekka.ug'
-        cp /etc/letsencrypt/live/tekka.ug/fullchain.pem /etc/letsencrypt/live/tekka.ug/chain.pem
-    "
-    echo -e "${GREEN}Dummy certificates created.${NC}"
-fi
-
-# Step 2: Start Nginx with dummy certificates
-echo -e "\n${GREEN}[2/5] Starting Nginx...${NC}"
-docker compose -f $COMPOSE_FILE up -d nginx
-
-# Wait for Nginx to be healthy
+# Wait for Nginx to start
 echo "Waiting for Nginx to start..."
 sleep 5
 
 # Verify Nginx is running
-if ! docker compose -f $COMPOSE_FILE ps nginx | grep -q "Up"; then
+if ! docker compose -f $COMPOSE_FILE ps nginx 2>/dev/null | grep -q "Up\|running"; then
     echo -e "${RED}ERROR: Nginx failed to start. Check logs:${NC}"
     docker compose -f $COMPOSE_FILE logs nginx
     exit 1
 fi
-echo -e "${GREEN}Nginx is running.${NC}"
+echo -e "${GREEN}Nginx is running in HTTP-only mode.${NC}"
 
-# Step 3: Delete dummy certificates
-echo -e "\n${GREEN}[3/5] Removing dummy certificates...${NC}"
-docker compose -f $COMPOSE_FILE run --rm --entrypoint "" certbot sh -c "
-    rm -rf /etc/letsencrypt/live/tekka.ug
-    rm -rf /etc/letsencrypt/archive/tekka.ug
-    rm -rf /etc/letsencrypt/renewal/tekka.ug.conf
-"
+# Step 2: Verify HTTP is accessible
+echo -e "\n${GREEN}[2/4] Verifying HTTP access...${NC}"
+if curl -s -o /dev/null -w "%{http_code}" http://localhost/ | grep -q "200\|301\|302"; then
+    echo -e "${GREEN}HTTP is accessible.${NC}"
+else
+    echo -e "${YELLOW}Warning: HTTP check returned unexpected status. Continuing anyway...${NC}"
+fi
 
-# Step 4: Request real certificates from Let's Encrypt
-echo -e "\n${GREEN}[4/5] Requesting certificates from Let's Encrypt...${NC}"
+# Step 3: Request certificates from Let's Encrypt
+echo -e "\n${GREEN}[3/4] Requesting certificates from Let's Encrypt...${NC}"
 
 # Build domain arguments
 DOMAIN_ARGS=""
@@ -101,25 +77,42 @@ docker compose -f $COMPOSE_FILE run --rm certbot certonly \
     --email $EMAIL \
     --agree-tos \
     --no-eff-email \
-    --force-renewal \
     $STAGING_ARG \
     $DOMAIN_ARGS
 
-# Step 5: Reload Nginx with real certificates
-echo -e "\n${GREEN}[5/5] Reloading Nginx with real certificates...${NC}"
-docker compose -f $COMPOSE_FILE exec nginx nginx -s reload
+# Check if certificates were created
+if docker compose -f $COMPOSE_FILE run --rm --entrypoint "" certbot \
+    test -f /etc/letsencrypt/live/tekka.ug/fullchain.pem 2>/dev/null; then
+    echo -e "${GREEN}Certificates obtained successfully!${NC}"
+else
+    echo -e "${RED}ERROR: Failed to obtain certificates. Check the output above.${NC}"
+    exit 1
+fi
+
+# Step 4: Restart Nginx to switch to HTTPS mode
+echo -e "\n${GREEN}[4/4] Restarting Nginx with HTTPS enabled...${NC}"
+docker compose -f $COMPOSE_FILE restart nginx
+
+# Wait for restart
+sleep 3
 
 echo -e "\n${GREEN}=== SSL Initialization Complete ===${NC}"
-echo -e "Your sites are now accessible via HTTPS:"
+
+if [ -n "$STAGING_ARG" ]; then
+    echo -e "\n${YELLOW}NOTE: You used STAGING certificates (not trusted by browsers).${NC}"
+    echo -e "${YELLOW}To get production certificates:${NC}"
+    echo -e "  1. Remove staging certs: docker compose -f $COMPOSE_FILE run --rm --entrypoint '' certbot rm -rf /etc/letsencrypt/live/tekka.ug"
+    echo -e "  2. Run again without --staging: ./infra/scripts/init-ssl.sh"
+fi
+
+echo -e "\n${GREEN}Your sites are now accessible via HTTPS:${NC}"
 echo -e "  - https://tekka.ug"
 echo -e "  - https://www.tekka.ug"
 echo -e "  - https://api.tekka.ug"
 echo -e "  - https://admin.tekka.ug"
 
-if [ -n "$STAGING_ARG" ]; then
-    echo -e "\n${YELLOW}NOTE: You used staging certificates. Run without --staging for production.${NC}"
-fi
-
-echo -e "\n${GREEN}Certificate renewal:${NC}"
-echo -e "  docker compose -f $COMPOSE_FILE run --rm certbot renew"
-echo -e "  docker compose -f $COMPOSE_FILE exec nginx nginx -s reload"
+echo -e "\n${GREEN}Next steps:${NC}"
+echo -e "1. Add DNS records for api.tekka.ug and admin.tekka.ug if not done"
+echo -e "2. Start the full application stack: docker compose -f $COMPOSE_FILE up -d"
+echo -e "3. Set up automatic renewal (add to crontab):"
+echo -e "   0 0,12 * * * /opt/tekka/infra/scripts/renew-ssl.sh >> /var/log/tekka-ssl-renew.log 2>&1"
