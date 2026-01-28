@@ -75,6 +75,6 @@ jobs:
           passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
           script: |
             cd /opt/tekka
-            docker compose -f infra/docker/docker-compose.prod.yml pull admin
-            docker compose -f infra/docker/docker-compose.prod.yml up -d admin
+            docker compose -f infra/docker/docker-compose.prod.yml --env-file .env pull admin
+            docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d admin
             docker image prune -f

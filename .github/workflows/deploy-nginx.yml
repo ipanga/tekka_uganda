@@ -67,6 +67,6 @@ jobs:
           passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
           script: |
             cd /opt/tekka
-            docker compose -f infra/docker/docker-compose.prod.yml pull nginx
-            docker compose -f infra/docker/docker-compose.prod.yml up -d nginx
+            docker compose -f infra/docker/docker-compose.prod.yml --env-file .env pull nginx
+            docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d nginx
             docker image prune -f
