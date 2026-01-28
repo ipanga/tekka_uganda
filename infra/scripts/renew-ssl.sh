@@ -15,6 +15,10 @@ set -e
 
 # Configuration
 COMPOSE_FILE="/opt/tekka/infra/docker/docker-compose.prod.yml"
+ENV_FILE="/opt/tekka/.env"
+
+# Docker Compose command with env file
+DC="$DC --env-file $ENV_FILE"
 
 # Colors (disabled in non-interactive mode)
 if [ -t 1 ]; then
@@ -30,14 +34,14 @@ fi
 echo -e "${GREEN}[$(date)] Starting SSL certificate renewal check...${NC}"
 
 # Attempt renewal (certbot only renews if needed)
-docker compose -f $COMPOSE_FILE run --rm certbot renew --quiet
+$DC run --rm certbot renew --quiet
 
 # Check if certificates were renewed by comparing modification times
 RENEWAL_STATUS=$?
 
 if [ $RENEWAL_STATUS -eq 0 ]; then
     echo -e "${GREEN}[$(date)] Renewal check completed. Reloading Nginx...${NC}"
-    docker compose -f $COMPOSE_FILE exec -T nginx nginx -s reload
+    $DC exec -T nginx nginx -s reload
     echo -e "${GREEN}[$(date)] Nginx reloaded successfully.${NC}"
 else
     echo -e "${YELLOW}[$(date)] Renewal check completed with status: $RENEWAL_STATUS${NC}"
