@@ -48,4 +48,4 @@ EXPOSE 4000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
   CMD node -e "const net = require('net'); const s = net.connect(4000, 'localhost', () => { s.destroy(); process.exit(0); }); s.on('error', () => process.exit(1));"
 
-CMD ["node", "dist/main"]
+CMD ["node", "dist/src/main"]
