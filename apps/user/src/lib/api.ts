@@ -7,10 +7,6 @@ import {
   CreateListingDto,
   UpdateListingDto,
   ListingQueryParams,
-  Offer,
-  CreateOfferDto,
-  CounterOfferDto,
-  OfferQueryParams,
   Chat,
   Message,
   CreateChatDto,
@@ -241,58 +237,6 @@ class ApiClient {
 
   isListingSaved(id: string): Promise<{ saved: boolean }> {
     return this.get<{ saved: boolean }>(`/listings/${id}/saved`);
-  }
-
-  // ============================================
-  // OFFER ENDPOINTS
-  // ============================================
-
-  createOffer(data: CreateOfferDto): Promise<Offer> {
-    return this.post<Offer>('/offers', data);
-  }
-
-  getOffers(params: OfferQueryParams = {}): Promise<PaginatedResponse<Offer>> {
-    return this.get<PaginatedResponse<Offer>>(`/offers${this.buildQueryString(params)}`);
-  }
-
-  getOfferStats(): Promise<{ pending: number; accepted: number; total: number }> {
-    return this.get('/offers/stats');
-  }
-
-  getListingOffers(listingId: string): Promise<Offer[]> {
-    return this.get<Offer[]>(`/offers/listing/${listingId}`);
-  }
-
-  getOffer(id: string): Promise<Offer> {
-    return this.get<Offer>(`/offers/${id}`);
-  }
-
-  updateOffer(id: string, data: { amount?: number; message?: string }): Promise<Offer> {
-    return this.put<Offer>(`/offers/${id}`, data);
-  }
-
-  acceptOffer(id: string): Promise<Offer> {
-    return this.post<Offer>(`/offers/${id}/accept`);
-  }
-
-  rejectOffer(id: string): Promise<Offer> {
-    return this.post<Offer>(`/offers/${id}/reject`);
-  }
-
-  counterOffer(id: string, data: CounterOfferDto): Promise<Offer> {
-    return this.post<Offer>(`/offers/${id}/counter`, data);
-  }
-
-  acceptCounterOffer(id: string): Promise<Offer> {
-    return this.post<Offer>(`/offers/${id}/accept-counter`);
-  }
-
-  declineCounterOffer(id: string): Promise<Offer> {
-    return this.post<Offer>(`/offers/${id}/decline-counter`);
-  }
-
-  withdrawOffer(id: string): Promise<void> {
-    return this.delete<void>(`/offers/${id}`);
   }
 
   // ============================================

@@ -24,10 +24,8 @@ services:
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      AT_API_KEY: ${AT_API_KEY}
-      AT_USERNAME: ${AT_USERNAME}
-      AT_SENDER_ID: ${AT_SENDER_ID}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:8080}
+      THINKXCLOUD_API_KEY: ${THINKXCLOUD_API_KEY}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8080}
     ports:
       - "4000:4000"
     networks:

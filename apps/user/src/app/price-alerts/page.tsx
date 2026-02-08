@@ -125,7 +125,7 @@ export default function PriceAlertsPage() {
                 <p className="text-gray-500 mb-6">
                   Save items you like - we&apos;ll notify you when their prices drop
                 </p>
-                <Button onClick={() => router.push('/explore')}>
+                <Button onClick={() => router.push('/')}>
                   Browse Listings
                 </Button>
               </CardContent>

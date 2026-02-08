@@ -18,7 +18,7 @@ class NotificationApiRepository implements NotificationRepository {
       '/notifications',
       queryParameters: {'limit': 50},
     );
-    final notifications = response['notifications'] as List<dynamic>? ?? [];
+    final notifications = response['data'] as List<dynamic>? ?? [];
     return notifications
         .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -38,7 +38,7 @@ class NotificationApiRepository implements NotificationRepository {
       final response = await _apiClient.get<Map<String, dynamic>>(
         '/notifications/unread-count',
       );
-      return response['unreadCount'] as int? ?? 0;
+      return response['count'] as int? ?? 0;
     } catch (_) {
       return 0;
     }

@@ -102,14 +102,6 @@ class _NotificationSettingsContent extends ConsumerWidget {
                 onChanged: (value) => notifier.setMessageNotifications(value),
               ),
               _SettingsToggle(
-                icon: Icons.local_offer_outlined,
-                title: 'Offers',
-                subtitle: 'New offers on your listings',
-                value: prefs.offerNotifications,
-                enabled: prefs.pushEnabled,
-                onChanged: (value) => notifier.setOfferNotifications(value),
-              ),
-              _SettingsToggle(
                 icon: Icons.star_outline,
                 title: 'Reviews',
                 subtitle: 'New reviews on your profile',

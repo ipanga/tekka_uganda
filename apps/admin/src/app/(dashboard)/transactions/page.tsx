@@ -28,7 +28,6 @@ import {
 const MOCK_TRANSACTIONS: Transaction[] = [
   {
     id: '1',
-    offerId: 'off1',
     buyerId: 'user1',
     sellerId: 'user2',
     listingId: 'list1',
@@ -44,7 +43,6 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '2',
-    offerId: 'off2',
     buyerId: 'user3',
     sellerId: 'user4',
     listingId: 'list2',
@@ -59,7 +57,6 @@ const MOCK_TRANSACTIONS: Transaction[] = [
   },
   {
     id: '3',
-    offerId: 'off3',
     buyerId: 'user5',
     sellerId: 'user6',
     listingId: 'list3',

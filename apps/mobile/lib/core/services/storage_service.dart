@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import 'api_client.dart';
@@ -51,17 +50,11 @@ class StorageService {
     }
 
     try {
-      final fileName = imageFile.path.split('/').last;
-      final formData = FormData.fromMap({
-        'file': await MultipartFile.fromFile(
-          imageFile.path,
-          filename: fileName,
-        ),
-      });
-
-      final response = await _apiClient!.post<Map<String, dynamic>>(
+      // Use the uploadFile method which has extended timeout for image uploads
+      final response = await _apiClient!.uploadFile<Map<String, dynamic>>(
         '/upload/image',
-        data: formData,
+        filePath: imageFile.path,
+        fileField: 'file',
       );
 
       return response['url'] as String?;
@@ -82,20 +75,11 @@ class StorageService {
     }
 
     try {
-      final files = await Future.wait(
-        imageFiles.map((file) async {
-          final fileName = file.path.split('/').last;
-          return MultipartFile.fromFile(file.path, filename: fileName);
-        }),
-      );
-
-      final formData = FormData.fromMap({
-        'files': files,
-      });
-
-      final response = await _apiClient!.post<Map<String, dynamic>>(
+      // Use the uploadFiles method which has extended timeout for image uploads
+      final response = await _apiClient!.uploadFiles<Map<String, dynamic>>(
         '/upload/images',
-        data: formData,
+        filePaths: imageFiles.map((f) => f.path).toList(),
+        fileField: 'files',
       );
 
       final urls = response['urls'] as List<dynamic>?;

@@ -9,7 +9,6 @@ import {
   PaperAirplaneIcon,
   EllipsisVerticalIcon,
   MapPinIcon,
-  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
 import { authManager } from '@/lib/auth';
@@ -33,7 +32,6 @@ import Header from '@/components/layout/Header';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
 import { PageLoader } from '@/components/ui/Spinner';
-import { OfferModal } from '@/components/offers/OfferModal';
 import { useAuthStore } from '@/stores/authStore';
 import { useChatStore } from '@/stores/chatStore';
 
@@ -49,7 +47,6 @@ export default function ChatDetailPage() {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [messageText, setMessageText] = useState('');
-  const [showOfferModal, setShowOfferModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const messages = storedMessages[chatId] || [];
@@ -259,15 +256,6 @@ export default function ChatDetailPage() {
                     </div>
                   )}
 
-                  {message.type === 'OFFER' && message.metadata?.offer && (
-                    <div className="flex items-center gap-2">
-                      <CurrencyDollarIcon className="w-5 h-5" />
-                      <span>
-                        Offer: {formatPrice(message.metadata.offer.amount)}
-                      </span>
-                    </div>
-                  )}
-
                   {message.type === 'MEETUP' && message.metadata?.meetup && (
                     <div className="flex items-center gap-2">
                       <MapPinIcon className="w-5 h-5" />
@@ -301,14 +289,6 @@ export default function ChatDetailPage() {
           {/* Quick Actions */}
           {listing && (
             <div className="flex gap-2 mb-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowOfferModal(true)}
-              >
-                <CurrencyDollarIcon className="w-4 h-4 mr-1" />
-                Make Offer
-              </Button>
               <Button variant="outline" size="sm">
                 <MapPinIcon className="w-4 h-4 mr-1" />
                 Schedule Meetup
@@ -340,15 +320,6 @@ export default function ChatDetailPage() {
         </div>
       </footer>
 
-      {/* Offer Modal */}
-      {showOfferModal && listing && (
-        <OfferModal
-          isOpen={showOfferModal}
-          onClose={() => setShowOfferModal(false)}
-          listing={listing}
-          onSuccess={() => setShowOfferModal(false)}
-        />
-      )}
     </div>
   );
 }

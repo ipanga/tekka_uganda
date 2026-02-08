@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { Header } from '@/components/layout/Header';
-import { Card, CardContent } from '@/components/ui/Card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge, getStatusVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
+import { Modal } from '@/components/ui/Modal';
 import {
   Table,
   TableHeader,
@@ -20,6 +21,8 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   TrashIcon,
+  PauseCircleIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
 import type { Listing, ListingStatus, ListingCategory } from '@/types';
@@ -44,6 +47,9 @@ export default function ListingsPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [viewLoading, setViewLoading] = useState(false);
 
   useEffect(() => {
     loadListings();
@@ -137,6 +143,36 @@ export default function ListingsPage() {
         console.error('Failed to delete listing:', error);
       }
     }
+  };
+
+  const handleSuspend = async (id: string) => {
+    const reason = prompt('Enter suspension reason (optional):');
+    try {
+      await api.suspendListing(id, reason || undefined);
+      loadListings();
+    } catch (error) {
+      console.error('Failed to suspend listing:', error);
+      alert('Failed to suspend listing');
+    }
+  };
+
+  const handleView = async (listing: Listing) => {
+    setViewLoading(true);
+    setViewModalOpen(true);
+    try {
+      const details = await api.getListing(listing.id);
+      setSelectedListing(details);
+    } catch (error) {
+      console.error('Failed to load listing details:', error);
+      setSelectedListing(listing);
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
+  const closeViewModal = () => {
+    setViewModalOpen(false);
+    setSelectedListing(null);
   };
 
   const filteredListings = listings.filter((listing) =>
@@ -238,7 +274,7 @@ export default function ListingsPage() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge>{listing.category?.replace('_', ' ') || 'Uncategorized'}</Badge>
+                            <Badge>{listing.categoryData?.name || listing.category?.replace('_', ' ') || 'Uncategorized'}</Badge>
                           </TableCell>
                           <TableCell>
                             UGX {listing.price.toLocaleString()}
@@ -252,7 +288,12 @@ export default function ListingsPage() {
                           <TableCell>{listing.saveCount}</TableCell>
                           <TableCell>
                             <div className="flex gap-1">
-                              <Button size="sm" variant="ghost" title="View">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                title="View"
+                                onClick={() => handleView(listing)}
+                              >
                                 <EyeIcon className="h-4 w-4" />
                               </Button>
                               {listing.status === 'PENDING' && (
@@ -274,6 +315,16 @@ export default function ListingsPage() {
                                     <XCircleIcon className="h-4 w-4 text-red-600" />
                                   </Button>
                                 </>
+                              )}
+                              {listing.status === 'ACTIVE' && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  title="Suspend"
+                                  onClick={() => handleSuspend(listing.id)}
+                                >
+                                  <PauseCircleIcon className="h-4 w-4 text-orange-500" />
+                                </Button>
                               )}
                               <Button
                                 size="sm"
@@ -326,6 +377,185 @@ export default function ListingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* View Listing Modal */}
+      <Modal isOpen={viewModalOpen} onClose={closeViewModal} title="Listing Details">
+        {viewLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+          </div>
+        ) : selectedListing ? (
+          <div className="space-y-6">
+            {/* Images */}
+            {selectedListing.imageUrls && selectedListing.imageUrls.length > 0 && (
+              <div className="grid grid-cols-3 gap-2">
+                {selectedListing.imageUrls.slice(0, 6).map((url, index) => (
+                  <img
+                    key={index}
+                    src={url}
+                    alt={`${selectedListing.title} image ${index + 1}`}
+                    className="w-full h-24 object-cover rounded-md"
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Basic Info */}
+            <div>
+              <h3 className="text-lg font-semibold">{selectedListing.title}</h3>
+              <p className="text-2xl font-bold text-blue-600 mt-1">
+                UGX {selectedListing.price.toLocaleString()}
+              </p>
+            </div>
+
+            {/* Status & Category */}
+            <div className="flex gap-2">
+              <Badge variant={getStatusVariant(selectedListing.status)}>
+                {selectedListing.status}
+              </Badge>
+              <Badge>{selectedListing.categoryData?.name || selectedListing.category?.replace('_', ' ') || 'Uncategorized'}</Badge>
+              <Badge variant="info">{selectedListing.condition}</Badge>
+            </div>
+
+            {/* Description */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-500 mb-1">Description</h4>
+              <p className="text-sm text-gray-700">{selectedListing.description}</p>
+            </div>
+
+            {/* Details Grid */}
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              {/* Display new attributes system if available */}
+              {selectedListing.attributes && Object.keys(selectedListing.attributes).length > 0 ? (
+                Object.entries(selectedListing.attributes).map(([key, value]) => (
+                  <div key={key}>
+                    <span className="text-gray-500">{key.replace(/-/g, ' ').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}:</span>{' '}
+                    <span className="font-medium">{Array.isArray(value) ? value.join(', ') : String(value)}</span>
+                  </div>
+                ))
+              ) : (
+                <>
+                  {selectedListing.size && (
+                    <div>
+                      <span className="text-gray-500">Size:</span>{' '}
+                      <span className="font-medium">{selectedListing.size}</span>
+                    </div>
+                  )}
+                  {selectedListing.brand && (
+                    <div>
+                      <span className="text-gray-500">Brand:</span>{' '}
+                      <span className="font-medium">{selectedListing.brand}</span>
+                    </div>
+                  )}
+                  {selectedListing.color && (
+                    <div>
+                      <span className="text-gray-500">Color:</span>{' '}
+                      <span className="font-medium">{selectedListing.color}</span>
+                    </div>
+                  )}
+                </>
+              )}
+              {/* Location - check for new system or legacy */}
+              {(selectedListing.city || selectedListing.division || selectedListing.location) && (
+                <div>
+                  <span className="text-gray-500">Location:</span>{' '}
+                  <span className="font-medium">
+                    {selectedListing.division?.name && selectedListing.city?.name
+                      ? `${selectedListing.division.name}, ${selectedListing.city.name}`
+                      : selectedListing.city?.name || selectedListing.location}
+                  </span>
+                </div>
+              )}
+              <div>
+                <span className="text-gray-500">Views:</span>{' '}
+                <span className="font-medium">{selectedListing.viewCount}</span>
+              </div>
+              <div>
+                <span className="text-gray-500">Saves:</span>{' '}
+                <span className="font-medium">{selectedListing.saveCount}</span>
+              </div>
+            </div>
+
+            {/* Seller Info */}
+            {selectedListing.seller && (
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-medium text-gray-500 mb-2">Seller</h4>
+                <div className="flex items-center gap-3">
+                  {selectedListing.seller.photoUrl ? (
+                    <img
+                      src={selectedListing.seller.photoUrl}
+                      alt={selectedListing.seller.displayName || 'Seller'}
+                      className="h-10 w-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                      <span className="text-gray-500 text-sm">
+                        {(selectedListing.seller.displayName || 'U')[0].toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-medium">{selectedListing.seller.displayName || 'Unknown'}</p>
+                    <p className="text-xs text-gray-500">ID: {selectedListing.sellerId}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Rejection Reason (if any) */}
+            {selectedListing.rejectionReason && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-3">
+                <h4 className="text-sm font-medium text-red-800 mb-1">Rejection/Suspension Reason</h4>
+                <p className="text-sm text-red-700">{selectedListing.rejectionReason}</p>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-2 border-t pt-4">
+              {selectedListing.status === 'PENDING' && (
+                <>
+                  <Button
+                    onClick={() => {
+                      handleApprove(selectedListing.id);
+                      closeViewModal();
+                    }}
+                  >
+                    <CheckCircleIcon className="h-4 w-4 mr-1" />
+                    Approve
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={() => {
+                      handleReject(selectedListing.id);
+                      closeViewModal();
+                    }}
+                  >
+                    <XCircleIcon className="h-4 w-4 mr-1" />
+                    Reject
+                  </Button>
+                </>
+              )}
+              {selectedListing.status === 'ACTIVE' && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    handleSuspend(selectedListing.id);
+                    closeViewModal();
+                  }}
+                >
+                  <PauseCircleIcon className="h-4 w-4 mr-1" />
+                  Suspend
+                </Button>
+              )}
+              <Button variant="ghost" onClick={closeViewModal}>
+                Close
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-500 py-8 text-center">No listing selected</p>
+        )}
+      </Modal>
     </div>
   );
 }

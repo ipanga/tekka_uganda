@@ -13,9 +13,10 @@ import { authManager } from '@/lib/auth';
 interface ListingCardProps {
   listing: Listing;
   onSaveChange?: (listingId: string, isSaved: boolean) => void;
+  showStatus?: boolean;
 }
 
-export function ListingCard({ listing, onSaveChange }: ListingCardProps) {
+export function ListingCard({ listing, onSaveChange, showStatus }: ListingCardProps) {
   const router = useRouter();
   // Initialize from listing.isSaved if available
   const [isSaved, setIsSaved] = useState(listing.isSaved ?? false);
@@ -64,6 +65,14 @@ export function ListingCard({ listing, onSaveChange }: ListingCardProps) {
     FAIR: 'Fair',
   };
 
+  const statusLabels: Record<string, { label: string; className: string }> = {
+    PENDING: { label: 'Pending Review', className: 'bg-yellow-100 text-yellow-800' },
+    REJECTED: { label: 'Rejected', className: 'bg-red-100 text-red-800' },
+    DRAFT: { label: 'Draft', className: 'bg-gray-100 text-gray-800' },
+    SOLD: { label: 'Sold', className: 'bg-green-100 text-green-800' },
+    ARCHIVED: { label: 'Archived', className: 'bg-gray-100 text-gray-600' },
+  };
+
   return (
     <div className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       {/* Image Container */}
@@ -85,6 +94,13 @@ export function ListingCard({ listing, onSaveChange }: ListingCardProps) {
         <span className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm text-xs font-medium px-2 py-1 rounded-full">
           {conditionLabels[listing.condition] || listing.condition}
         </span>
+
+        {/* Status Badge (for pending/suspended items) */}
+        {showStatus && listing.status && statusLabels[listing.status] && (
+          <span className={`absolute bottom-2 left-2 text-xs font-medium px-2 py-1 rounded-full ${statusLabels[listing.status].className}`}>
+            {statusLabels[listing.status].label}
+          </span>
+        )}
       </Link>
 
       {/* Save Button */}

@@ -14,7 +14,6 @@ interface ReviewFormProps {
   onClose: () => void;
   revieweeId: string;
   listingId?: string;
-  offerId?: string;
   onSuccess?: (review: Review) => void;
 }
 
@@ -32,7 +31,6 @@ export function ReviewForm({
   onClose,
   revieweeId,
   listingId,
-  offerId,
   onSuccess,
 }: ReviewFormProps) {
   const [rating, setRating] = useState(0);

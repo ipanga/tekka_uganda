@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
-import { AfricasTalkingService } from './africastalking.service';
+import { OtpService } from './otp.service';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
@@ -26,7 +26,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-    private smsService: AfricasTalkingService,
+    private otpService: OtpService,
   ) {}
 
   /**
@@ -49,8 +49,9 @@ export class AuthService {
 
   /**
    * Send OTP to phone number
+   * Uses WhatsApp as primary channel, SMS as fallback
    */
-  async sendOTP(phone: string): Promise<{ success: boolean; message: string }> {
+  async sendOTP(phone: string): Promise<{ success: boolean; message: string; channel?: string }> {
     const formattedPhone = this.formatPhoneNumber(phone);
 
     // Validate phone number format
@@ -58,12 +59,13 @@ export class AuthService {
       throw new BadRequestException('Invalid Ugandan phone number format');
     }
 
-    const result = await this.smsService.sendOTP(formattedPhone);
+    const result = await this.otpService.sendOTP(formattedPhone);
 
     if (result.success) {
       return {
         success: true,
-        message: 'Verification code sent successfully',
+        message: result.message || 'Verification code sent successfully',
+        channel: result.channel,
       };
     }
 
@@ -76,8 +78,8 @@ export class AuthService {
   async verifyOTP(phone: string, code: string): Promise<AuthTokens> {
     const formattedPhone = this.formatPhoneNumber(phone);
 
-    // Verify the OTP with Africa's Talking
-    const verification = this.smsService.verifyOTP(formattedPhone, code);
+    // Verify the OTP
+    const verification = this.otpService.verifyOTP(formattedPhone, code);
 
     if (!verification.valid) {
       throw new UnauthorizedException('Invalid or expired verification code');

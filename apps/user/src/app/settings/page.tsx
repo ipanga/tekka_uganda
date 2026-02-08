@@ -158,12 +158,6 @@ export default function SettingsPage() {
                 onChange={(v) => updateSetting('notifications', 'newMessage', v)}
               />
               <ToggleSetting
-                label="New Offers"
-                description="Get notified when you receive offers on your listings"
-                checked={settings?.notifications.newOffer ?? true}
-                onChange={(v) => updateSetting('notifications', 'newOffer', v)}
-              />
-              <ToggleSetting
                 label="Price Drops"
                 description="Get notified when saved items drop in price"
                 checked={settings?.notifications.priceDrops ?? true}

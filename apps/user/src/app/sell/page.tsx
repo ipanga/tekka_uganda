@@ -294,6 +294,12 @@ export default function CreateListingPage() {
       return;
     }
 
+    // Validate images for non-draft listings
+    if (!isDraft && imageUrls.length === 0) {
+      setError('Please add at least one photo');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -313,6 +319,10 @@ export default function CreateListingPage() {
         cityId: selectedCity?.id,
         divisionId: selectedDivision?.id,
       });
+
+      if (!listing || !listing.id) {
+        throw new Error('Failed to create listing - invalid response');
+      }
 
       router.push(`/listing/${listing.id}`);
     } catch (err) {
@@ -719,10 +729,12 @@ export default function CreateListingPage() {
                 <Input
                   label="Title"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => setTitle(e.target.value.slice(0, 150))}
                   placeholder="e.g., Beautiful Kitenge Dress"
                   required
                   showRequired
+                  maxLength={150}
+                  helperText={`${title.length}/150 characters`}
                 />
 
                 <Textarea

@@ -46,25 +46,35 @@ export default function OverviewPage() {
 
   const loadDashboardData = async () => {
     try {
-      // For demo, using mock data since admin endpoints aren't fully implemented
-      setStats({
-        totalUsers: 1250,
-        activeUsers: 890,
-        totalListings: 3450,
-        activeListings: 2100,
-        pendingListings: 45,
-        totalTransactions: 780,
-        pendingReports: 12,
-      });
+      // Load real dashboard stats from API
+      try {
+        const dashboardStats = await api.getDashboardStats();
+        setStats(dashboardStats);
+      } catch (statsError) {
+        console.error('Failed to load dashboard stats:', statsError);
+        // Fallback to zeros if API fails
+        setStats({
+          totalUsers: 0,
+          activeUsers: 0,
+          totalListings: 0,
+          activeListings: 0,
+          pendingListings: 0,
+          totalTransactions: 0,
+          pendingReports: 0,
+        });
+      }
 
-      // Try to fetch pending listings
+      // Load pending listings
       try {
         const response = await api.getPendingListings({ limit: 5 });
-        if (Array.isArray(response)) {
+        if (response && typeof response === 'object' && 'listings' in response) {
+          setPendingListings((response as any).listings || []);
+        } else if (Array.isArray(response)) {
           setPendingListings(response);
+        } else {
+          setPendingListings([]);
         }
       } catch {
-        // Use mock data if API fails
         setPendingListings([]);
       }
     } catch (error) {

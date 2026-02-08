@@ -14,11 +14,13 @@ import {
   FlagIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  StarIcon,
 } from '@heroicons/react/24/outline';
+import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { api } from '@/lib/api';
 import { authManager } from '@/lib/auth';
-import { Listing, User, CATEGORY_LABELS, CONDITION_LABELS, OCCASION_LABELS } from '@/types';
+import { Listing, User, UserStats, CATEGORY_LABELS, CONDITION_LABELS, OCCASION_LABELS } from '@/types';
 import { formatPrice, formatRelativeTime, cn } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -26,7 +28,6 @@ import { Button } from '@/components/ui/Button';
 import { Badge, getStatusVariant } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
 import { PageLoader } from '@/components/ui/Spinner';
-import { OfferModal } from '@/components/offers/OfferModal';
 import { ReportModal } from '@/components/modals/ReportModal';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -38,12 +39,12 @@ export default function ListingDetailPage() {
   const { user, isAuthenticated } = useAuthStore();
   const [listing, setListing] = useState<Listing | null>(null);
   const [seller, setSeller] = useState<User | null>(null);
+  const [sellerStats, setSellerStats] = useState<UserStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
   const [savingItem, setSavingItem] = useState(false);
-  const [showOfferModal, setShowOfferModal] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
 
   useEffect(() => {
@@ -58,9 +59,23 @@ export default function ListingDetailPage() {
 
       if (data.seller) {
         setSeller(data.seller);
+        // Fetch seller stats for rating
+        try {
+          const stats = await api.getUserStats(data.seller.id);
+          setSellerStats(stats);
+        } catch {
+          // Ignore stats fetch error
+        }
       } else if (data.sellerId) {
         const sellerData = await api.getUser(data.sellerId);
         setSeller(sellerData);
+        // Fetch seller stats for rating
+        try {
+          const stats = await api.getUserStats(data.sellerId);
+          setSellerStats(stats);
+        } catch {
+          // Ignore stats fetch error
+        }
       }
 
       // Check if saved
@@ -141,15 +156,6 @@ export default function ListingDetailPage() {
     }
   };
 
-  const handleMakeOffer = () => {
-    // Use authManager as primary source - it ensures initialization and sets API token
-    if (!authManager.isAuthenticated()) {
-      router.push('/login');
-      return;
-    }
-    setShowOfferModal(true);
-  };
-
   const nextImage = () => {
     if (listing?.imageUrls) {
       setCurrentImageIndex((prev) =>
@@ -184,7 +190,7 @@ export default function ListingDetailPage() {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">Listing not found</h1>
             <p className="text-gray-500 mb-6">This listing may have been removed or is no longer available.</p>
-            <Button onClick={() => router.push('/explore')}>Browse Listings</Button>
+            <Button onClick={() => router.push('/')}>Browse Listings</Button>
           </div>
         </main>
         <Footer />
@@ -225,13 +231,11 @@ export default function ListingDetailPage() {
           <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
             <Link href="/" className="hover:text-gray-700">Home</Link>
             <span>/</span>
-            <Link href="/explore" className="hover:text-gray-700">Explore</Link>
-            <span>/</span>
             <Link
-              href={`/explore?category=${listing.category}`}
+              href={listing.categoryId ? `/?categoryId=${listing.categoryId}` : '/'}
               className="hover:text-gray-700"
             >
-              {CATEGORY_LABELS[listing.category]}
+              {listing.categoryData?.name || (listing.category && CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS]) || 'Category'}
             </Link>
             <span>/</span>
             <span className="text-gray-900 truncate max-w-xs">{listing.title}</span>
@@ -392,6 +396,25 @@ export default function ListingDetailPage() {
                           {seller.location}
                         </p>
                       )}
+                      {sellerStats && sellerStats.averageRating > 0 && (
+                        <div className="flex items-center gap-1 mt-1">
+                          <div className="flex items-center">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <StarSolidIcon
+                                key={star}
+                                className={`w-4 h-4 ${
+                                  star <= Math.round(sellerStats.averageRating)
+                                    ? 'text-yellow-400'
+                                    : 'text-gray-200'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-500 ml-1">
+                            {sellerStats.averageRating.toFixed(1)} ({sellerStats.totalReviews} {sellerStats.totalReviews === 1 ? 'review' : 'reviews'})
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <Link
                       href={`/profile/${seller.id}`}
@@ -406,10 +429,7 @@ export default function ListingDetailPage() {
               {/* Action Buttons */}
               {!isOwnListing && listing.status === 'ACTIVE' && (
                 <div className="flex gap-3">
-                  <Button onClick={handleMakeOffer} className="flex-1">
-                    Make an Offer
-                  </Button>
-                  <Button variant="outline" onClick={handleContactSeller} className="flex-1">
+                  <Button onClick={handleContactSeller} className="flex-1">
                     <ChatBubbleLeftRightIcon className="w-5 h-5 mr-2" />
                     Message Seller
                   </Button>
@@ -434,7 +454,9 @@ export default function ListingDetailPage() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-500">Category</span>
-                    <p className="font-medium">{CATEGORY_LABELS[listing.category]}</p>
+                    <p className="font-medium">
+                      {listing.categoryData?.name?.trim() || CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS] || 'N/A'}
+                    </p>
                   </div>
                   <div>
                     <span className="text-gray-500">Condition</span>
@@ -446,34 +468,68 @@ export default function ListingDetailPage() {
                       <p className="font-medium">{OCCASION_LABELS[listing.occasion]}</p>
                     </div>
                   )}
-                  {listing.size && (
-                    <div>
-                      <span className="text-gray-500">Size</span>
-                      <p className="font-medium">{listing.size}</p>
-                    </div>
+                  {/* Display all attributes from JSON with proper labels */}
+                  {listing.attributes && Object.keys(listing.attributes).length > 0 && Object.entries(listing.attributes).map(([key, value]) => {
+                    // Map attribute keys to display labels
+                    const labelMap: Record<string, string> = {
+                      'size': 'Size',
+                      'size-clothing': 'Size',
+                      'size-shoes': 'Shoe Size',
+                      'brand': 'Brand',
+                      'brand-fashion': 'Brand',
+                      'brand-consoles': 'Brand',
+                      'color': 'Color',
+                      'material': 'Material',
+                      'storage-capacity': 'Storage',
+                      'console-model': 'Model',
+                    };
+                    const label = labelMap[key] || key.replace(/-/g, ' ').replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    const displayValue = Array.isArray(value) ? value.join(', ') : String(value);
+                    return (
+                      <div key={key}>
+                        <span className="text-gray-500">{label}</span>
+                        <p className="font-medium">{displayValue}</p>
+                      </div>
+                    );
+                  })}
+                  {/* Fallback to legacy fields if no attributes JSON or empty object */}
+                  {(!listing.attributes || Object.keys(listing.attributes).length === 0) && (
+                    <>
+                      {listing.size && (
+                        <div>
+                          <span className="text-gray-500">Size</span>
+                          <p className="font-medium">{listing.size}</p>
+                        </div>
+                      )}
+                      {listing.brand && (
+                        <div>
+                          <span className="text-gray-500">Brand</span>
+                          <p className="font-medium">{listing.brand}</p>
+                        </div>
+                      )}
+                      {listing.color && (
+                        <div>
+                          <span className="text-gray-500">Color</span>
+                          <p className="font-medium">{listing.color}</p>
+                        </div>
+                      )}
+                      {listing.material && (
+                        <div>
+                          <span className="text-gray-500">Material</span>
+                          <p className="font-medium">{listing.material}</p>
+                        </div>
+                      )}
+                    </>
                   )}
-                  {listing.brand && (
-                    <div>
-                      <span className="text-gray-500">Brand</span>
-                      <p className="font-medium">{listing.brand}</p>
-                    </div>
-                  )}
-                  {listing.color && (
-                    <div>
-                      <span className="text-gray-500">Color</span>
-                      <p className="font-medium">{listing.color}</p>
-                    </div>
-                  )}
-                  {listing.material && (
-                    <div>
-                      <span className="text-gray-500">Material</span>
-                      <p className="font-medium">{listing.material}</p>
-                    </div>
-                  )}
-                  {listing.location && (
+                  {/* Display location from city/division or legacy field */}
+                  {(listing.city || listing.division || listing.location) && (
                     <div>
                       <span className="text-gray-500">Location</span>
-                      <p className="font-medium">{listing.location}</p>
+                      <p className="font-medium">
+                        {listing.division?.name && listing.city?.name
+                          ? `${listing.division.name}, ${listing.city.name}`
+                          : listing.city?.name || listing.location}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -518,18 +574,6 @@ export default function ListingDetailPage() {
       <Footer />
 
       {/* Modals */}
-      {showOfferModal && listing && (
-        <OfferModal
-          isOpen={showOfferModal}
-          onClose={() => setShowOfferModal(false)}
-          listing={listing}
-          onSuccess={() => {
-            setShowOfferModal(false);
-            // Could show a success message
-          }}
-        />
-      )}
-
       {showReportModal && (
         <ReportModal
           isOpen={showReportModal}

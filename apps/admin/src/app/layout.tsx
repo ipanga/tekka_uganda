@@ -8,8 +8,8 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Tekka Admin',
-  description: 'Admin dashboard for Tekka marketplace',
+  title: 'Tekka.ug Admin',
+  description: 'Admin dashboard for Tekka.ug marketplace',
 };
 
 export default function RootLayout({

@@ -24,11 +24,16 @@ final listingsFeedProvider = FutureProvider.family<List<Listing>, ListingsFilter
     final result = await repository.search(
       query: filter.searchQuery,
       category: filter.category,
+      categoryId: filter.categoryId,
       condition: filter.condition,
       occasion: filter.occasion,
       minPrice: filter.minPrice,
       maxPrice: filter.maxPrice,
       location: filter.location,
+      cityId: filter.cityId,
+      divisionId: filter.divisionId,
+      sortBy: filter.sortBy,
+      sortOrder: filter.sortOrder,
       page: filter.page,
       limit: filter.limit,
     );
@@ -124,10 +129,13 @@ final purchaseHistoryProvider = FutureProvider.family<List<Listing>, String>(
 
 /// Filter for listings query
 class ListingsFilter {
-  final ListingCategory? category;
+  final ListingCategory? category; // Legacy enum
+  final String? categoryId; // New hierarchical category ID
   final ItemCondition? condition;
   final Occasion? occasion;
   final String? location;
+  final String? cityId;
+  final String? divisionId;
   final int? minPrice;
   final int? maxPrice;
   final String? searchQuery;
@@ -138,9 +146,12 @@ class ListingsFilter {
 
   const ListingsFilter({
     this.category,
+    this.categoryId,
     this.condition,
     this.occasion,
     this.location,
+    this.cityId,
+    this.divisionId,
     this.minPrice,
     this.maxPrice,
     this.searchQuery,
@@ -152,9 +163,12 @@ class ListingsFilter {
 
   ListingsFilter copyWith({
     ListingCategory? category,
+    String? categoryId,
     ItemCondition? condition,
     Occasion? occasion,
     String? location,
+    String? cityId,
+    String? divisionId,
     int? minPrice,
     int? maxPrice,
     String? searchQuery,
@@ -165,9 +179,12 @@ class ListingsFilter {
   }) {
     return ListingsFilter(
       category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
       condition: condition ?? this.condition,
       occasion: occasion ?? this.occasion,
       location: location ?? this.location,
+      cityId: cityId ?? this.cityId,
+      divisionId: divisionId ?? this.divisionId,
       minPrice: minPrice ?? this.minPrice,
       maxPrice: maxPrice ?? this.maxPrice,
       searchQuery: searchQuery ?? this.searchQuery,
@@ -183,9 +200,12 @@ class ListingsFilter {
     if (identical(this, other)) return true;
     return other is ListingsFilter &&
         other.category == category &&
+        other.categoryId == categoryId &&
         other.condition == condition &&
         other.occasion == occasion &&
         other.location == location &&
+        other.cityId == cityId &&
+        other.divisionId == divisionId &&
         other.minPrice == minPrice &&
         other.maxPrice == maxPrice &&
         other.searchQuery == searchQuery &&
@@ -199,9 +219,12 @@ class ListingsFilter {
   int get hashCode {
     return Object.hash(
       category,
+      categoryId,
       condition,
       occasion,
       location,
+      cityId,
+      divisionId,
       minPrice,
       maxPrice,
       searchQuery,

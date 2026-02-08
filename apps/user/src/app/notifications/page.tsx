@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
   ChatBubbleLeftRightIcon,
-  CurrencyDollarIcon,
   CheckCircleIcon,
   XCircleIcon,
   TagIcon,
@@ -28,11 +27,6 @@ import { useNotificationStore } from '@/stores/notificationStore';
 
 const NOTIFICATION_ICONS: Record<NotificationType, React.ReactNode> = {
   MESSAGE: <ChatBubbleLeftRightIcon className="w-5 h-5" />,
-  OFFER: <CurrencyDollarIcon className="w-5 h-5" />,
-  OFFER_ACCEPTED: <CheckCircleIcon className="w-5 h-5 text-green-500" />,
-  OFFER_DECLINED: <XCircleIcon className="w-5 h-5 text-red-500" />,
-  OFFER_COUNTERED: <CurrencyDollarIcon className="w-5 h-5 text-yellow-500" />,
-  OFFER_EXPIRED: <CurrencyDollarIcon className="w-5 h-5 text-gray-400" />,
   LISTING_APPROVED: <CheckCircleIcon className="w-5 h-5 text-green-500" />,
   LISTING_REJECTED: <XCircleIcon className="w-5 h-5 text-red-500" />,
   LISTING_SOLD: <TagIcon className="w-5 h-5 text-pink-500" />,
@@ -114,7 +108,6 @@ export default function NotificationsPage() {
 
     if (data.chatId) return `/messages/${data.chatId}`;
     if (data.listingId) return `/listing/${data.listingId}`;
-    if (data.offerId) return '/offers';
     if (data.userId) return `/profile/${data.userId}`;
     return undefined;
   };

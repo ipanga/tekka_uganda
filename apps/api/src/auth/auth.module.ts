@@ -7,7 +7,8 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { AdminGuard, SuperAdminGuard } from './guards/admin.guard';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { AfricasTalkingService } from './africastalking.service';
+import { OtpService } from './otp.service';
+import { ThinkXCloudService } from './thinkxcloud.service';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
@@ -27,7 +28,8 @@ import { PrismaModule } from '../prisma/prisma.module';
   controllers: [AuthController],
   providers: [
     AuthService,
-    AfricasTalkingService,
+    ThinkXCloudService,
+    OtpService,
     FirebaseAuthGuard,
     JwtAuthGuard,
     AdminGuard,
@@ -35,7 +37,7 @@ import { PrismaModule } from '../prisma/prisma.module';
   ],
   exports: [
     AuthService,
-    AfricasTalkingService,
+    OtpService,
     FirebaseAuthGuard,
     JwtAuthGuard,
     AdminGuard,

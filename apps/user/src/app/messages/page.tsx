@@ -197,8 +197,6 @@ export default function MessagesPage() {
                                 {lastMessage.senderId === user?.id && 'You: '}
                                 {lastMessage.type === 'IMAGE'
                                   ? 'Sent an image'
-                                  : lastMessage.type === 'OFFER'
-                                  ? 'Made an offer'
                                   : lastMessage.type === 'MEETUP'
                                   ? 'Proposed a meetup'
                                   : truncateText(lastMessage.content, 50)}

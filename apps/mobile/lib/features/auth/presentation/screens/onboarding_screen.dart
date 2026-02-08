@@ -8,6 +8,8 @@ import '../../../../core/services/image_service_provider.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../router/app_router.dart';
 import '../../application/auth_provider.dart';
+import '../../../listing/application/category_provider.dart';
+import '../../../listing/domain/entities/location.dart';
 
 /// Onboarding screen for new users
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -21,22 +23,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
 
-  String? _selectedLocation;
+  // Location selection state (same pattern as create listing screen)
+  City? _selectedCity;
+  Division? _selectedDivision;
+
   File? _selectedImage;
   bool _isUploadingImage = false;
 
-  final List<String> _locations = [
-    'Kampala Central',
-    'Kampala - Nakawa',
-    'Kampala - Rubaga',
-    'Kampala - Makindye',
-    'Kampala - Kawempe',
-    'Entebbe',
-    'Jinja',
-    'Mukono',
-    'Wakiso',
-    'Other',
-  ];
+  @override
+  void initState() {
+    super.initState();
+    // Load cities (same as create listing screen)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(categoryProvider.notifier).loadData();
+    });
+  }
 
   @override
   void dispose() {
@@ -44,8 +45,25 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     super.dispose();
   }
 
+  /// Format location string from selected city/division (same pattern as web registration)
+  String? _getLocationString() {
+    if (_selectedCity == null) return null;
+    if (_selectedDivision != null) {
+      return '${_selectedCity!.name}, ${_selectedDivision!.name}';
+    }
+    return _selectedCity!.name;
+  }
+
   Future<void> _onComplete() async {
     if (!_formKey.currentState!.validate()) return;
+
+    // Validate city selection
+    if (_selectedCity == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select your city')),
+      );
+      return;
+    }
 
     try {
       String? photoUrl;
@@ -72,7 +90,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
       await ref.read(authNotifierProvider.notifier).updateProfile(
             displayName: _nameController.text.trim(),
-            location: _selectedLocation!,
+            location: _getLocationString()!,
             photoUrl: photoUrl,
           );
 
@@ -173,6 +191,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
+    final categoryState = ref.watch(categoryProvider);
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -301,29 +320,72 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
                 const SizedBox(height: AppSpacing.space4),
 
-                // Location dropdown
-                DropdownButtonFormField<String>(
-                  initialValue: _selectedLocation,
-                  decoration: const InputDecoration(
-                    labelText: 'Location',
-                    hintText: 'Where are you based?',
+                // Location selection (same pattern as create listing screen)
+                Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: 'City', style: AppTypography.titleSmall),
+                      const TextSpan(text: ' *', style: TextStyle(color: AppColors.error)),
+                    ],
                   ),
-                  items: _locations.map((location) {
-                    return DropdownMenuItem(
-                      value: location,
-                      child: Text(location),
-                    );
-                  }).toList(),
-                  onChanged: (value) {
-                    setState(() => _selectedLocation = value);
-                  },
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Please select your location';
-                    }
-                    return null;
-                  },
                 ),
+                const SizedBox(height: AppSpacing.space2),
+                if (categoryState.isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else if (categoryState.activeCities.isEmpty)
+                  Text(
+                    'Loading locations...',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: AppSpacing.space2,
+                    runSpacing: AppSpacing.space2,
+                    children: categoryState.activeCities.map((city) {
+                      final isSelected = _selectedCity?.id == city.id;
+                      return ChoiceChip(
+                        label: Text(city.name),
+                        selected: isSelected,
+                        onSelected: (_) {
+                          setState(() {
+                            _selectedCity = city;
+                            _selectedDivision = null;
+                          });
+                        },
+                        selectedColor: AppColors.primaryContainer,
+                      );
+                    }).toList(),
+                  ),
+
+                // Division selection (appears when city is selected)
+                if (_selectedCity != null &&
+                    _selectedCity!.activeDivisions.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.space4),
+                  Text(
+                    'Area (Optional)',
+                    style: AppTypography.titleSmall,
+                  ),
+                  const SizedBox(height: AppSpacing.space2),
+                  Wrap(
+                    spacing: AppSpacing.space2,
+                    runSpacing: AppSpacing.space2,
+                    children: _selectedCity!.activeDivisions.map((division) {
+                      final isSelected = _selectedDivision?.id == division.id;
+                      return FilterChip(
+                        label: Text(division.name),
+                        selected: isSelected,
+                        onSelected: (_) {
+                          setState(() {
+                            _selectedDivision = isSelected ? null : division;
+                          });
+                        },
+                        selectedColor: AppColors.primaryContainer,
+                      );
+                    }).toList(),
+                  ),
+                ],
 
                 const Spacer(),
 

@@ -6,10 +6,10 @@ import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'user_api_repository.dart';
 
-/// JWT-based authentication repository using Twilio OTP via backend API
+/// JWT-based authentication repository using SMS OTP via backend API
 ///
 /// This replaces Firebase Auth with custom JWT authentication.
-/// OTP is sent via Twilio through the backend API.
+/// OTP is sent via SMS through the backend API.
 class JwtAuthRepository implements AuthRepository {
   final ApiClient _apiClient;
   final UserApiRepository _userApiRepository;

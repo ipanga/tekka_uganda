@@ -28,7 +28,7 @@ export interface Listing {
   description: string;
   price: number;
   originalPrice?: number;
-  category: ListingCategory;
+  category?: ListingCategory; // Optional - may be null when using new categoryId system
   condition: ItemCondition;
   occasion?: ItemOccasion;
   size?: string;
@@ -46,6 +46,14 @@ export interface Listing {
   soldAt?: string;
   archivedAt?: string;
   seller?: User;
+  // New hierarchical category system fields
+  categoryId?: string;
+  categoryData?: Category;
+  attributes?: Record<string, string | string[]>;
+  cityId?: string;
+  divisionId?: string;
+  city?: City;
+  division?: Division;
 }
 
 export type ListingCategory =
@@ -126,36 +134,9 @@ export interface ApiResponse<T> {
   error?: string;
 }
 
-// Offer types
-export interface Offer {
-  id: string;
-  buyerId: string;
-  sellerId: string;
-  listingId: string;
-  amount: number;
-  status: OfferStatus;
-  message?: string;
-  counterAmount?: number;
-  expiresAt: string;
-  createdAt: string;
-  updatedAt: string;
-  buyer?: User;
-  seller?: User;
-  listing?: Listing;
-}
-
-export type OfferStatus =
-  | 'PENDING'
-  | 'ACCEPTED'
-  | 'REJECTED'
-  | 'COUNTERED'
-  | 'EXPIRED'
-  | 'CANCELLED';
-
 // Transaction types
 export interface Transaction {
   id: string;
-  offerId: string;
   buyerId: string;
   sellerId: string;
   listingId: string;
@@ -171,7 +152,6 @@ export interface Transaction {
   buyer?: User;
   seller?: User;
   listing?: Listing;
-  offer?: Offer;
 }
 
 export type TransactionStatus =
@@ -369,15 +349,6 @@ export interface Division {
 }
 
 // Label constants
-export const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
-  PENDING: 'Pending',
-  ACCEPTED: 'Accepted',
-  REJECTED: 'Rejected',
-  COUNTERED: 'Countered',
-  EXPIRED: 'Expired',
-  CANCELLED: 'Cancelled',
-};
-
 export const TRANSACTION_STATUS_LABELS: Record<TransactionStatus, string> = {
   PENDING: 'Pending',
   PAYMENT_PENDING: 'Payment Pending',

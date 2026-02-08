@@ -114,21 +114,6 @@ export class AdminController {
     return this.adminService.dismissReport(id, admin.id);
   }
 
-  // ===== OFFERS =====
-  @Get('offers')
-  async getOffers(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('status') status?: string,
-  ) {
-    return this.adminService.getOffers({ page, limit, status });
-  }
-
-  @Get('offers/:id')
-  async getOffer(@Param('id') id: string) {
-    return this.adminService.getOffer(id);
-  }
-
   // ===== ANALYTICS =====
   @Get('analytics/overview')
   async getAnalyticsOverview(@Query('period') period?: string) {
@@ -143,11 +128,6 @@ export class AdminController {
   @Get('analytics/listings')
   async getListingGrowth(@Query('period') period?: string) {
     return this.adminService.getListingGrowth(period);
-  }
-
-  @Get('analytics/transactions')
-  async getTransactionAnalytics(@Query('period') period?: string) {
-    return this.adminService.getTransactionAnalytics(period);
   }
 
   @Get('analytics/revenue-by-category')
@@ -294,31 +274,6 @@ export class AdminController {
   @Delete('locations/divisions/:id')
   async deleteDivision(@Param('id') id: string) {
     return this.adminService.deleteDivision(id);
-  }
-
-  // ===== TRANSACTIONS =====
-  @Get('transactions')
-  async getTransactions(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('status') status?: string,
-    @Query('search') search?: string,
-  ) {
-    return this.adminService.getTransactions({ page, limit, status, search });
-  }
-
-  @Get('transactions/:id')
-  async getTransaction(@Param('id') id: string) {
-    return this.adminService.getTransaction(id);
-  }
-
-  @Post('transactions/:id/cancel')
-  async cancelTransaction(
-    @Param('id') id: string,
-    @Body('reason') reason: string,
-    @CurrentUser() admin: Prisma.User,
-  ) {
-    return this.adminService.cancelTransaction(id, reason, admin.id);
   }
 
   // ===== VERIFICATIONS =====

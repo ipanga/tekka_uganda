@@ -106,7 +106,7 @@ export default function EditListingPage() {
       setImageUrls(data.imageUrls || []);
       setTitle(data.title);
       setDescription(data.description);
-      setCategory(data.category);
+      setCategory(data.category || '');
       setCondition(data.condition);
       setOccasion(data.occasion || '');
       setSize(data.size || '');
@@ -339,9 +339,11 @@ export default function EditListingPage() {
                 <Input
                   label="Title"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
+                  onChange={(e) => setTitle(e.target.value.slice(0, 150))}
                   placeholder="e.g., Beautiful Kitenge Dress"
                   required
+                  maxLength={150}
+                  helperText={`${title.length}/150 characters`}
                 />
 
                 <Textarea

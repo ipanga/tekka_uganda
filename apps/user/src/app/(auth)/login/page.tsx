@@ -23,18 +23,48 @@ export default function LoginPage() {
     }
   }, [user, authLoading, router]);
 
+  /**
+   * Normalize phone number to E.164 format for Uganda (+2567XXXXXXXX)
+   * Handles:
+   * - Input with leading 0 (0712345678 → +256712345678)
+   * - Input without leading 0 (712345678 → +256712345678)
+   * - Input with country code (256712345678 → +256712345678)
+   * - Already normalized (+256712345678 → +256712345678)
+   */
+  const normalizePhoneNumber = (phone: string): string => {
+    // Remove all non-digit characters except +
+    let cleaned = phone.replace(/[^\d+]/g, '');
+
+    // Handle already normalized number
+    if (cleaned.startsWith('+256')) {
+      return cleaned;
+    }
+
+    // Handle number with 256 prefix (no +)
+    if (cleaned.startsWith('256') && cleaned.length >= 12) {
+      return '+' + cleaned;
+    }
+
+    // Handle number with leading 0 (local format)
+    if (cleaned.startsWith('0')) {
+      return '+256' + cleaned.substring(1);
+    }
+
+    // Handle number without country code (assume Uganda)
+    return '+256' + cleaned;
+  };
+
   const handleSendOTP = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
     try {
-      // Format phone number for Uganda
-      let formattedPhone = phoneNumber;
-      if (phoneNumber.startsWith('0')) {
-        formattedPhone = '+256' + phoneNumber.substring(1);
-      } else if (!phoneNumber.startsWith('+')) {
-        formattedPhone = '+256' + phoneNumber;
+      const formattedPhone = normalizePhoneNumber(phoneNumber);
+
+      // Validate final format: +256 followed by 9 digits (total 13 characters)
+      if (!/^\+256[0-9]{9}$/.test(formattedPhone)) {
+        throw new Error('Please enter a valid 9-digit Ugandan phone number');
       }
 
       await sendOTP(formattedPhone);
@@ -104,20 +134,25 @@ export default function LoginPage() {
                   Phone Number
                 </label>
                 <div className="mt-1 flex">
-                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                    +256
+                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">
+                    🇺🇬 +256
                   </span>
                   <input
                     id="phone"
                     type="tel"
+                    inputMode="numeric"
                     value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     required
                     maxLength={10}
                     className="flex-1 block w-full rounded-r-lg border border-gray-300 px-3 py-2 focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500"
-                    placeholder="7XXXXXXXX"
+                    placeholder="712 345 678"
+                    autoComplete="tel-national"
                   />
                 </div>
+                <p className="mt-1.5 text-xs text-gray-500">
+                  Enter your number with or without the leading 0
+                </p>
               </div>
 
               <Button

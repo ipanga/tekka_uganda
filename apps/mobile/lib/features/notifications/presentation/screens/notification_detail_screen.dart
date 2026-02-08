@@ -320,13 +320,6 @@ class _NotificationDetailScreenState
           context.push(AppRoutes.listingDetail.replaceFirst(':id', targetId));
         };
         break;
-      case 'offer':
-        buttonText = 'View Offer';
-        buttonIcon = Icons.local_offer_outlined;
-        onPressed = () {
-          context.push(AppRoutes.offerDetail.replaceFirst(':id', targetId));
-        };
-        break;
       case 'user':
         buttonText = 'View Profile';
         buttonIcon = Icons.person_outline;
@@ -351,15 +344,6 @@ class _NotificationDetailScreenState
               context.push(AppRoutes.chat.replaceFirst(':id', targetId));
             };
             break;
-          case NotificationType.offer:
-          case NotificationType.offerAccepted:
-          case NotificationType.offerDeclined:
-            buttonText = 'View Offer';
-            buttonIcon = Icons.local_offer_outlined;
-            onPressed = () {
-              context.push(AppRoutes.offerDetail.replaceFirst(':id', targetId));
-            };
-            break;
           case NotificationType.listingApproved:
           case NotificationType.listingRejected:
           case NotificationType.listingSold:
@@ -379,6 +363,9 @@ class _NotificationDetailScreenState
                   .push(AppRoutes.userProfile.replaceFirst(':userId', targetId));
             };
             break;
+          case NotificationType.offer:
+          case NotificationType.offerAccepted:
+          case NotificationType.offerDeclined:
           case NotificationType.system:
             return const SizedBox.shrink();
         }

@@ -37,6 +37,7 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('listings');
   const [stats, setStats] = useState<UserStats | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
+  const [pendingListings, setPendingListings] = useState<Listing[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -56,14 +57,22 @@ export default function ProfilePage() {
 
     try {
       setLoading(true);
-      const [statsData, listingsData, reviewsData] = await Promise.all([
+      const [statsData, listingsData, pendingData, rejectedData, reviewsData] = await Promise.all([
         api.getMyStats(),
-        api.getMyListings({ limit: 20 }),
+        api.getMyListings({ status: 'ACTIVE', limit: 20 }),
+        api.getMyListings({ status: 'PENDING', limit: 20 }),
+        api.getMyListings({ status: 'REJECTED', limit: 20 }),
         api.getUserReviews(user.id, 'received'),
       ]);
 
       setStats(statsData);
       setListings(listingsData.data || []);
+      // Combine pending and rejected listings for the "Pending Review" tab
+      const allPendingListings = [
+        ...(pendingData.data || []),
+        ...(rejectedData.data || []),
+      ].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      setPendingListings(allPendingListings);
       setReviews(reviewsData.reviews || []);
     } catch (error) {
       console.error('Error loading profile:', error);
@@ -88,6 +97,7 @@ export default function ProfilePage() {
 
   const tabs = [
     { id: 'listings', label: 'Listings', count: stats?.activeListings },
+    { id: 'pending', label: 'Pending Review', count: pendingListings.length || undefined },
     { id: 'reviews', label: 'Reviews', count: stats?.totalReviews },
   ];
 
@@ -204,13 +214,6 @@ export default function ProfilePage() {
                 </CardContent>
               </Card>
             </Link>
-            <Link href="/offers">
-              <Card hoverable>
-                <CardContent className="py-4 text-center">
-                  <span className="text-pink-600 font-medium">My Offers</span>
-                </CardContent>
-              </Card>
-            </Link>
             <Link href="/messages">
               <Card hoverable>
                 <CardContent className="py-4 text-center">
@@ -232,6 +235,31 @@ export default function ProfilePage() {
                   {listings.map((listing) => (
                     <ListingCard key={listing.id} listing={listing} />
                   ))}
+                </div>
+              )}
+            </TabPanel>
+
+            <TabPanel tabId="pending" activeTab={activeTab}>
+              {pendingListings.length === 0 ? (
+                <Card>
+                  <CardContent className="py-12 text-center">
+                    <ShoppingBagIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No listings under review</h3>
+                    <p className="text-gray-500">Listings pending review, suspended, or rejected will appear here.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <p className="text-sm text-yellow-800">
+                      These listings are pending review, suspended, or rejected. Active listings will be visible to buyers once approved.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {pendingListings.map((listing) => (
+                      <ListingCard key={listing.id} listing={listing} showStatus />
+                    ))}
+                  </div>
                 </div>
               )}
             </TabPanel>

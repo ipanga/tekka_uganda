@@ -5,7 +5,7 @@
 export interface User {
   id: string;
   firebaseUid: string;
-  phoneNumber: string;
+  phoneNumber?: string;
   email?: string;
   displayName?: string;
   photoUrl?: string;
@@ -13,6 +13,7 @@ export interface User {
   location?: string;
   isVerified: boolean;
   isOnboardingComplete?: boolean;
+  showPhoneNumber?: boolean;
   createdAt: string;
   updatedAt?: string;
 }
@@ -80,7 +81,7 @@ export interface Listing {
   description: string;
   price: number;
   originalPrice?: number;
-  category: ListingCategory;
+  category?: ListingCategory; // Optional - may be null when using new categoryId system
   condition: ItemCondition;
   occasion?: ItemOccasion;
   size?: string;
@@ -161,11 +162,14 @@ export type UpdateListingDto = Partial<CreateListingDto>;
 
 export interface ListingQueryParams {
   search?: string;
+  categoryId?: string;
   category?: ListingCategory;
   condition?: ItemCondition;
   occasion?: ItemOccasion;
   minPrice?: number;
   maxPrice?: number;
+  cityId?: string;
+  divisionId?: string;
   location?: string;
   sellerId?: string;
   status?: ListingStatus;
@@ -173,52 +177,6 @@ export interface ListingQueryParams {
   limit?: number;
   sortBy?: 'createdAt' | 'price' | 'viewCount';
   sortOrder?: 'asc' | 'desc';
-}
-
-// ============================================
-// OFFER TYPES
-// ============================================
-
-export interface Offer {
-  id: string;
-  listingId: string;
-  listing?: Listing;
-  buyerId: string;
-  buyer?: User;
-  sellerId: string;
-  seller?: User;
-  amount: number;
-  counterAmount?: number;
-  message?: string;
-  status: OfferStatus;
-  expiresAt: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export type OfferStatus =
-  | 'PENDING'
-  | 'ACCEPTED'
-  | 'DECLINED'
-  | 'COUNTERED'
-  | 'EXPIRED'
-  | 'WITHDRAWN';
-
-export interface CreateOfferDto {
-  listingId: string;
-  amount: number;
-  message?: string;
-}
-
-export interface CounterOfferDto {
-  counterAmount: number;
-}
-
-export interface OfferQueryParams {
-  role?: 'buyer' | 'seller';
-  status?: OfferStatus;
-  page?: number;
-  limit?: number;
 }
 
 // ============================================
@@ -251,13 +209,11 @@ export interface Message {
   updatedAt: string;
 }
 
-export type MessageType = 'TEXT' | 'IMAGE' | 'OFFER' | 'SYSTEM' | 'MEETUP';
+export type MessageType = 'TEXT' | 'IMAGE' | 'SYSTEM' | 'MEETUP';
 
 export type MessageStatus = 'SENDING' | 'SENT' | 'DELIVERED' | 'READ' | 'FAILED';
 
 export interface MessageMetadata {
-  offerId?: string;
-  offer?: Offer;
   meetupId?: string;
   meetup?: Meetup;
   imageUrl?: string;
@@ -329,11 +285,6 @@ export interface Notification {
 
 export type NotificationType =
   | 'MESSAGE'
-  | 'OFFER'
-  | 'OFFER_ACCEPTED'
-  | 'OFFER_DECLINED'
-  | 'OFFER_COUNTERED'
-  | 'OFFER_EXPIRED'
   | 'LISTING_APPROVED'
   | 'LISTING_REJECTED'
   | 'LISTING_SOLD'
@@ -346,7 +297,6 @@ export type NotificationType =
 export interface NotificationData {
   listingId?: string;
   chatId?: string;
-  offerId?: string;
   userId?: string;
   meetupId?: string;
 }
@@ -584,15 +534,6 @@ export const STATUS_LABELS: Record<ListingStatus, string> = {
   SOLD: 'Sold',
   ARCHIVED: 'Archived',
   REJECTED: 'Rejected',
-};
-
-export const OFFER_STATUS_LABELS: Record<OfferStatus, string> = {
-  PENDING: 'Pending',
-  ACCEPTED: 'Accepted',
-  DECLINED: 'Declined',
-  COUNTERED: 'Counter Offered',
-  EXPIRED: 'Expired',
-  WITHDRAWN: 'Withdrawn',
 };
 
 export const MEETUP_STATUS_LABELS: Record<MeetupStatus, string> = {

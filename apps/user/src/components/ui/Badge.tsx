@@ -55,12 +55,6 @@ export function getStatusVariant(status: string): BadgeVariant {
     SOLD: 'info',
     ARCHIVED: 'default',
     REJECTED: 'danger',
-    // Offer statuses
-    ACCEPTED: 'success',
-    DECLINED: 'danger',
-    COUNTERED: 'warning',
-    EXPIRED: 'default',
-    WITHDRAWN: 'default',
     // Meetup statuses
     PROPOSED: 'warning',
     COMPLETED: 'success',

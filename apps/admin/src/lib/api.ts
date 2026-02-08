@@ -225,6 +225,17 @@ class ApiClient {
     });
   }
 
+  async suspendListing(id: string, reason?: string) {
+    return this.request(`/listings/admin/${id}/suspend`, {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async getListing(id: string) {
+    return this.request<any>(`/listings/${id}`);
+  }
+
   async deleteListing(id: string) {
     return this.request(`/admin/listings/${id}`, {
       method: 'DELETE',
@@ -299,23 +310,6 @@ class ApiClient {
       method: 'POST',
       body: JSON.stringify({ resolution, refundAmount }),
     });
-  }
-
-  // Offers
-  async getOffers(params?: {
-    page?: number;
-    limit?: number;
-    status?: string;
-  }): Promise<{ data?: any[]; totalPages?: number } | any[]> {
-    const query = new URLSearchParams();
-    if (params?.page) query.set('page', params.page.toString());
-    if (params?.limit) query.set('limit', params.limit.toString());
-    if (params?.status) query.set('status', params.status);
-    return this.request(`/admin/offers?${query.toString()}`);
-  }
-
-  async getOffer(id: string) {
-    return this.request(`/admin/offers/${id}`);
   }
 
   // Verifications

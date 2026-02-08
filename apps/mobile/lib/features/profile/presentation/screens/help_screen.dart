@@ -25,11 +25,11 @@ class _HelpScreenState extends State<HelpScreen> {
           'price, and category, then tap "Publish" to make it live.',
     ),
     _FaqItem(
-      question: 'How do I make an offer on an item?',
+      question: 'How do I contact a seller?',
       answer:
-          'Go to the item you\'re interested in and tap "Make Offer". '
-          'Enter your offer amount and optionally add a message. The seller '
-          'will be notified and can accept, decline, or counter your offer.',
+          'Go to the item you\'re interested in and tap "Message Seller". '
+          'You can ask questions about the item, discuss the price, and '
+          'arrange a meetup directly through the chat.',
     ),
     _FaqItem(
       question: 'How does payment work?',

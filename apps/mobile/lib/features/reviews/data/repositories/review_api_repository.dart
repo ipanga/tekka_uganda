@@ -52,20 +52,28 @@ class ReviewApiRepository implements ReviewRepository {
   Future<bool> canReview({
     required String reviewerId,
     required String revieweeId,
-    required String listingId,
+    String? listingId,
   }) async {
-    // Check if user has already reviewed this listing
-    // The API will return 409 if already reviewed, so we check client-side
+    // Check if user has already reviewed this listing or seller
     try {
       final response = await _apiClient.get<Map<String, dynamic>>(
         '/reviews/user/$reviewerId',
         queryParameters: {'type': 'given'},
       );
       final reviews = response['reviews'] as List<dynamic>? ?? [];
-      return !reviews.any((r) =>
-        (r as Map<String, dynamic>)['listingId'] == listingId ||
-        (r['listing'] as Map<String, dynamic>?)?['id'] == listingId
-      );
+
+      if (listingId != null) {
+        // Check for specific listing review
+        return !reviews.any((r) =>
+          (r as Map<String, dynamic>)['listingId'] == listingId ||
+          (r['listing'] as Map<String, dynamic>?)?['id'] == listingId
+        );
+      } else {
+        // Check if already reviewed this seller (any review)
+        return !reviews.any((r) =>
+          (r as Map<String, dynamic>)['revieweeId'] == revieweeId
+        );
+      }
     } catch (_) {
       return true; // Assume can review if check fails
     }
@@ -77,8 +85,8 @@ class ReviewApiRepository implements ReviewRepository {
     required String reviewerName,
     String? reviewerPhotoUrl,
     required String revieweeId,
-    required String listingId,
-    required String listingTitle,
+    String? listingId,
+    String? listingTitle,
     required int rating,
     String? comment,
     required ReviewType type,
@@ -87,7 +95,7 @@ class ReviewApiRepository implements ReviewRepository {
       '/reviews',
       data: {
         'revieweeId': revieweeId,
-        'listingId': listingId,
+        if (listingId != null) 'listingId': listingId,
         'rating': rating,
         if (comment != null) 'comment': comment,
       },

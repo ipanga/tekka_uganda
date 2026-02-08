@@ -304,11 +304,6 @@ class ProfileScreen extends ConsumerWidget {
                     onTap: () => context.push(AppRoutes.purchaseHistory),
                   ),
                   _MenuItem(
-                    icon: Icons.local_offer_outlined,
-                    title: 'My Offers',
-                    onTap: () => context.push(AppRoutes.myOffers),
-                  ),
-                  _MenuItem(
                     icon: Icons.star_border,
                     title: 'Reviews',
                     onTap: () {

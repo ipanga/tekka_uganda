@@ -15,6 +15,7 @@ export class ReviewsService {
 
   /**
    * Create a review for a user
+   * Now supports rating sellers without requiring a listing (purchase)
    */
   async create(reviewerId: string, dto: CreateReviewDto) {
     // Can't review yourself
@@ -31,40 +32,65 @@ export class ReviewsService {
       throw new NotFoundException('User not found');
     }
 
-    // listingId is required in this schema
-    if (!dto.listingId) {
-      throw new BadRequestException('Listing ID is required');
-    }
+    let listing = null;
+    let reviewType: ReviewType = ReviewType.BUYER; // Default: buyer reviewing seller
 
-    // Verify listing exists
-    const listing = await this.prisma.listing.findUnique({
-      where: { id: dto.listingId },
-    });
+    // If listingId is provided, verify it and determine review type
+    if (dto.listingId) {
+      listing = await this.prisma.listing.findUnique({
+        where: { id: dto.listingId },
+      });
 
-    if (!listing) {
-      throw new NotFoundException('Listing not found');
-    }
+      if (!listing) {
+        throw new NotFoundException('Listing not found');
+      }
 
-    // Check if already reviewed this listing
-    const existingReview = await this.prisma.review.findUnique({
-      where: {
-        reviewerId_listingId: {
-          reviewerId,
-          listingId: dto.listingId,
+      // Check if already reviewed this specific listing
+      const existingListingReview = await this.prisma.review.findUnique({
+        where: {
+          reviewerId_listingId: {
+            reviewerId,
+            listingId: dto.listingId,
+          },
         },
-      },
-    });
+      });
 
-    if (existingReview) {
-      throw new ConflictException('You have already reviewed this transaction');
-    }
+      if (existingListingReview) {
+        throw new ConflictException('You have already reviewed this listing');
+      }
 
-    // Determine review type (buyer reviewing seller or seller reviewing buyer)
-    let reviewType: ReviewType;
-    if (listing.sellerId === dto.revieweeId) {
-      reviewType = ReviewType.BUYER; // Buyer is reviewing the seller
+      // Determine review type based on listing ownership
+      if (listing.sellerId === dto.revieweeId) {
+        reviewType = ReviewType.BUYER; // Buyer is reviewing the seller
+      } else {
+        reviewType = ReviewType.SELLER; // Seller is reviewing the buyer
+      }
     } else {
-      reviewType = ReviewType.SELLER; // Seller is reviewing the buyer
+      // No listing provided - find a listing from this seller to use
+      // Check if reviewer already reviewed this seller through any listing
+      const existingSellerReview = await this.prisma.review.findFirst({
+        where: {
+          reviewerId,
+          revieweeId: dto.revieweeId,
+        },
+      });
+
+      if (existingSellerReview) {
+        throw new ConflictException('You have already reviewed this seller');
+      }
+
+      // Find the most recent listing from this seller to use as reference
+      const sellerListing = await this.prisma.listing.findFirst({
+        where: { sellerId: dto.revieweeId },
+        orderBy: { createdAt: 'desc' },
+      });
+
+      if (!sellerListing) {
+        throw new BadRequestException('Cannot review a seller with no listings');
+      }
+
+      listing = sellerListing;
+      reviewType = ReviewType.BUYER; // General seller review
     }
 
     // Create review
@@ -72,7 +98,7 @@ export class ReviewsService {
       data: {
         reviewerId,
         revieweeId: dto.revieweeId,
-        listingId: dto.listingId,
+        listingId: listing.id,
         rating: dto.rating,
         comment: dto.comment,
         type: reviewType,

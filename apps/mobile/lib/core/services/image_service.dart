@@ -50,23 +50,51 @@ class ImageService {
   }
 
   /// Compress image file
-  Future<File?> compressImage(File file, {int quality = 85}) async {
+  /// If the file is over 1MB, uses more aggressive compression to ensure
+  /// the final file size is under 1MB while preserving visual quality.
+  Future<File?> compressImage(File file, {int? quality}) async {
     final dir = await getTemporaryDirectory();
     final targetPath = path.join(
       dir.path,
       '${DateTime.now().millisecondsSinceEpoch}_compressed.jpg',
     );
 
+    // Determine compression quality based on file size
+    final fileSizeMB = getFileSizeMB(file);
+    int compressionQuality;
+
+    if (quality != null) {
+      compressionQuality = quality;
+    } else if (fileSizeMB > 3) {
+      // Very large files: aggressive compression
+      compressionQuality = 60;
+    } else if (fileSizeMB > 1) {
+      // Large files: moderate compression to get under 1MB
+      compressionQuality = 70;
+    } else {
+      // Normal files: standard quality
+      compressionQuality = 85;
+    }
+
     final result = await FlutterImageCompress.compressAndGetFile(
       file.absolute.path,
       targetPath,
-      quality: quality,
+      quality: compressionQuality,
       minWidth: 800,
       minHeight: 800,
     );
 
     if (result == null) return null;
-    return File(result.path);
+
+    final compressedFile = File(result.path);
+
+    // If still over 1MB, try again with lower quality
+    if (getFileSizeMB(compressedFile) > 1 && compressionQuality > 50) {
+      debugPrint('Image still over 1MB after compression, retrying with lower quality');
+      return compressImage(file, quality: compressionQuality - 15);
+    }
+
+    return compressedFile;
   }
 
   /// Compress multiple images

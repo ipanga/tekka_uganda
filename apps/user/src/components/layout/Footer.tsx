@@ -8,7 +8,7 @@ export function Footer() {
           {/* Brand */}
           <div className="col-span-1">
             <Link href="/" className="text-2xl font-bold text-white">
-              Tekka
+              Tekka.ug
             </Link>
             <p className="mt-4 text-sm">
               Uganda&apos;s premier marketplace for pre-loved fashion. Buy and sell with confidence.
@@ -19,11 +19,11 @@ export function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Shop</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/explore?category=dresses" className="hover:text-pink-400">Dresses</Link></li>
-              <li><Link href="/explore?category=tops" className="hover:text-pink-400">Tops</Link></li>
-              <li><Link href="/explore?category=traditional" className="hover:text-pink-400">Traditional Wear</Link></li>
-              <li><Link href="/explore?category=shoes" className="hover:text-pink-400">Shoes</Link></li>
-              <li><Link href="/explore?category=accessories" className="hover:text-pink-400">Accessories</Link></li>
+              <li><Link href="/?search=dresses" className="hover:text-pink-400">Dresses</Link></li>
+              <li><Link href="/?search=tops" className="hover:text-pink-400">Tops</Link></li>
+              <li><Link href="/?search=traditional" className="hover:text-pink-400">Traditional Wear</Link></li>
+              <li><Link href="/?search=shoes" className="hover:text-pink-400">Shoes</Link></li>
+              <li><Link href="/?search=accessories" className="hover:text-pink-400">Accessories</Link></li>
             </ul>
           </div>
 
@@ -50,7 +50,7 @@ export function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-gray-800 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-sm">&copy; {new Date().getFullYear()} Tekka. All rights reserved.</p>
+          <p className="text-sm">&copy; {new Date().getFullYear()} Tekka.ug. All rights reserved.</p>
           <div className="flex space-x-6 mt-4 md:mt-0">
             <a href="#" className="hover:text-pink-400">Instagram</a>
             <a href="#" className="hover:text-pink-400">Twitter</a>
