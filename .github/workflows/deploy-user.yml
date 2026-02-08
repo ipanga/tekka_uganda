@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'apps/user/**'
+      - 'infra/docker/**'
       - '.github/workflows/deploy-user.yml'
   workflow_dispatch:
 
@@ -75,6 +76,7 @@ jobs:
           passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
           script: |
             cd /opt/tekka
+            git pull origin main --ff-only || true
             docker compose -f infra/docker/docker-compose.prod.yml --env-file .env pull user
             docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d user
             docker image prune -f
