@@ -4,12 +4,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:local_auth/local_auth.dart';
 
 /// Biometric types available on the device
-enum AppBiometricType {
-  fingerprint,
-  faceId,
-  iris,
-  none,
-}
+enum AppBiometricType { fingerprint, faceId, iris, none }
 
 /// Status for biometric authentication
 class BiometricStatus {
@@ -82,8 +77,8 @@ class _BiometricKeys {
 /// Provider for biometric status
 final biometricAuthProvider =
     StateNotifierProvider<BiometricAuthNotifier, BiometricStatus>(
-  (ref) => BiometricAuthNotifier(),
-);
+      (ref) => BiometricAuthNotifier(),
+    );
 
 /// Notifier for managing biometric authentication
 class BiometricAuthNotifier extends StateNotifier<BiometricStatus> {
@@ -140,7 +135,8 @@ class BiometricAuthNotifier extends StateNotifier<BiometricStatus> {
           return AppBiometricType.iris;
         case BiometricType.strong:
         case BiometricType.weak:
-          return AppBiometricType.fingerprint; // Default to fingerprint for generic
+          return AppBiometricType
+              .fingerprint; // Default to fingerprint for generic
       }
     }).toList();
   }
@@ -166,9 +162,7 @@ class BiometricAuthNotifier extends StateNotifier<BiometricStatus> {
       );
 
       if (!authenticated) {
-        state = state.copyWith(
-          errorMessage: 'Authentication failed',
-        );
+        state = state.copyWith(errorMessage: 'Authentication failed');
       }
 
       return authenticated;
@@ -179,13 +173,15 @@ class BiometricAuthNotifier extends StateNotifier<BiometricStatus> {
           message = 'Biometric authentication is not available';
           break;
         case 'NotEnrolled':
-          message = 'No biometrics enrolled. Please set up biometrics in device settings.';
+          message =
+              'No biometrics enrolled. Please set up biometrics in device settings.';
           break;
         case 'LockedOut':
           message = 'Too many attempts. Please try again later.';
           break;
         case 'PermanentlyLockedOut':
-          message = 'Biometrics permanently locked. Please unlock device first.';
+          message =
+              'Biometrics permanently locked. Please unlock device first.';
           break;
         default:
           message = 'Authentication error: ${e.message}';
@@ -193,9 +189,7 @@ class BiometricAuthNotifier extends StateNotifier<BiometricStatus> {
       state = state.copyWith(errorMessage: message);
       return false;
     } catch (e) {
-      state = state.copyWith(
-        errorMessage: 'An unexpected error occurred',
-      );
+      state = state.copyWith(errorMessage: 'An unexpected error occurred');
       return false;
     }
   }
@@ -204,7 +198,8 @@ class BiometricAuthNotifier extends StateNotifier<BiometricStatus> {
   Future<bool> enableBiometric() async {
     if (!state.isAvailable) {
       state = state.copyWith(
-        errorMessage: 'Biometric authentication is not available on this device',
+        errorMessage:
+            'Biometric authentication is not available on this device',
       );
       return false;
     }
@@ -230,10 +225,7 @@ class BiometricAuthNotifier extends StateNotifier<BiometricStatus> {
 
     try {
       await _secureStorage.write(key: _BiometricKeys.enabled, value: 'true');
-      state = state.copyWith(
-        isEnabled: true,
-        isLoading: false,
-      );
+      state = state.copyWith(isEnabled: true, isLoading: false);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -250,10 +242,7 @@ class BiometricAuthNotifier extends StateNotifier<BiometricStatus> {
 
     try {
       await _secureStorage.write(key: _BiometricKeys.enabled, value: 'false');
-      state = state.copyWith(
-        isEnabled: false,
-        isLoading: false,
-      );
+      state = state.copyWith(isEnabled: false, isLoading: false);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -303,7 +292,9 @@ final biometricAvailableProvider = FutureProvider<bool>((ref) async {
 });
 
 /// Provider for getting available biometric types
-final availableBiometricsProvider = FutureProvider<List<AppBiometricType>>((ref) async {
+final availableBiometricsProvider = FutureProvider<List<AppBiometricType>>((
+  ref,
+) async {
   final localAuth = LocalAuthentication();
   final biometrics = await localAuth.getAvailableBiometrics();
 

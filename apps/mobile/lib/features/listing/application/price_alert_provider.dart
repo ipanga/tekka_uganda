@@ -147,7 +147,7 @@ class PriceAlertNotifier extends StateNotifier<PriceAlertState> {
   final UserApiRepository _userApiRepository;
 
   PriceAlertNotifier(this._repository, this._userApiRepository)
-      : super(const PriceAlertState());
+    : super(const PriceAlertState());
 
   /// Toggle price alerts on/off
   Future<void> togglePriceAlerts(bool enabled) async {
@@ -155,10 +155,7 @@ class PriceAlertNotifier extends StateNotifier<PriceAlertState> {
 
     try {
       await _userApiRepository.updateSettings(priceAlertsEnabled: enabled);
-      state = state.copyWith(
-        isLoading: false,
-        priceAlertsEnabled: enabled,
-      );
+      state = state.copyWith(isLoading: false, priceAlertsEnabled: enabled);
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
@@ -224,7 +221,7 @@ class PriceAlertNotifier extends StateNotifier<PriceAlertState> {
 /// Provider for price alert operations
 final priceAlertProvider =
     StateNotifierProvider<PriceAlertNotifier, PriceAlertState>((ref) {
-  final repository = ref.watch(priceAlertRepositoryProvider);
-  final userApiRepository = ref.watch(userApiRepositoryProvider);
-  return PriceAlertNotifier(repository, userApiRepository);
-});
+      final repository = ref.watch(priceAlertRepositoryProvider);
+      final userApiRepository = ref.watch(userApiRepositoryProvider);
+      return PriceAlertNotifier(repository, userApiRepository);
+    });

@@ -91,7 +91,8 @@ extension UgandaRegionX on UgandaRegion {
 
   static UgandaRegion fromString(String name) {
     return UgandaRegion.values.firstWhere(
-      (r) => r.name == name || r.displayName.toLowerCase() == name.toLowerCase(),
+      (r) =>
+          r.name == name || r.displayName.toLowerCase() == name.toLowerCase(),
       orElse: () => UgandaRegion.kampala,
     );
   }
@@ -99,10 +100,18 @@ extension UgandaRegionX on UgandaRegion {
   /// Get all regions grouped by area
   static Map<String, List<UgandaRegion>> get grouped {
     return {
-      'Central': UgandaRegion.values.where((r) => r.region == 'Central').toList(),
-      'Eastern': UgandaRegion.values.where((r) => r.region == 'Eastern').toList(),
-      'Western': UgandaRegion.values.where((r) => r.region == 'Western').toList(),
-      'Northern': UgandaRegion.values.where((r) => r.region == 'Northern').toList(),
+      'Central': UgandaRegion.values
+          .where((r) => r.region == 'Central')
+          .toList(),
+      'Eastern': UgandaRegion.values
+          .where((r) => r.region == 'Eastern')
+          .toList(),
+      'Western': UgandaRegion.values
+          .where((r) => r.region == 'Western')
+          .toList(),
+      'Northern': UgandaRegion.values
+          .where((r) => r.region == 'Northern')
+          .toList(),
     };
   }
 }
@@ -137,15 +146,18 @@ const String _locationKey = 'default_location';
 
 /// Provider for location preferences state
 final locationPreferencesProvider =
-    StateNotifierProvider<LocationPreferencesNotifier, LocationPreferencesState>(
-  (ref) => LocationPreferencesNotifier(ref),
-);
+    StateNotifierProvider<
+      LocationPreferencesNotifier,
+      LocationPreferencesState
+    >((ref) => LocationPreferencesNotifier(ref));
 
 /// Notifier for managing location preferences
-class LocationPreferencesNotifier extends StateNotifier<LocationPreferencesState> {
+class LocationPreferencesNotifier
+    extends StateNotifier<LocationPreferencesState> {
   final Ref _ref;
 
-  LocationPreferencesNotifier(this._ref) : super(const LocationPreferencesState()) {
+  LocationPreferencesNotifier(this._ref)
+    : super(const LocationPreferencesState()) {
     _loadLocation();
   }
 
@@ -160,10 +172,7 @@ class LocationPreferencesNotifier extends StateNotifier<LocationPreferencesState
 
       if (locationName != null) {
         final location = UgandaRegionX.fromString(locationName);
-        state = state.copyWith(
-          selectedLocation: location,
-          isLoading: false,
-        );
+        state = state.copyWith(selectedLocation: location, isLoading: false);
       }
 
       // Then sync with API
@@ -204,15 +213,14 @@ class LocationPreferencesNotifier extends StateNotifier<LocationPreferencesState
       // Save to API
       try {
         final userApiRepository = _ref.read(userApiRepositoryProvider);
-        await userApiRepository.updateSettings(defaultLocation: location.displayName);
+        await userApiRepository.updateSettings(
+          defaultLocation: location.displayName,
+        );
       } catch (_) {
         // Non-critical - location still saved locally
       }
 
-      state = state.copyWith(
-        selectedLocation: location,
-        isLoading: false,
-      );
+      state = state.copyWith(selectedLocation: location, isLoading: false);
       return true;
     } catch (e) {
       state = state.copyWith(

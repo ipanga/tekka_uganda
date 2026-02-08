@@ -79,9 +79,7 @@ class _HelpScreenState extends State<HelpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Help & Support'),
-      ),
+      appBar: AppBar(title: const Text('Help & Support')),
       body: ListView(
         children: [
           const SizedBox(height: AppSpacing.space4),
@@ -211,10 +209,7 @@ class _HelpScreenState extends State<HelpScreen> {
                     Icons.privacy_tip_outlined,
                     color: AppColors.onSurfaceVariant,
                   ),
-                  title: Text(
-                    'Privacy Policy',
-                    style: AppTypography.bodyLarge,
-                  ),
+                  title: Text('Privacy Policy', style: AppTypography.bodyLarge),
                   trailing: const Icon(
                     Icons.chevron_right,
                     color: AppColors.onSurfaceVariant,
@@ -250,17 +245,17 @@ class _HelpScreenState extends State<HelpScreen> {
   void _launchEmail() {
     const email = 'support@tekka.ug';
     Clipboard.setData(const ClipboardData(text: email));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Email copied: $email')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Email copied: $email')));
   }
 
   void _launchPhone() {
     const phone = '+256 700 000 000';
     Clipboard.setData(const ClipboardData(text: phone));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Phone copied: $phone')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Phone copied: $phone')));
   }
 }
 
@@ -353,11 +348,7 @@ class _ContactButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              size: 20,
-              color: AppColors.primary,
-            ),
+            Icon(icon, size: 20, color: AppColors.primary),
             const SizedBox(width: AppSpacing.space2),
             Text(
               label,

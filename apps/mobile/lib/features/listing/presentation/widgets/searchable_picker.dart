@@ -105,10 +105,7 @@ class _SearchablePickerState extends State<SearchablePicker> {
                     ),
                   ),
                 ),
-                const Icon(
-                  Icons.keyboard_arrow_down,
-                  color: Color(0xFF9CA3AF),
-                ),
+                const Icon(Icons.keyboard_arrow_down, color: Color(0xFF9CA3AF)),
               ],
             ),
           ),
@@ -118,10 +115,7 @@ class _SearchablePickerState extends State<SearchablePicker> {
           const SizedBox(height: 4),
           Text(
             widget.errorText!,
-            style: const TextStyle(
-              fontSize: 12,
-              color: Colors.red,
-            ),
+            style: const TextStyle(fontSize: 12, color: Colors.red),
           ),
         ],
       ],
@@ -134,10 +128,7 @@ class PickerOption {
   final String value;
   final String label;
 
-  const PickerOption({
-    required this.value,
-    required this.label,
-  });
+  const PickerOption({required this.value, required this.label});
 }
 
 /// The bottom sheet modal content
@@ -194,9 +185,7 @@ class _SearchablePickerModalState extends State<_SearchablePickerModal> {
     final screenHeight = MediaQuery.of(context).size.height;
 
     return Container(
-      constraints: BoxConstraints(
-        maxHeight: screenHeight * 0.75,
-      ),
+      constraints: BoxConstraints(maxHeight: screenHeight * 0.75),
       decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -285,18 +274,16 @@ class _SearchablePickerModalState extends State<_SearchablePickerModal> {
                           option.label,
                           style: TextStyle(
                             fontSize: 16,
-                            fontWeight:
-                                isSelected ? FontWeight.w500 : FontWeight.normal,
+                            fontWeight: isSelected
+                                ? FontWeight.w500
+                                : FontWeight.normal,
                             color: isSelected
                                 ? const Color(0xFFEC4899)
                                 : const Color(0xFF111827),
                           ),
                         ),
                         trailing: isSelected
-                            ? const Icon(
-                                Icons.check,
-                                color: Color(0xFFEC4899),
-                              )
+                            ? const Icon(Icons.check, color: Color(0xFFEC4899))
                             : null,
                       );
                     },

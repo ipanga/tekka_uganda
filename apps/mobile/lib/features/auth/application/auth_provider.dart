@@ -55,15 +55,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final verificationId = await _repository.sendOtp(phoneNumber);
-      state = state.copyWith(
-        isLoading: false,
-        verificationId: verificationId,
-      );
+      state = state.copyWith(isLoading: false, verificationId: verificationId);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -83,10 +77,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(isLoading: false);
       return user;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -106,10 +97,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       state = state.copyWith(isLoading: false);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -121,10 +109,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await _repository.signOut();
       state = const AuthState();
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
     }
   }
@@ -141,17 +126,9 @@ class AuthState {
   final String? error;
   final String? verificationId;
 
-  const AuthState({
-    this.isLoading = false,
-    this.error,
-    this.verificationId,
-  });
+  const AuthState({this.isLoading = false, this.error, this.verificationId});
 
-  AuthState copyWith({
-    bool? isLoading,
-    String? error,
-    String? verificationId,
-  }) {
+  AuthState copyWith({bool? isLoading, String? error, String? verificationId}) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
       error: error,
@@ -161,22 +138,27 @@ class AuthState {
 }
 
 /// Auth notifier provider
-final authNotifierProvider =
-    StateNotifierProvider<AuthNotifier, AuthState>((ref) {
+final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((
+  ref,
+) {
   final repository = ref.watch(authRepositoryProvider);
   return AuthNotifier(repository);
 });
 
 /// Public user provider - for viewing other user profiles
-final publicUserProvider =
-    FutureProvider.family<AppUser?, String>((ref, userId) async {
+final publicUserProvider = FutureProvider.family<AppUser?, String>((
+  ref,
+  userId,
+) async {
   final repository = ref.watch(authRepositoryProvider);
   return repository.getUserById(userId);
 });
 
 /// User stats provider
-final userStatsProvider =
-    FutureProvider.family<UserStats?, String>((ref, userId) async {
+final userStatsProvider = FutureProvider.family<UserStats?, String>((
+  ref,
+  userId,
+) async {
   final userApiRepository = ref.watch(userApiRepositoryProvider);
   try {
     return await userApiRepository.getUserStats(userId);
@@ -209,7 +191,8 @@ final blockedUsersProvider = FutureProvider<List<AppUser>>((ref) async {
 class UserProfileNotifier extends StateNotifier<UserProfileState> {
   final UserApiRepository _userApiRepository;
 
-  UserProfileNotifier(this._userApiRepository) : super(const UserProfileState());
+  UserProfileNotifier(this._userApiRepository)
+    : super(const UserProfileState());
 
   /// Update current user's profile
   Future<AppUser> updateProfile({
@@ -259,7 +242,10 @@ class UserProfileNotifier extends StateNotifier<UserProfileState> {
   }
 
   /// Register FCM token for push notifications
-  Future<void> registerFcmToken(String token, {String platform = 'android'}) async {
+  Future<void> registerFcmToken(
+    String token, {
+    String platform = 'android',
+  }) async {
     try {
       await _userApiRepository.registerFcmToken(token, platform);
     } catch (e) {
@@ -286,15 +272,9 @@ class UserProfileState {
   final bool isLoading;
   final String? error;
 
-  const UserProfileState({
-    this.isLoading = false,
-    this.error,
-  });
+  const UserProfileState({this.isLoading = false, this.error});
 
-  UserProfileState copyWith({
-    bool? isLoading,
-    String? error,
-  }) {
+  UserProfileState copyWith({bool? isLoading, String? error}) {
     return UserProfileState(
       isLoading: isLoading ?? this.isLoading,
       error: error,
@@ -305,6 +285,6 @@ class UserProfileState {
 /// User profile notifier provider
 final userProfileNotifierProvider =
     StateNotifierProvider<UserProfileNotifier, UserProfileState>((ref) {
-  final userApiRepository = ref.watch(userApiRepositoryProvider);
-  return UserProfileNotifier(userApiRepository);
-});
+      final userApiRepository = ref.watch(userApiRepositoryProvider);
+      return UserProfileNotifier(userApiRepository);
+    });

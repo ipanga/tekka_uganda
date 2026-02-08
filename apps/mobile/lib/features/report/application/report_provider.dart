@@ -14,7 +14,10 @@ final reportRepositoryProvider = Provider<ReportRepository>((ref) {
 });
 
 /// Check if current user has reported another user
-final hasReportedProvider = FutureProvider.family<bool, String>((ref, reportedUserId) async {
+final hasReportedProvider = FutureProvider.family<bool, String>((
+  ref,
+  reportedUserId,
+) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return false;
 
@@ -23,7 +26,10 @@ final hasReportedProvider = FutureProvider.family<bool, String>((ref, reportedUs
 });
 
 /// Check if a user is blocked
-final isBlockedProvider = FutureProvider.family<bool, String>((ref, otherUserId) async {
+final isBlockedProvider = FutureProvider.family<bool, String>((
+  ref,
+  otherUserId,
+) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return false;
 
@@ -72,7 +78,7 @@ class ReportActionsNotifier extends StateNotifier<ReportActionsState> {
   final String _userName;
 
   ReportActionsNotifier(this._repository, this._userId, this._userName)
-      : super(const ReportActionsState());
+    : super(const ReportActionsState());
 
   Future<Report?> submitReport(CreateReportRequest request) async {
     state = state.copyWith(isLoading: true, error: null, isSuccess: false);
@@ -120,13 +126,16 @@ class ReportActionsNotifier extends StateNotifier<ReportActionsState> {
 
 /// Report actions provider
 final reportActionsProvider =
-    StateNotifierProvider.autoDispose<ReportActionsNotifier, ReportActionsState>((ref) {
-  final user = ref.watch(currentUserProvider);
-  final repository = ref.watch(reportRepositoryProvider);
+    StateNotifierProvider.autoDispose<
+      ReportActionsNotifier,
+      ReportActionsState
+    >((ref) {
+      final user = ref.watch(currentUserProvider);
+      final repository = ref.watch(reportRepositoryProvider);
 
-  return ReportActionsNotifier(
-    repository,
-    user?.uid ?? '',
-    user?.displayName ?? 'User',
-  );
-});
+      return ReportActionsNotifier(
+        repository,
+        user?.uid ?? '',
+        user?.displayName ?? 'User',
+      );
+    });

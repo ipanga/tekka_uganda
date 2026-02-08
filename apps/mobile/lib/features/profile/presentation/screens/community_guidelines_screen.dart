@@ -10,9 +10,7 @@ class CommunityGuidelinesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Community Guidelines'),
-      ),
+      appBar: AppBar(title: const Text('Community Guidelines')),
       body: ListView(
         padding: AppSpacing.screenPadding,
         children: [
@@ -30,10 +28,7 @@ class CommunityGuidelinesScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.people_outline,
-                      color: AppColors.primary,
-                    ),
+                    Icon(Icons.people_outline, color: AppColors.primary),
                     const SizedBox(width: AppSpacing.space2),
                     Text(
                       'Building a Safe Community',
@@ -153,9 +148,7 @@ class CommunityGuidelinesScreen extends StatelessWidget {
             '• Focus on the transaction, not personal attacks\n'
             '• Do not offer incentives for positive reviews\n'
             '• Report fake or manipulated reviews',
-            style: AppTypography.bodyMedium.copyWith(
-              height: 1.6,
-            ),
+            style: AppTypography.bodyMedium.copyWith(height: 1.6),
           ),
 
           const SizedBox(height: AppSpacing.space6),
@@ -175,9 +168,7 @@ class CommunityGuidelinesScreen extends StatelessWidget {
             '• Harassment or threatening messages\n'
             '• Fake reviews or rating manipulation\n\n'
             'Use the report button on listings or user profiles, or contact us at support@tekka.ug',
-            style: AppTypography.bodyMedium.copyWith(
-              height: 1.6,
-            ),
+            style: AppTypography.bodyMedium.copyWith(height: 1.6),
           ),
 
           const SizedBox(height: AppSpacing.space6),
@@ -197,9 +188,7 @@ class CommunityGuidelinesScreen extends StatelessWidget {
             '• Permanent account ban\n'
             '• Reporting to law enforcement (for serious violations)\n\n'
             'We review all reports and take appropriate action based on the severity of the violation.',
-            style: AppTypography.bodyMedium.copyWith(
-              height: 1.6,
-            ),
+            style: AppTypography.bodyMedium.copyWith(height: 1.6),
           ),
 
           const SizedBox(height: AppSpacing.space8),
@@ -220,10 +209,7 @@ class CommunityGuidelinesScreen extends StatelessWidget {
                   color: AppColors.primary,
                 ),
                 const SizedBox(height: AppSpacing.space3),
-                Text(
-                  'Our Community Pledge',
-                  style: AppTypography.titleMedium,
-                ),
+                Text('Our Community Pledge', style: AppTypography.titleMedium),
                 const SizedBox(height: AppSpacing.space2),
                 Text(
                   'Together, we commit to creating a marketplace where everyone feels welcome, safe, and respected. Thank you for being part of the Tekka community!',
@@ -289,26 +275,19 @@ class _GuidelineCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.space3),
-          ...items.map((item) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.space2),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(
-                      Icons.check_circle_outline,
-                      size: 18,
-                      color: color,
-                    ),
-                    const SizedBox(width: AppSpacing.space2),
-                    Expanded(
-                      child: Text(
-                        item,
-                        style: AppTypography.bodyMedium,
-                      ),
-                    ),
-                  ],
-                ),
-              )),
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.space2),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.check_circle_outline, size: 18, color: color),
+                  const SizedBox(width: AppSpacing.space2),
+                  Expanded(child: Text(item, style: AppTypography.bodyMedium)),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -326,18 +305,9 @@ class _ProhibitedItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.space2),
       child: Row(
         children: [
-          const Icon(
-            Icons.block,
-            size: 18,
-            color: AppColors.error,
-          ),
+          const Icon(Icons.block, size: 18, color: AppColors.error),
           const SizedBox(width: AppSpacing.space2),
-          Expanded(
-            child: Text(
-              text,
-              style: AppTypography.bodyMedium,
-            ),
-          ),
+          Expanded(child: Text(text, style: AppTypography.bodyMedium)),
         ],
       ),
     );

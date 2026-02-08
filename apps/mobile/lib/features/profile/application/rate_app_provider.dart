@@ -19,8 +19,7 @@ class _StoreUrls {
   static const String appStoreId = 'com.tekka.app';
   static const String playStoreId = 'com.tekka.app';
 
-  static String get appStoreUrl =>
-      'https://apps.apple.com/app/id$appStoreId';
+  static String get appStoreUrl => 'https://apps.apple.com/app/id$appStoreId';
 
   static String get playStoreUrl =>
       'https://play.google.com/store/apps/details?id=$playStoreId';
@@ -71,8 +70,9 @@ class RateAppState {
 
     // Don't prompt more than once per week
     if (lastPromptDate != null) {
-      final daysSinceLastPrompt =
-          DateTime.now().difference(lastPromptDate!).inDays;
+      final daysSinceLastPrompt = DateTime.now()
+          .difference(lastPromptDate!)
+          .inDays;
       if (daysSinceLastPrompt < 7) return false;
     }
 
@@ -136,7 +136,10 @@ class RateAppNotifier extends StateNotifier<RateAppState> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final now = DateTime.now();
-      await prefs.setInt(_RateAppKeys.lastPromptDate, now.millisecondsSinceEpoch);
+      await prefs.setInt(
+        _RateAppKeys.lastPromptDate,
+        now.millisecondsSinceEpoch,
+      );
       state = state.copyWith(lastPromptDate: now);
     } catch (e) {
       // Silently fail - not critical
@@ -219,10 +222,7 @@ class RateAppNotifier extends StateNotifier<RateAppState> {
         state = state.copyWith(isLoading: false);
         return true;
       } else {
-        state = state.copyWith(
-          isLoading: false,
-          error: 'Could not open store',
-        );
+        state = state.copyWith(isLoading: false, error: 'Could not open store');
         return false;
       }
     } catch (e) {

@@ -85,7 +85,8 @@ class ReportListingScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ReportListingScreen> createState() => _ReportListingScreenState();
+  ConsumerState<ReportListingScreen> createState() =>
+      _ReportListingScreenState();
 }
 
 class _ReportListingScreenState extends ConsumerState<ReportListingScreen> {
@@ -119,9 +120,7 @@ class _ReportListingScreenState extends ConsumerState<ReportListingScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Report Listing'),
-      ),
+      appBar: AppBar(title: const Text('Report Listing')),
       body: Column(
         children: [
           Expanded(
@@ -145,7 +144,9 @@ class _ReportListingScreenState extends ConsumerState<ReportListingScreen> {
                           height: 60,
                           decoration: BoxDecoration(
                             color: AppColors.gray100,
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusSm,
+                            ),
                           ),
                           child: const Icon(
                             Icons.shopping_bag_outlined,
@@ -215,15 +216,17 @@ class _ReportListingScreenState extends ConsumerState<ReportListingScreen> {
                   ),
                   const SizedBox(height: AppSpacing.space3),
 
-                  ...ListingReportReason.values.map((reason) => _ReasonTile(
-                        reason: reason,
-                        isSelected: _selectedReason == reason,
-                        onTap: () {
-                          setState(() {
-                            _selectedReason = reason;
-                          });
-                        },
-                      )),
+                  ...ListingReportReason.values.map(
+                    (reason) => _ReasonTile(
+                      reason: reason,
+                      isSelected: _selectedReason == reason,
+                      onTap: () {
+                        setState(() {
+                          _selectedReason = reason;
+                        });
+                      },
+                    ),
+                  ),
 
                   const SizedBox(height: AppSpacing.space6),
 
@@ -240,7 +243,9 @@ class _ReportListingScreenState extends ConsumerState<ReportListingScreen> {
                     decoration: InputDecoration(
                       hintText: 'Provide more context about this issue...',
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
                       ),
                     ),
                   ),
@@ -346,11 +351,7 @@ class _ReportListingScreenState extends ConsumerState<ReportListingScreen> {
                 color: AppColors.successContainer,
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.check,
-                color: AppColors.success,
-                size: 24,
-              ),
+              child: Icon(Icons.check, color: AppColors.success, size: 24),
             ),
             const SizedBox(width: 12),
             const Text('Report Submitted'),
@@ -404,7 +405,9 @@ class _ReasonTile extends StatelessWidget {
           children: [
             Icon(
               isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.onSurfaceVariant,
             ),
             const SizedBox(width: AppSpacing.space3),
             Expanded(
@@ -414,7 +417,9 @@ class _ReasonTile extends StatelessWidget {
                   Text(
                     reason.displayName,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                   Text(

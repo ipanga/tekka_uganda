@@ -26,9 +26,9 @@ class FirebaseAuthRepository implements AuthRepository {
     FirebaseAuth? auth,
     required UserApiRepository userApiRepository,
     required ApiClient apiClient,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _userApiRepository = userApiRepository,
-        _apiClient = apiClient;
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _userApiRepository = userApiRepository,
+       _apiClient = apiClient;
 
   @override
   Stream<AppUser?> get authStateChanges {

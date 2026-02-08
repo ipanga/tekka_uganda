@@ -11,7 +11,8 @@ class SafeLocationsScreen extends ConsumerStatefulWidget {
   const SafeLocationsScreen({super.key});
 
   @override
-  ConsumerState<SafeLocationsScreen> createState() => _SafeLocationsScreenState();
+  ConsumerState<SafeLocationsScreen> createState() =>
+      _SafeLocationsScreenState();
 }
 
 class _SafeLocationsScreenState extends ConsumerState<SafeLocationsScreen> {
@@ -24,14 +25,11 @@ class _SafeLocationsScreenState extends ConsumerState<SafeLocationsScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Safe Meetup Locations'),
-      ),
+      appBar: AppBar(title: const Text('Safe Meetup Locations')),
       body: locationsAsync.when(
         data: (locations) {
           // Get unique areas
-          final areas = locations.map((l) => l.area).toSet().toList()
-            ..sort();
+          final areas = locations.map((l) => l.area).toSet().toList()..sort();
 
           // Filter locations
           var filtered = locations;
@@ -58,13 +56,17 @@ class _SafeLocationsScreenState extends ConsumerState<SafeLocationsScreen> {
                           _FilterChip(
                             label: 'All Types',
                             selected: _selectedType == null,
-                            onSelected: () => setState(() => _selectedType = null),
+                            onSelected: () =>
+                                setState(() => _selectedType = null),
                           ),
-                          ...MeetupLocationType.values.map((type) => _FilterChip(
-                            label: type.displayName,
-                            selected: _selectedType == type,
-                            onSelected: () => setState(() => _selectedType = type),
-                          )),
+                          ...MeetupLocationType.values.map(
+                            (type) => _FilterChip(
+                              label: type.displayName,
+                              selected: _selectedType == type,
+                              onSelected: () =>
+                                  setState(() => _selectedType = type),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -75,7 +77,9 @@ class _SafeLocationsScreenState extends ConsumerState<SafeLocationsScreen> {
                       decoration: InputDecoration(
                         labelText: 'Filter by Area',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusSm,
+                          ),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -87,12 +91,13 @@ class _SafeLocationsScreenState extends ConsumerState<SafeLocationsScreen> {
                           value: null,
                           child: Text('All Areas'),
                         ),
-                        ...areas.map((area) => DropdownMenuItem(
-                          value: area,
-                          child: Text(area),
-                        )),
+                        ...areas.map(
+                          (area) =>
+                              DropdownMenuItem(value: area, child: Text(area)),
+                        ),
                       ],
-                      onChanged: (value) => setState(() => _selectedArea = value),
+                      onChanged: (value) =>
+                          setState(() => _selectedArea = value),
                     ),
                   ],
                 ),
@@ -159,11 +164,7 @@ class _SafeLocationsScreenState extends ConsumerState<SafeLocationsScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 48,
-                color: AppColors.error,
-              ),
+              Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: AppSpacing.space4),
               Text(
                 'Failed to load locations',
@@ -303,10 +304,7 @@ class _LocationCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            location.name,
-                            style: AppTypography.titleMedium,
-                          ),
+                          Text(location.name, style: AppTypography.titleMedium),
                           const SizedBox(height: 2),
                           Text(
                             location.address,

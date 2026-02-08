@@ -40,13 +40,19 @@ final chatProvider = FutureProvider.family<Chat?, String>((ref, chatId) async {
 });
 
 /// Messages stream for a chat
-final messagesStreamProvider = StreamProvider.family<List<Message>, String>((ref, chatId) {
+final messagesStreamProvider = StreamProvider.family<List<Message>, String>((
+  ref,
+  chatId,
+) {
   final repository = ref.watch(chatRepositoryProvider);
   return repository.getMessagesStream(chatId);
 });
 
 /// Typing status stream for a chat
-final typingStatusProvider = StreamProvider.family<Map<String, bool>, String>((ref, chatId) {
+final typingStatusProvider = StreamProvider.family<Map<String, bool>, String>((
+  ref,
+  chatId,
+) {
   final repository = ref.watch(chatRepositoryProvider);
   return repository.getTypingStatusStream(chatId);
 });
@@ -60,7 +66,7 @@ class ChatActionsNotifier extends StateNotifier<ChatActionsState> {
   Timer? _typingTimer;
 
   ChatActionsNotifier(this._repository, this.chatId, this.userId, this.userName)
-      : super(const ChatActionsState());
+    : super(const ChatActionsState());
 
   Future<void> sendMessage(
     String content, {
@@ -199,17 +205,20 @@ class ChatActionsState {
 }
 
 /// Chat actions provider - not autoDispose to prevent disposal during async operations
-final chatActionsProvider = StateNotifierProvider.family<ChatActionsNotifier, ChatActionsState, String>((ref, chatId) {
-  final user = ref.watch(currentUserProvider);
-  final repository = ref.watch(chatRepositoryProvider);
+final chatActionsProvider =
+    StateNotifierProvider.family<ChatActionsNotifier, ChatActionsState, String>(
+      (ref, chatId) {
+        final user = ref.watch(currentUserProvider);
+        final repository = ref.watch(chatRepositoryProvider);
 
-  return ChatActionsNotifier(
-    repository,
-    chatId,
-    user?.uid ?? '',
-    user?.displayName ?? 'User',
-  );
-});
+        return ChatActionsNotifier(
+          repository,
+          chatId,
+          user?.uid ?? '',
+          user?.displayName ?? 'User',
+        );
+      },
+    );
 
 /// Create chat notifier
 class CreateChatNotifier extends StateNotifier<CreateChatState> {
@@ -218,8 +227,12 @@ class CreateChatNotifier extends StateNotifier<CreateChatState> {
   final String userName;
   final String? userPhotoUrl;
 
-  CreateChatNotifier(this._repository, this.userId, this.userName, this.userPhotoUrl)
-      : super(const CreateChatState());
+  CreateChatNotifier(
+    this._repository,
+    this.userId,
+    this.userName,
+    this.userPhotoUrl,
+  ) : super(const CreateChatState());
 
   Future<Chat?> createChat(CreateChatRequest request) async {
     state = state.copyWith(isLoading: true, error: null);
@@ -251,11 +264,7 @@ class CreateChatState {
   final String? error;
   final Chat? createdChat;
 
-  const CreateChatState({
-    this.isLoading = false,
-    this.error,
-    this.createdChat,
-  });
+  const CreateChatState({this.isLoading = false, this.error, this.createdChat});
 
   CreateChatState copyWith({
     bool? isLoading,
@@ -273,19 +282,22 @@ class CreateChatState {
 /// Create chat provider - not autoDispose to prevent disposal during async operations
 final createChatProvider =
     StateNotifierProvider<CreateChatNotifier, CreateChatState>((ref) {
-  final user = ref.watch(currentUserProvider);
-  final repository = ref.watch(chatRepositoryProvider);
+      final user = ref.watch(currentUserProvider);
+      final repository = ref.watch(chatRepositoryProvider);
 
-  return CreateChatNotifier(
-    repository,
-    user?.uid ?? '',
-    user?.displayName ?? 'User',
-    user?.photoUrl,
-  );
-});
+      return CreateChatNotifier(
+        repository,
+        user?.uid ?? '',
+        user?.displayName ?? 'User',
+        user?.photoUrl,
+      );
+    });
 
 /// Check if chat exists between user and listing
-final existingChatProvider = FutureProvider.family<Chat?, String>((ref, listingId) async {
+final existingChatProvider = FutureProvider.family<Chat?, String>((
+  ref,
+  listingId,
+) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return null;
 
@@ -294,7 +306,10 @@ final existingChatProvider = FutureProvider.family<Chat?, String>((ref, listingI
 });
 
 /// Check if the other user in a chat is blocked (either direction)
-final isChatBlockedProvider = FutureProvider.family<bool, String>((ref, otherUserId) async {
+final isChatBlockedProvider = FutureProvider.family<bool, String>((
+  ref,
+  otherUserId,
+) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return false;
 
@@ -304,6 +319,9 @@ final isChatBlockedProvider = FutureProvider.family<bool, String>((ref, otherUse
 
   // Check if other user blocked the current user
   final reportRepository = ref.watch(reportRepositoryProvider);
-  final isBlockedByThem = await reportRepository.isBlocked(otherUserId, user.uid);
+  final isBlockedByThem = await reportRepository.isBlocked(
+    otherUserId,
+    user.uid,
+  );
   return isBlockedByThem;
 });

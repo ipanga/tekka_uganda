@@ -8,8 +8,9 @@ import '../../auth/data/repositories/user_api_repository.dart';
 import '../domain/entities/security_preferences.dart';
 
 /// Stream of security preferences for current user (using polling)
-final securityPreferencesStreamProvider =
-    StreamProvider<SecurityPreferences>((ref) {
+final securityPreferencesStreamProvider = StreamProvider<SecurityPreferences>((
+  ref,
+) {
   final user = ref.watch(currentUserProvider);
   if (user == null) return Stream.value(const SecurityPreferences());
 
@@ -48,8 +49,9 @@ final securityPreferencesStreamProvider =
 });
 
 /// One-time fetch of security preferences
-final securityPreferencesProvider =
-    FutureProvider<SecurityPreferences>((ref) async {
+final securityPreferencesProvider = FutureProvider<SecurityPreferences>((
+  ref,
+) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return const SecurityPreferences();
 
@@ -59,8 +61,7 @@ final securityPreferencesProvider =
 });
 
 /// Verification status provider (using polling)
-final verificationStatusProvider =
-    StreamProvider<VerificationStatus>((ref) {
+final verificationStatusProvider = StreamProvider<VerificationStatus>((ref) {
   final user = ref.watch(currentUserProvider);
   if (user == null) return Stream.value(const VerificationStatus());
 
@@ -78,18 +79,20 @@ final verificationStatusProvider =
         // Phone is verified if user authenticated via phone
         final phoneVerified = user.phoneNumber.isNotEmpty;
 
-        controller.add(VerificationStatus(
-          phoneVerified: phoneVerified,
-          phoneVerifiedAt: phoneVerified ? user.createdAt : null,
-          emailVerified: status['emailVerified'] as bool? ?? false,
-          emailVerifiedAt: status['emailVerifiedAt'] != null
-              ? DateTime.parse(status['emailVerifiedAt'] as String)
-              : null,
-          identityVerified: status['identityVerified'] as bool? ?? false,
-          identityVerifiedAt: status['identityVerifiedAt'] != null
-              ? DateTime.parse(status['identityVerifiedAt'] as String)
-              : null,
-        ));
+        controller.add(
+          VerificationStatus(
+            phoneVerified: phoneVerified,
+            phoneVerifiedAt: phoneVerified ? user.createdAt : null,
+            emailVerified: status['emailVerified'] as bool? ?? false,
+            emailVerifiedAt: status['emailVerifiedAt'] != null
+                ? DateTime.parse(status['emailVerifiedAt'] as String)
+                : null,
+            identityVerified: status['identityVerified'] as bool? ?? false,
+            identityVerifiedAt: status['identityVerifiedAt'] != null
+                ? DateTime.parse(status['identityVerifiedAt'] as String)
+                : null,
+          ),
+        );
       }
     } catch (e) {
       if (!isDisposed) {
@@ -113,8 +116,7 @@ final verificationStatusProvider =
 });
 
 /// Login sessions provider
-final loginSessionsProvider =
-    FutureProvider<List<LoginSession>>((ref) async {
+final loginSessionsProvider = FutureProvider<List<LoginSession>>((ref) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return [];
 
@@ -130,7 +132,7 @@ class SecurityPreferencesNotifier
   final UserApiRepository _repository;
 
   SecurityPreferencesNotifier(this._repository, SecurityPreferences initial)
-      : super(AsyncValue.data(initial));
+    : super(AsyncValue.data(initial));
 
   Future<void> updatePreferences(SecurityPreferences preferences) async {
     state = const AsyncValue.loading();
@@ -138,7 +140,8 @@ class SecurityPreferencesNotifier
       await _repository.updateSettings(
         biometricEnabled: preferences.biometricEnabled,
         loginAlerts: preferences.loginAlerts,
-        requireTransactionConfirmation: preferences.requireTransactionConfirmation,
+        requireTransactionConfirmation:
+            preferences.requireTransactionConfirmation,
         transactionThreshold: preferences.transactionThreshold,
         twoFactorEnabled: preferences.twoFactorEnabled,
       );
@@ -161,7 +164,8 @@ class SecurityPreferencesNotifier
   Future<void> setTransactionConfirmation(bool required) async {
     final current = state.valueOrNull ?? const SecurityPreferences();
     await updatePreferences(
-        current.copyWith(requireTransactionConfirmation: required));
+      current.copyWith(requireTransactionConfirmation: required),
+    );
   }
 
   Future<void> setTransactionThreshold(int amount) async {
@@ -175,21 +179,21 @@ class SecurityPreferencesNotifier
   }
 }
 
-final securityPreferencesNotifierProvider = StateNotifierProvider<
-    SecurityPreferencesNotifier, AsyncValue<SecurityPreferences>>((ref) {
-  final repository = ref.watch(userApiRepositoryProvider);
-  final prefsAsync = ref.watch(securityPreferencesProvider);
+final securityPreferencesNotifierProvider =
+    StateNotifierProvider<
+      SecurityPreferencesNotifier,
+      AsyncValue<SecurityPreferences>
+    >((ref) {
+      final repository = ref.watch(userApiRepositoryProvider);
+      final prefsAsync = ref.watch(securityPreferencesProvider);
 
-  final initialPrefs = prefsAsync.maybeWhen(
-    data: (prefs) => prefs,
-    orElse: () => const SecurityPreferences(),
-  );
+      final initialPrefs = prefsAsync.maybeWhen(
+        data: (prefs) => prefs,
+        orElse: () => const SecurityPreferences(),
+      );
 
-  return SecurityPreferencesNotifier(
-    repository,
-    initialPrefs,
-  );
-});
+      return SecurityPreferencesNotifier(repository, initialPrefs);
+    });
 
 /// Sign out from all devices action
 final signOutAllDevicesProvider = Provider((ref) {
@@ -208,14 +212,14 @@ final signOutAllDevicesProvider = Provider((ref) {
 /// Terminate specific session
 final terminateSessionProvider =
     Provider.family<Future<void> Function(), String>((ref, sessionId) {
-  return () async {
-    final user = ref.read(currentUserProvider);
-    if (user == null) return;
+      return () async {
+        final user = ref.read(currentUserProvider);
+        if (user == null) return;
 
-    final repository = ref.read(userApiRepositoryProvider);
-    await repository.terminateSession(sessionId);
+        final repository = ref.read(userApiRepositoryProvider);
+        await repository.terminateSession(sessionId);
 
-    // Refresh sessions list
-    ref.invalidate(loginSessionsProvider);
-  };
-});
+        // Refresh sessions list
+        ref.invalidate(loginSessionsProvider);
+      };
+    });

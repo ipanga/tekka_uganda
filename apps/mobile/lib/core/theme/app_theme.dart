@@ -62,9 +62,7 @@ abstract class AppTheme {
         height: AppSpacing.bottomNavHeight,
         labelTextStyle: WidgetStateProperty.resolveWith((states) {
           if (states.contains(WidgetState.selected)) {
-            return AppTypography.labelSmall.copyWith(
-              color: AppColors.primary,
-            );
+            return AppTypography.labelSmall.copyWith(color: AppColors.primary);
           }
           return AppTypography.labelSmall.copyWith(
             color: AppColors.onSurfaceVariant,
@@ -104,9 +102,7 @@ abstract class AppTheme {
           elevation: 0,
           minimumSize: const Size.fromHeight(AppSpacing.buttonHeightMedium),
           padding: AppSpacing.buttonPadding,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppSpacing.buttonRadius,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: AppSpacing.buttonRadius),
           textStyle: AppTypography.labelLarge,
         ),
       ),
@@ -118,9 +114,7 @@ abstract class AppTheme {
           foregroundColor: AppColors.onPrimary,
           minimumSize: const Size.fromHeight(AppSpacing.buttonHeightMedium),
           padding: AppSpacing.buttonPadding,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppSpacing.buttonRadius,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: AppSpacing.buttonRadius),
           textStyle: AppTypography.labelLarge,
         ),
       ),
@@ -131,9 +125,7 @@ abstract class AppTheme {
           foregroundColor: AppColors.onSurface,
           minimumSize: const Size.fromHeight(AppSpacing.buttonHeightMedium),
           padding: AppSpacing.buttonPadding,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppSpacing.buttonRadius,
-          ),
+          shape: RoundedRectangleBorder(borderRadius: AppSpacing.buttonRadius),
           side: const BorderSide(color: AppColors.outline),
           textStyle: AppTypography.labelLarge,
         ),
@@ -143,7 +135,10 @@ abstract class AppTheme {
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
-          minimumSize: const Size(AppSpacing.touchTargetMin, AppSpacing.buttonHeightSmall),
+          minimumSize: const Size(
+            AppSpacing.touchTargetMin,
+            AppSpacing.buttonHeightSmall,
+          ),
           padding: AppSpacing.buttonPadding,
           textStyle: AppTypography.labelLarge,
         ),

@@ -20,7 +20,8 @@ class AppLockSettingsScreen extends ConsumerWidget {
 
     // Listen for errors
     ref.listen<AppLockStatus>(appLockProvider, (prev, next) {
-      if (next.errorMessage != null && prev?.errorMessage != next.errorMessage) {
+      if (next.errorMessage != null &&
+          prev?.errorMessage != next.errorMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.errorMessage!),
@@ -33,9 +34,7 @@ class AppLockSettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('App Lock'),
-      ),
+      appBar: AppBar(title: const Text('App Lock')),
       body: ListView(
         children: [
           const SizedBox(height: AppSpacing.space4),
@@ -68,7 +67,8 @@ class AppLockSettingsScreen extends ConsumerWidget {
                 _LockModeOption(
                   mode: AppLockMode.biometricOnly,
                   currentMode: appLockStatus.mode,
-                  isEnabled: biometricStatus.isAvailable && biometricStatus.isEnrolled,
+                  isEnabled:
+                      biometricStatus.isAvailable && biometricStatus.isEnrolled,
                   disabledReason: biometricStatus.isAvailable
                       ? 'Set up biometrics in device settings'
                       : 'Not available on this device',
@@ -77,7 +77,8 @@ class AppLockSettingsScreen extends ConsumerWidget {
                 _LockModeOption(
                   mode: AppLockMode.biometricOrPin,
                   currentMode: appLockStatus.mode,
-                  isEnabled: pinStatus.hasPinSet &&
+                  isEnabled:
+                      pinStatus.hasPinSet &&
                       biometricStatus.isAvailable &&
                       biometricStatus.isEnrolled,
                   disabledReason: !pinStatus.hasPinSet
@@ -150,11 +151,7 @@ class AppLockSettingsScreen extends ConsumerWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 20,
-                    color: AppColors.primary,
-                  ),
+                  Icon(Icons.info_outline, size: 20, color: AppColors.primary),
                   const SizedBox(width: AppSpacing.space3),
                   Expanded(
                     child: Text(
@@ -375,10 +372,7 @@ class _TimeoutOption extends StatelessWidget {
     final isSelected = minutes == currentTimeout;
 
     return ListTile(
-      title: Text(
-        label,
-        style: AppTypography.bodyLarge,
-      ),
+      title: Text(label, style: AppTypography.bodyLarge),
       trailing: isSelected
           ? const Icon(Icons.check, color: AppColors.primary)
           : null,

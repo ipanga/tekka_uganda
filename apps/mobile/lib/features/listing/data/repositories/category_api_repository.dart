@@ -22,27 +22,37 @@ class CategoryApiRepository {
 
   /// Get a single category by ID
   Future<Category> getCategory(String id) async {
-    final response = await _apiClient.get<Map<String, dynamic>>('/categories/$id');
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/categories/$id',
+    );
     return Category.fromJson(response);
   }
 
   /// Get a category by slug
   Future<Category> getCategoryBySlug(String slug) async {
-    final response = await _apiClient.get<Map<String, dynamic>>('/categories/slug/$slug');
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/categories/slug/$slug',
+    );
     return Category.fromJson(response);
   }
 
   /// Get children of a category
   Future<List<Category>> getCategoryChildren(String id) async {
-    final response = await _apiClient.get<List<dynamic>>('/categories/$id/children');
+    final response = await _apiClient.get<List<dynamic>>(
+      '/categories/$id/children',
+    );
     return response
         .map((e) => Category.fromJson(e as Map<String, dynamic>))
         .toList();
   }
 
   /// Get attributes for a category (includes inherited attributes)
-  Future<List<AttributeDefinition>> getCategoryAttributes(String categoryId) async {
-    final response = await _apiClient.get<List<dynamic>>('/categories/$categoryId/attributes');
+  Future<List<AttributeDefinition>> getCategoryAttributes(
+    String categoryId,
+  ) async {
+    final response = await _apiClient.get<List<dynamic>>(
+      '/categories/$categoryId/attributes',
+    );
     return response
         .map((e) => AttributeDefinition.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -50,7 +60,9 @@ class CategoryApiRepository {
 
   /// Get breadcrumb path for a category
   Future<List<Category>> getCategoryBreadcrumb(String id) async {
-    final response = await _apiClient.get<List<dynamic>>('/categories/$id/breadcrumb');
+    final response = await _apiClient.get<List<dynamic>>(
+      '/categories/$id/breadcrumb',
+    );
     return response
         .map((e) => Category.fromJson(e as Map<String, dynamic>))
         .toList();
@@ -70,13 +82,17 @@ class CategoryApiRepository {
 
   /// Get an attribute by slug with its values
   Future<AttributeDefinition> getAttributeBySlug(String slug) async {
-    final response = await _apiClient.get<Map<String, dynamic>>('/attributes/$slug');
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/attributes/$slug',
+    );
     return AttributeDefinition.fromJson(response);
   }
 
   /// Get values for an attribute
   Future<AttributeDefinition> getAttributeValues(String slug) async {
-    final response = await _apiClient.get<Map<String, dynamic>>('/attributes/$slug/values');
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/attributes/$slug/values',
+    );
     return AttributeDefinition.fromJson(response);
   }
 
@@ -104,7 +120,9 @@ class CategoryApiRepository {
 
   /// Get divisions for a city
   Future<List<Division>> getDivisions(String cityId) async {
-    final response = await _apiClient.get<List<dynamic>>('/locations/cities/$cityId/divisions');
+    final response = await _apiClient.get<List<dynamic>>(
+      '/locations/cities/$cityId/divisions',
+    );
     return response
         .map((e) => Division.fromJson(e as Map<String, dynamic>))
         .toList();

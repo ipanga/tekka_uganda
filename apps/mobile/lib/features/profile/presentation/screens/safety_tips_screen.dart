@@ -10,9 +10,7 @@ class SafetyTipsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Safety Tips'),
-      ),
+      appBar: AppBar(title: const Text('Safety Tips')),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.space4),
         children: [
@@ -213,11 +211,7 @@ class SafetyTipsScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      Icons.flag_outlined,
-                      color: AppColors.error,
-                      size: 24,
-                    ),
+                    Icon(Icons.flag_outlined, color: AppColors.error, size: 24),
                     const SizedBox(width: AppSpacing.space3),
                     Text(
                       'Report Suspicious Activity',
@@ -278,16 +272,9 @@ class _SafetySection extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.space4),
             child: Row(
               children: [
-                Icon(
-                  icon,
-                  color: AppColors.primary,
-                  size: 24,
-                ),
+                Icon(icon, color: AppColors.primary, size: 24),
                 const SizedBox(width: AppSpacing.space3),
-                Text(
-                  title,
-                  style: AppTypography.titleSmall,
-                ),
+                Text(title, style: AppTypography.titleSmall),
               ],
             ),
           ),

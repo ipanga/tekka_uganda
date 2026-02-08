@@ -18,10 +18,7 @@ import '../../domain/entities/chat.dart';
 
 /// Individual chat conversation screen
 class ChatScreen extends ConsumerStatefulWidget {
-  const ChatScreen({
-    super.key,
-    required this.chatId,
-  });
+  const ChatScreen({super.key, required this.chatId});
 
   final String chatId;
 
@@ -58,11 +55,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final typingStatus = ref.watch(typingStatusProvider(widget.chatId));
 
     // Listen for errors
-    ref.listen<ChatActionsState>(chatActionsProvider(widget.chatId), (prev, next) {
+    ref.listen<ChatActionsState>(chatActionsProvider(widget.chatId), (
+      prev,
+      next,
+    ) {
       if (next.error != null && prev?.error != next.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next.error!)));
         ref.read(chatActionsProvider(widget.chatId).notifier).clearError();
       }
       if (next.isDeleted) {
@@ -71,9 +71,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     });
 
     return chatAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
         body: Center(
@@ -111,7 +110,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         );
 
         // Check if chat is blocked
-        final isChatBlockedAsync = ref.watch(isChatBlockedProvider(otherUserId));
+        final isChatBlockedAsync = ref.watch(
+          isChatBlockedProvider(otherUserId),
+        );
         final isChatBlocked = isChatBlockedAsync.maybeWhen(
           data: (blocked) => blocked,
           orElse: () => false,
@@ -130,11 +131,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ? CachedNetworkImageProvider(otherUserPhotoUrl)
                       : null,
                   child: otherUserPhotoUrl == null
-                      ? Icon(
-                          Icons.person,
-                          color: AppColors.primary,
-                          size: 20,
-                        )
+                      ? Icon(Icons.person, color: AppColors.primary, size: 20)
                       : null,
                 ),
                 const SizedBox(width: AppSpacing.space3),
@@ -142,10 +139,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        otherUserName,
-                        style: AppTypography.labelLarge,
-                      ),
+                      Text(otherUserName, style: AppTypography.labelLarge),
                       if (isOtherTyping)
                         Text(
                           'typing...',
@@ -162,16 +156,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             actions: [
               PopupMenuButton<String>(
                 icon: const Icon(Icons.more_vert),
-                onSelected: (value) => _handleMenuAction(value, chat, otherUserId),
+                onSelected: (value) =>
+                    _handleMenuAction(value, chat, otherUserId),
                 itemBuilder: (context) => [
                   const PopupMenuItem(
                     value: 'view_listing',
                     child: Text('View Listing'),
                   ),
-                  const PopupMenuItem(
-                    value: 'report',
-                    child: Text('Report'),
-                  ),
+                  const PopupMenuItem(value: 'report', child: Text('Report')),
                   const PopupMenuItem(
                     value: 'block',
                     child: Text('Block User'),
@@ -191,8 +183,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               const Divider(height: 1),
 
               // Blocked banner
-              if (isChatBlocked)
-                _BlockedBanner(otherUserName: otherUserName),
+              if (isChatBlocked) _BlockedBanner(otherUserName: otherUserName),
 
               // Review banner for sold listings
               if (!isChatBlocked)
@@ -206,10 +197,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               // Messages list
               Expanded(
                 child: messagesAsync.when(
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (error, _) => const Center(
-                    child: Text('Failed to load messages'),
-                  ),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (error, _) =>
+                      const Center(child: Text('Failed to load messages')),
                   data: (messages) {
                     if (messages.isEmpty) {
                       return _buildEmptyMessages();
@@ -222,18 +213,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       itemCount: messages.length,
                       itemBuilder: (context, index) {
                         final message = messages[index];
-                        final showDateSeparator = index == 0 ||
-                            messages[index].dateGroup != messages[index - 1].dateGroup;
+                        final showDateSeparator =
+                            index == 0 ||
+                            messages[index].dateGroup !=
+                                messages[index - 1].dateGroup;
 
                         return Column(
                           children: [
                             if (showDateSeparator) ...[
-                              if (index > 0) const SizedBox(height: AppSpacing.space4),
+                              if (index > 0)
+                                const SizedBox(height: AppSpacing.space4),
                               _DateSeparator(date: message.dateGroup),
                               const SizedBox(height: AppSpacing.space4),
                             ],
                             Padding(
-                              padding: const EdgeInsets.only(bottom: AppSpacing.space3),
+                              padding: const EdgeInsets.only(
+                                bottom: AppSpacing.space3,
+                              ),
                               child: _MessageBubble(
                                 message: message,
                                 isMe: message.isFromMe(currentUserId),
@@ -249,9 +245,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
               // Quick actions (hide when blocked)
               if (!isChatBlocked)
-                _QuickActionsBar(
-                  onQuickMessage: _sendQuickMessage,
-                ),
+                _QuickActionsBar(onQuickMessage: _sendQuickMessage),
 
               // Message input or blocked message
               if (isChatBlocked)
@@ -259,10 +253,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               else
                 _MessageInput(
                   controller: _messageController,
-                  isSending: chatActions.isSending || chatActions.isUploadingImage,
+                  isSending:
+                      chatActions.isSending || chatActions.isUploadingImage,
                   onSend: _sendMessage,
                   onTyping: () {
-                    ref.read(chatActionsProvider(widget.chatId).notifier).setTyping(true);
+                    ref
+                        .read(chatActionsProvider(widget.chatId).notifier)
+                        .setTyping(true);
                   },
                   onSuggestMeetup: () => _suggestMeetup(chat),
                   onSendPhoto: _sendPhoto,
@@ -287,10 +284,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               color: AppColors.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.space4),
-            Text(
-              'Start the conversation!',
-              style: AppTypography.titleMedium,
-            ),
+            Text('Start the conversation!', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.space2),
             Text(
               'Send a message to get started',
@@ -307,9 +301,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _sendMessage() {
     if (_messageController.text.trim().isEmpty) return;
 
-    ref.read(chatActionsProvider(widget.chatId).notifier).sendMessage(
-          _messageController.text,
-        );
+    ref
+        .read(chatActionsProvider(widget.chatId).notifier)
+        .sendMessage(_messageController.text);
     _messageController.clear();
 
     // Scroll to bottom
@@ -358,17 +352,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     if (meetup != null) {
       // Send a meetup message to the chat
-      final message = 'Meetup proposed at ${meetup.location.name} on ${meetup.formattedDate} at ${meetup.formattedTime}';
-      ref.read(chatActionsProvider(widget.chatId).notifier).sendMessage(
-        message,
-        type: MessageType.meetup,
-        meetupData: meetup.toMap(),
-      );
+      final message =
+          'Meetup proposed at ${meetup.location.name} on ${meetup.formattedDate} at ${meetup.formattedTime}';
+      ref
+          .read(chatActionsProvider(widget.chatId).notifier)
+          .sendMessage(
+            message,
+            type: MessageType.meetup,
+            meetupData: meetup.toMap(),
+          );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Meetup proposal sent!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Meetup proposal sent!')));
       }
     }
   }
@@ -421,7 +418,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
 
     // Upload image
-    ref.read(chatActionsProvider(widget.chatId).notifier).setUploadingImage(true);
+    ref
+        .read(chatActionsProvider(widget.chatId).notifier)
+        .setUploadingImage(true);
 
     try {
       final imageUrl = await storageService.uploadChatImage(
@@ -434,11 +433,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       }
 
       // Send image message
-      ref.read(chatActionsProvider(widget.chatId).notifier).sendMessage(
-        '',
-        type: MessageType.image,
-        imageUrl: imageUrl,
-      );
+      ref
+          .read(chatActionsProvider(widget.chatId).notifier)
+          .sendMessage('', type: MessageType.image, imageUrl: imageUrl);
 
       // Scroll to bottom
       Future.delayed(const Duration(milliseconds: 100), () {
@@ -452,12 +449,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send image: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to send image: $e')));
       }
     } finally {
-      ref.read(chatActionsProvider(widget.chatId).notifier).setUploadingImage(false);
+      ref
+          .read(chatActionsProvider(widget.chatId).notifier)
+          .setUploadingImage(false);
       // Clean up temp file
       imageService.cleanupTempFiles([compressedFile]);
     }
@@ -466,7 +465,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _handleMenuAction(String action, Chat chat, String otherUserId) async {
     switch (action) {
       case 'view_listing':
-        context.push(AppRoutes.listingDetail.replaceFirst(':id', chat.listingId));
+        context.push(
+          AppRoutes.listingDetail.replaceFirst(':id', chat.listingId),
+        );
         break;
       case 'report':
         _showReportDialog();
@@ -500,9 +501,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 title: Text(reason),
                 onTap: () {
                   Navigator.pop(context);
-                  ref.read(chatActionsProvider(widget.chatId).notifier).reportChat(reason);
+                  ref
+                      .read(chatActionsProvider(widget.chatId).notifier)
+                      .reportChat(reason);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Report submitted. Thank you!')),
+                    const SnackBar(
+                      content: Text('Report submitted. Thank you!'),
+                    ),
                   );
                 },
               );
@@ -536,7 +541,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () {
               Navigator.pop(context);
-              ref.read(chatActionsProvider(widget.chatId).notifier).blockUser(userId);
+              ref
+                  .read(chatActionsProvider(widget.chatId).notifier)
+                  .blockUser(userId);
             },
             child: const Text('Block'),
           ),
@@ -562,7 +569,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () {
               Navigator.pop(context);
-              ref.read(chatActionsProvider(widget.chatId).notifier).deleteChat();
+              ref
+                  .read(chatActionsProvider(widget.chatId).notifier)
+                  .deleteChat();
             },
             child: const Text('Delete'),
           ),
@@ -598,10 +607,7 @@ class _ListingContextBar extends StatelessWidget {
                   : null,
             ),
             child: chat.listingImageUrl == null
-                ? const Icon(
-                    Icons.image,
-                    color: AppColors.gray400,
-                  )
+                ? const Icon(Icons.image, color: AppColors.gray400)
                 : null,
           ),
           const SizedBox(width: AppSpacing.space3),
@@ -626,7 +632,9 @@ class _ListingContextBar extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              context.push(AppRoutes.listingDetail.replaceFirst(':id', chat.listingId));
+              context.push(
+                AppRoutes.listingDetail.replaceFirst(':id', chat.listingId),
+              );
             },
             child: const Text('View'),
           ),
@@ -674,10 +682,7 @@ class _DateSeparator extends StatelessWidget {
 }
 
 class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({
-    required this.message,
-    required this.isMe,
-  });
+  const _MessageBubble({required this.message, required this.isMe});
 
   final Message message;
   final bool isMe;
@@ -718,10 +723,7 @@ class _MessageBubble extends StatelessWidget {
                     fontSize: 11,
                   ),
                 ),
-                if (isMe) ...[
-                  const SizedBox(width: 4),
-                  _buildStatusIcon(),
-                ],
+                if (isMe) ...[const SizedBox(width: 4), _buildStatusIcon()],
               ],
             ),
           ],
@@ -798,7 +800,20 @@ class _MessageBubble extends StatelessWidget {
       final scheduledAt = meetupData['scheduledAt'] as String?;
       if (scheduledAt != null) {
         final dateTime = DateTime.parse(scheduledAt);
-        final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        final months = [
+          'Jan',
+          'Feb',
+          'Mar',
+          'Apr',
+          'May',
+          'Jun',
+          'Jul',
+          'Aug',
+          'Sep',
+          'Oct',
+          'Nov',
+          'Dec',
+        ];
         date = '${months[dateTime.month - 1]} ${dateTime.day}';
         final hour = dateTime.hour;
         final minute = dateTime.minute.toString().padLeft(2, '0');
@@ -817,13 +832,17 @@ class _MessageBubble extends StatelessWidget {
             Icon(
               Icons.location_on,
               size: 16,
-              color: isMe ? AppColors.white.withValues(alpha: 0.8) : AppColors.primary,
+              color: isMe
+                  ? AppColors.white.withValues(alpha: 0.8)
+                  : AppColors.primary,
             ),
             const SizedBox(width: 4),
             Text(
               'Meetup Proposal',
               style: AppTypography.labelSmall.copyWith(
-                color: isMe ? AppColors.white.withValues(alpha: 0.8) : AppColors.primary,
+                color: isMe
+                    ? AppColors.white.withValues(alpha: 0.8)
+                    : AppColors.primary,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -844,13 +863,17 @@ class _MessageBubble extends StatelessWidget {
               Icon(
                 Icons.calendar_today,
                 size: 14,
-                color: isMe ? AppColors.white.withValues(alpha: 0.7) : AppColors.onSurfaceVariant,
+                color: isMe
+                    ? AppColors.white.withValues(alpha: 0.7)
+                    : AppColors.onSurfaceVariant,
               ),
               const SizedBox(width: 4),
               Text(
                 '$date at $time',
                 style: AppTypography.bodySmall.copyWith(
-                  color: isMe ? AppColors.white.withValues(alpha: 0.8) : AppColors.onSurfaceVariant,
+                  color: isMe
+                      ? AppColors.white.withValues(alpha: 0.8)
+                      : AppColors.onSurfaceVariant,
                 ),
               ),
             ],
@@ -884,9 +907,7 @@ class _MessageBubble extends StatelessWidget {
 }
 
 class _QuickActionsBar extends ConsumerWidget {
-  const _QuickActionsBar({
-    required this.onQuickMessage,
-  });
+  const _QuickActionsBar({required this.onQuickMessage});
 
   final void Function(String, String?) onQuickMessage;
 
@@ -988,10 +1009,7 @@ class _QuickActionsBar extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Quick Replies',
-                    style: AppTypography.titleMedium,
-                  ),
+                  Text('Quick Replies', style: AppTypography.titleMedium),
                   TextButton(
                     onPressed: () {
                       Navigator.pop(context);
@@ -1046,19 +1064,18 @@ class _QuickActionsBar extends ConsumerWidget {
   }
 
   String _formatCategory(String category) {
-    return category.split('_').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1);
-    }).join(' ');
+    return category
+        .split('_')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1);
+        })
+        .join(' ');
   }
 }
 
 class _QuickActionChip extends StatelessWidget {
-  const _QuickActionChip({
-    required this.label,
-    required this.onTap,
-    this.icon,
-  });
+  const _QuickActionChip({required this.label, required this.onTap, this.icon});
 
   final String label;
   final VoidCallback onTap;
@@ -1084,10 +1101,7 @@ class _QuickActionChip extends StatelessWidget {
               Icon(icon, size: 14, color: AppColors.onSurfaceVariant),
               const SizedBox(width: 4),
             ],
-            Text(
-              label,
-              style: AppTypography.bodySmall,
-            ),
+            Text(label, style: AppTypography.bodySmall),
           ],
         ),
       ),
@@ -1235,10 +1249,11 @@ class _ReviewBanner extends ConsumerWidget {
         }
 
         // Check if current user can leave a review
-        final canReviewAsync = ref.watch(canReviewProvider(CanReviewParams(
-          revieweeId: otherUserId,
-          listingId: chat.listingId,
-        )));
+        final canReviewAsync = ref.watch(
+          canReviewProvider(
+            CanReviewParams(revieweeId: otherUserId, listingId: chat.listingId),
+          ),
+        );
 
         return canReviewAsync.when(
           loading: () => const SizedBox.shrink(),
@@ -1309,18 +1324,12 @@ class _BlockedBanner extends StatelessWidget {
       color: AppColors.error.withValues(alpha: 0.1),
       child: Row(
         children: [
-          Icon(
-            Icons.block,
-            color: AppColors.error,
-            size: 20,
-          ),
+          Icon(Icons.block, color: AppColors.error, size: 20),
           const SizedBox(width: AppSpacing.space3),
           Expanded(
             child: Text(
               'You can no longer send messages to $otherUserName',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.error,
-              ),
+              style: AppTypography.bodySmall.copyWith(color: AppColors.error),
             ),
           ),
         ],

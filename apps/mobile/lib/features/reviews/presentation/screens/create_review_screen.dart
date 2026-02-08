@@ -63,17 +63,15 @@ class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
 
     ref.listen<CreateReviewState>(createReviewProvider, (prev, next) {
       if (next.error != null && prev?.error != next.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next.error!)));
       }
     });
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Write Review'),
-      ),
+      appBar: AppBar(title: const Text('Write Review')),
       body: SingleChildScrollView(
         padding: AppSpacing.screenPadding,
         child: Column(
@@ -96,10 +94,7 @@ class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    widget.revieweeName,
-                    style: AppTypography.titleLarge,
-                  ),
+                  Text(widget.revieweeName, style: AppTypography.titleLarge),
                   const SizedBox(height: AppSpacing.space2),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -212,9 +207,7 @@ class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
                 hintText: widget.reviewType == ReviewType.buyer
                     ? 'How was the buyer? Were they punctual, easy to communicate with?'
                     : 'How was the item? Was the seller honest about the condition?',
-                border: OutlineInputBorder(
-                  borderRadius: AppSpacing.cardRadius,
-                ),
+                border: OutlineInputBorder(borderRadius: AppSpacing.cardRadius),
               ),
             ),
 

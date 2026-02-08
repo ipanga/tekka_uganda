@@ -90,7 +90,9 @@ class ImageService {
 
     // If still over 1MB, try again with lower quality
     if (getFileSizeMB(compressedFile) > 1 && compressionQuality > 50) {
-      debugPrint('Image still over 1MB after compression, retrying with lower quality');
+      debugPrint(
+        'Image still over 1MB after compression, retrying with lower quality',
+      );
       return compressImage(file, quality: compressionQuality - 15);
     }
 
@@ -98,7 +100,10 @@ class ImageService {
   }
 
   /// Compress multiple images
-  Future<List<File>> compressImages(List<File> files, {int quality = 85}) async {
+  Future<List<File>> compressImages(
+    List<File> files, {
+    int quality = 85,
+  }) async {
     final compressed = <File>[];
 
     for (final file in files) {

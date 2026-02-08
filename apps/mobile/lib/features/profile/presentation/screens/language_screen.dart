@@ -15,9 +15,7 @@ class LanguageScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Language'),
-      ),
+      appBar: AppBar(title: const Text('Language')),
       body: ListView(
         children: [
           const SizedBox(height: AppSpacing.space4),
@@ -34,11 +32,7 @@ class LanguageScreen extends ConsumerWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.translate,
-                    color: AppColors.primary,
-                    size: 24,
-                  ),
+                  Icon(Icons.translate, color: AppColors.primary, size: 24),
                   const SizedBox(width: AppSpacing.space3),
                   Expanded(
                     child: Column(
@@ -70,10 +64,7 @@ class LanguageScreen extends ConsumerWidget {
           // Language options
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
-            child: Text(
-              'Select Language',
-              style: AppTypography.titleMedium,
-            ),
+            child: Text('Select Language', style: AppTypography.titleMedium),
           ),
 
           const SizedBox(height: AppSpacing.space3),
@@ -117,10 +108,7 @@ class LanguageScreen extends ConsumerWidget {
                         size: 20,
                       ),
                       const SizedBox(width: AppSpacing.space2),
-                      Text(
-                        'Note',
-                        style: AppTypography.titleSmall,
-                      ),
+                      Text('Note', style: AppTypography.titleSmall),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.space2),
@@ -166,9 +154,7 @@ class LanguageScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Change Language?'),
-        content: Text(
-          'Change app language to ${language.displayName}?',
-        ),
+        content: Text('Change app language to ${language.displayName}?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -183,7 +169,9 @@ class LanguageScreen extends ConsumerWidget {
     );
 
     if (confirmed == true) {
-      final success = await ref.read(languageProvider.notifier).setLanguage(language);
+      final success = await ref
+          .read(languageProvider.notifier)
+          .setLanguage(language);
 
       if (context.mounted) {
         if (success) {
@@ -273,10 +261,7 @@ class _LanguageTile extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
         ),
         child: Center(
-          child: Text(
-            language.flag,
-            style: const TextStyle(fontSize: 24),
-          ),
+          child: Text(language.flag, style: const TextStyle(fontSize: 24)),
         ),
       ),
       title: Text(
@@ -300,11 +285,7 @@ class _LanguageTile extends StatelessWidget {
                 color: AppColors.primary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.check,
-                color: AppColors.white,
-                size: 16,
-              ),
+              child: const Icon(Icons.check, color: AppColors.white, size: 16),
             )
           : null,
       onTap: isLoading ? null : onTap,

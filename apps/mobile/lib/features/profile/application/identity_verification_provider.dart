@@ -6,11 +6,7 @@ import '../../../core/providers/repository_providers.dart';
 import '../../auth/application/auth_provider.dart';
 
 /// ID document types supported for verification
-enum IdDocumentType {
-  nationalId,
-  passport,
-  drivingLicense,
-}
+enum IdDocumentType { nationalId, passport, drivingLicense }
 
 extension IdDocumentTypeExtension on IdDocumentType {
   String get displayName {
@@ -197,7 +193,7 @@ class IdentityVerificationNotifier
   final Ref _ref;
 
   IdentityVerificationNotifier(this._ref)
-      : super(const IdentityVerificationStatus()) {
+    : super(const IdentityVerificationStatus()) {
     _loadExistingVerification();
   }
 
@@ -298,7 +294,9 @@ class IdentityVerificationNotifier
   void goBack() {
     switch (state.state) {
       case IdentityVerificationState.enteringDetails:
-        state = state.copyWith(state: IdentityVerificationState.selectingDocument);
+        state = state.copyWith(
+          state: IdentityVerificationState.selectingDocument,
+        );
         break;
       default:
         break;
@@ -307,52 +305,53 @@ class IdentityVerificationNotifier
 }
 
 /// Identity verification provider
-final identityVerificationProvider = StateNotifierProvider<
-    IdentityVerificationNotifier, IdentityVerificationStatus>(
-  (ref) => IdentityVerificationNotifier(ref),
-);
+final identityVerificationProvider =
+    StateNotifierProvider<
+      IdentityVerificationNotifier,
+      IdentityVerificationStatus
+    >((ref) => IdentityVerificationNotifier(ref));
 
 /// Stream provider for identity verification status (using polling)
 final identityVerificationStreamProvider =
     StreamProvider<IdentityVerificationStatus>((ref) {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) {
-    return Stream.value(const IdentityVerificationStatus());
-  }
-
-  final repository = ref.watch(userApiRepositoryProvider);
-
-  late StreamController<IdentityVerificationStatus> controller;
-  Timer? timer;
-  bool isDisposed = false;
-
-  Future<void> poll() async {
-    if (isDisposed) return;
-    try {
-      final data = await repository.getIdentityVerificationStatus();
-      if (!isDisposed) {
-        controller.add(IdentityVerificationStatus.fromMap(data));
+      final user = ref.watch(currentUserProvider);
+      if (user == null) {
+        return Stream.value(const IdentityVerificationStatus());
       }
-    } catch (e) {
-      if (!isDisposed) {
-        controller.addError(e);
+
+      final repository = ref.watch(userApiRepositoryProvider);
+
+      late StreamController<IdentityVerificationStatus> controller;
+      Timer? timer;
+      bool isDisposed = false;
+
+      Future<void> poll() async {
+        if (isDisposed) return;
+        try {
+          final data = await repository.getIdentityVerificationStatus();
+          if (!isDisposed) {
+            controller.add(IdentityVerificationStatus.fromMap(data));
+          }
+        } catch (e) {
+          if (!isDisposed) {
+            controller.addError(e);
+          }
+        }
       }
-    }
-  }
 
-  controller = StreamController<IdentityVerificationStatus>(
-    onListen: () {
-      poll();
-      timer = Timer.periodic(const Duration(seconds: 60), (_) => poll());
-    },
-    onCancel: () {
-      isDisposed = true;
-      timer?.cancel();
-    },
-  );
+      controller = StreamController<IdentityVerificationStatus>(
+        onListen: () {
+          poll();
+          timer = Timer.periodic(const Duration(seconds: 60), (_) => poll());
+        },
+        onCancel: () {
+          isDisposed = true;
+          timer?.cancel();
+        },
+      );
 
-  return controller.stream;
-});
+      return controller.stream;
+    });
 
 /// Check if identity is verified
 final isIdentityVerifiedProvider = Provider<bool>((ref) {

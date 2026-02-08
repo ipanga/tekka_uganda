@@ -302,14 +302,26 @@ class ScheduledMeetup {
   bool get isUpcoming {
     final now = DateTime.now();
     final diff = scheduledAt.difference(now);
-    return diff.inHours >= 0 && diff.inHours <= 24 && status == MeetupStatus.confirmed;
+    return diff.inHours >= 0 &&
+        diff.inHours <= 24 &&
+        status == MeetupStatus.confirmed;
   }
 
   /// Get formatted date
   String get formattedDate {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[scheduledAt.month - 1]} ${scheduledAt.day}';
   }

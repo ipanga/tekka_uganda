@@ -12,19 +12,37 @@ abstract class ChatRepository {
   Future<Chat?> getChatByListingAndUser(String listingId, String buyerId);
 
   /// Create a new chat conversation
-  Future<Chat> createChat(CreateChatRequest request, String buyerId, String buyerName, String? buyerPhotoUrl);
+  Future<Chat> createChat(
+    CreateChatRequest request,
+    String buyerId,
+    String buyerName,
+    String? buyerPhotoUrl,
+  );
 
   /// Get or create chat (returns existing if already exists)
-  Future<Chat> getOrCreateChat(CreateChatRequest request, String buyerId, String buyerName, String? buyerPhotoUrl);
+  Future<Chat> getOrCreateChat(
+    CreateChatRequest request,
+    String buyerId,
+    String buyerName,
+    String? buyerPhotoUrl,
+  );
 
   /// Get messages stream for a chat
   Stream<List<Message>> getMessagesStream(String chatId, {int limit = 50});
 
   /// Get messages with pagination
-  Future<List<Message>> getMessages(String chatId, {int limit = 50, String? lastMessageId});
+  Future<List<Message>> getMessages(
+    String chatId, {
+    int limit = 50,
+    String? lastMessageId,
+  });
 
   /// Send a message
-  Future<Message> sendMessage(SendMessageRequest request, String senderId, String senderName);
+  Future<Message> sendMessage(
+    SendMessageRequest request,
+    String senderId,
+    String senderName,
+  );
 
   /// Mark messages as read
   Future<void> markAsRead(String chatId, String userId);

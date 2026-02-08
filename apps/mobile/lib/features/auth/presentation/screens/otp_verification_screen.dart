@@ -82,7 +82,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
     if (_otp.length != AppConstants.otpLength) return;
 
     try {
-      final user = await ref.read(authNotifierProvider.notifier).verifyOtp(_otp);
+      final user = await ref
+          .read(authNotifierProvider.notifier)
+          .verifyOtp(_otp);
 
       if (mounted) {
         if (user.isOnboardingComplete) {
@@ -93,9 +95,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
         // Clear OTP fields
         for (final controller in _controllers) {
           controller.clear();
@@ -112,16 +114,16 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       await ref.read(authNotifierProvider.notifier).sendOtp(widget.phoneNumber);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('OTP sent successfully')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('OTP sent successfully')));
         _startResendTimer();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -146,10 +148,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
             children: [
               const SizedBox(height: AppSpacing.space4),
 
-              Text(
-                'Verify your number',
-                style: AppTypography.headlineSmall,
-              ),
+              Text('Verify your number', style: AppTypography.headlineSmall),
 
               const SizedBox(height: AppSpacing.space2),
 
@@ -184,13 +183,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                       style: AppTypography.headlineMedium,
                       decoration: const InputDecoration(
                         counterText: '',
-                        contentPadding: EdgeInsets.symmetric(
-                          vertical: 12,
-                        ),
+                        contentPadding: EdgeInsets.symmetric(vertical: 12),
                       ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       onChanged: (value) => _onOtpChanged(index, value),
                       onEditingComplete: () {
                         if (index < AppConstants.otpLength - 1) {

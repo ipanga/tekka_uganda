@@ -18,9 +18,7 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Settings'),
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
           const SizedBox(height: AppSpacing.space4),
@@ -78,12 +76,7 @@ class SettingsScreen extends ConsumerWidget {
           _SectionHeader(title: 'Preferences'),
           Container(
             color: AppColors.surface,
-            child: Column(
-              children: [
-                _LanguageTile(),
-                _LocationTile(),
-              ],
-            ),
+            child: Column(children: [_LanguageTile(), _LocationTile()]),
           ),
 
           const SizedBox(height: AppSpacing.space4),
@@ -277,7 +270,8 @@ class _SettingsTile extends StatelessWidget {
           color: isDestructive ? AppColors.error : AppColors.onSurface,
         ),
       ),
-      trailing: trailing ??
+      trailing:
+          trailing ??
           (showChevron && onTap != null
               ? const Icon(
                   Icons.chevron_right,
@@ -295,14 +289,8 @@ class _LanguageTile extends ConsumerWidget {
     final languageState = ref.watch(languageProvider);
 
     return ListTile(
-      leading: const Icon(
-        Icons.language,
-        color: AppColors.onSurfaceVariant,
-      ),
-      title: Text(
-        'Language',
-        style: AppTypography.bodyLarge,
-      ),
+      leading: const Icon(Icons.language, color: AppColors.onSurfaceVariant),
+      title: Text('Language', style: AppTypography.bodyLarge),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -313,10 +301,7 @@ class _LanguageTile extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 4),
-          const Icon(
-            Icons.chevron_right,
-            color: AppColors.onSurfaceVariant,
-          ),
+          const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
         ],
       ),
       onTap: () => context.push(AppRoutes.language),
@@ -334,10 +319,7 @@ class _LocationTile extends ConsumerWidget {
         Icons.location_on_outlined,
         color: AppColors.onSurfaceVariant,
       ),
-      title: Text(
-        'Default Location',
-        style: AppTypography.bodyLarge,
-      ),
+      title: Text('Default Location', style: AppTypography.bodyLarge),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -348,10 +330,7 @@ class _LocationTile extends ConsumerWidget {
             ),
           ),
           const SizedBox(width: 4),
-          const Icon(
-            Icons.chevron_right,
-            color: AppColors.onSurfaceVariant,
-          ),
+          const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
         ],
       ),
       onTap: () => context.push(AppRoutes.defaultLocation),

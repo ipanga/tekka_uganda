@@ -12,10 +12,7 @@ import '../../domain/entities/meetup_location.dart';
 class MeetupDetailScreen extends ConsumerWidget {
   final String meetupId;
 
-  const MeetupDetailScreen({
-    super.key,
-    required this.meetupId,
-  });
+  const MeetupDetailScreen({super.key, required this.meetupId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -25,9 +22,7 @@ class MeetupDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Meetup Details'),
-      ),
+      appBar: AppBar(title: const Text('Meetup Details')),
       body: meetupAsync.when(
         data: (meetup) {
           if (meetup == null) {
@@ -41,10 +36,7 @@ class MeetupDetailScreen extends ConsumerWidget {
                     color: AppColors.onSurfaceVariant,
                   ),
                   const SizedBox(height: AppSpacing.space4),
-                  Text(
-                    'Meetup not found',
-                    style: AppTypography.titleMedium,
-                  ),
+                  Text('Meetup not found', style: AppTypography.titleMedium),
                   const SizedBox(height: AppSpacing.space4),
                   FilledButton(
                     onPressed: () => context.pop(),
@@ -60,8 +52,10 @@ class MeetupDetailScreen extends ConsumerWidget {
           final isConfirmed = meetup.status == MeetupStatus.confirmed;
           final canConfirm = isProposed && !isBuyer; // Seller confirms
           final canCancel = isProposed || isConfirmed;
-          final canComplete = isConfirmed && meetup.scheduledAt.isBefore(DateTime.now());
-          final canMarkNoShow = isConfirmed && meetup.scheduledAt.isBefore(DateTime.now());
+          final canComplete =
+              isConfirmed && meetup.scheduledAt.isBefore(DateTime.now());
+          final canMarkNoShow =
+              isConfirmed && meetup.scheduledAt.isBefore(DateTime.now());
 
           return SingleChildScrollView(
             padding: AppSpacing.screenPadding,
@@ -247,7 +241,9 @@ class MeetupDetailScreen extends ConsumerWidget {
 
                 // Role card
                 _InfoCard(
-                  icon: isBuyer ? Icons.shopping_bag_outlined : Icons.sell_outlined,
+                  icon: isBuyer
+                      ? Icons.shopping_bag_outlined
+                      : Icons.sell_outlined,
                   title: 'Your Role',
                   child: Row(
                     children: [
@@ -265,7 +261,9 @@ class MeetupDetailScreen extends ConsumerWidget {
                         child: Text(
                           isBuyer ? 'Buyer' : 'Seller',
                           style: AppTypography.labelLarge.copyWith(
-                            color: isBuyer ? AppColors.primary : AppColors.secondary,
+                            color: isBuyer
+                                ? AppColors.primary
+                                : AppColors.secondary,
                           ),
                         ),
                       ),
@@ -279,10 +277,7 @@ class MeetupDetailScreen extends ConsumerWidget {
                   _InfoCard(
                     icon: Icons.note_outlined,
                     title: 'Notes',
-                    child: Text(
-                      meetup.notes!,
-                      style: AppTypography.bodyMedium,
-                    ),
+                    child: Text(meetup.notes!, style: AppTypography.bodyMedium),
                   ),
                 ],
 
@@ -367,16 +362,9 @@ class MeetupDetailScreen extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 48,
-                color: AppColors.error,
-              ),
+              Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: AppSpacing.space4),
-              Text(
-                'Error loading meetup',
-                style: AppTypography.titleMedium,
-              ),
+              Text('Error loading meetup', style: AppTypography.titleMedium),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
                 onPressed: () => ref.refresh(scheduledMeetupProvider(meetupId)),
@@ -391,12 +379,27 @@ class MeetupDetailScreen extends ConsumerWidget {
 
   String _formatFullDate(DateTime date) {
     final weekdays = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-      'Friday', 'Saturday', 'Sunday'
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
     ];
     final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
 
     return '${weekdays[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}, ${date.year}';
@@ -512,9 +515,7 @@ class MeetupDetailScreen extends ConsumerWidget {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.warning,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.warning),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Report'),
           ),
@@ -556,9 +557,7 @@ class MeetupDetailScreen extends ConsumerWidget {
             child: const Text('Back'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () => Navigator.pop(context, reasonController.text),
             child: const Text('Cancel Meetup'),
           ),
@@ -702,10 +701,7 @@ class _InfoCard extends StatelessWidget {
                   color: AppColors.onSurfaceVariant,
                 ),
               ),
-              if (trailing != null) ...[
-                const Spacer(),
-                trailing!,
-              ],
+              if (trailing != null) ...[const Spacer(), trailing!],
             ],
           ),
           const SizedBox(height: AppSpacing.space3),
@@ -740,9 +736,7 @@ class _ActionButton extends StatelessWidget {
           onPressed: onPressed,
           icon: Icon(icon, color: color),
           label: Text(label, style: TextStyle(color: color)),
-          style: OutlinedButton.styleFrom(
-            side: BorderSide(color: color),
-          ),
+          style: OutlinedButton.styleFrom(side: BorderSide(color: color)),
         ),
       );
     }
@@ -753,9 +747,7 @@ class _ActionButton extends StatelessWidget {
         onPressed: onPressed,
         icon: Icon(icon),
         label: Text(label),
-        style: FilledButton.styleFrom(
-          backgroundColor: color,
-        ),
+        style: FilledButton.styleFrom(backgroundColor: color),
       ),
     );
   }

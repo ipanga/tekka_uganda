@@ -17,7 +17,9 @@ final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
 });
 
 /// Stream of notifications for current user
-final notificationsStreamProvider = StreamProvider<List<AppNotification>>((ref) {
+final notificationsStreamProvider = StreamProvider<List<AppNotification>>((
+  ref,
+) {
   final user = ref.watch(currentUserProvider);
   if (user == null) return Stream.value([]);
 
@@ -26,7 +28,9 @@ final notificationsStreamProvider = StreamProvider<List<AppNotification>>((ref) 
 });
 
 /// Notifications list provider (one-time fetch)
-final notificationsProvider = FutureProvider<List<AppNotification>>((ref) async {
+final notificationsProvider = FutureProvider<List<AppNotification>>((
+  ref,
+) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return [];
 
@@ -46,10 +50,7 @@ final unreadNotificationsStreamProvider = StreamProvider<int>((ref) {
 /// Unread notifications count provider (derived from stream)
 final unreadNotificationsCountProvider = Provider<int>((ref) {
   final countAsync = ref.watch(unreadNotificationsStreamProvider);
-  return countAsync.maybeWhen(
-    data: (count) => count,
-    orElse: () => 0,
-  );
+  return countAsync.maybeWhen(data: (count) => count, orElse: () => 0);
 });
 
 /// Notification actions notifier
@@ -58,7 +59,7 @@ class NotificationActionsNotifier extends StateNotifier<AsyncValue<void>> {
   final String _userId;
 
   NotificationActionsNotifier(this._repository, this._userId)
-      : super(const AsyncValue.data(null));
+    : super(const AsyncValue.data(null));
 
   Future<void> markAsRead(String notificationId) async {
     state = const AsyncValue.loading();
@@ -103,14 +104,11 @@ class NotificationActionsNotifier extends StateNotifier<AsyncValue<void>> {
 
 final notificationActionsProvider =
     StateNotifierProvider<NotificationActionsNotifier, AsyncValue<void>>((ref) {
-  final user = ref.watch(currentUserProvider);
-  final repository = ref.watch(notificationRepositoryProvider);
+      final user = ref.watch(currentUserProvider);
+      final repository = ref.watch(notificationRepositoryProvider);
 
-  return NotificationActionsNotifier(
-    repository,
-    user?.uid ?? '',
-  );
-});
+      return NotificationActionsNotifier(repository, user?.uid ?? '');
+    });
 
 /// Create notification helper provider
 final createNotificationProvider = Provider((ref) {
@@ -124,54 +122,55 @@ final createNotificationProvider = Provider((ref) {
 /// Stream of notification preferences for current user (using polling)
 final notificationPreferencesStreamProvider =
     StreamProvider<NotificationPreferences>((ref) {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) return Stream.value(const NotificationPreferences());
+      final user = ref.watch(currentUserProvider);
+      if (user == null) return Stream.value(const NotificationPreferences());
 
-  final repository = ref.watch(userApiRepositoryProvider);
+      final repository = ref.watch(userApiRepositoryProvider);
 
-  // Create a polling stream
-  late StreamController<NotificationPreferences> controller;
-  Timer? timer;
-  bool isDisposed = false;
+      // Create a polling stream
+      late StreamController<NotificationPreferences> controller;
+      Timer? timer;
+      bool isDisposed = false;
 
-  Future<void> poll() async {
-    if (isDisposed) return;
-    try {
-      final settings = await repository.getSettings();
-      if (!isDisposed) {
-        controller.add(NotificationPreferences.fromMap(settings));
+      Future<void> poll() async {
+        if (isDisposed) return;
+        try {
+          final settings = await repository.getSettings();
+          if (!isDisposed) {
+            controller.add(NotificationPreferences.fromMap(settings));
+          }
+        } catch (e) {
+          if (!isDisposed) {
+            controller.addError(e);
+          }
+        }
       }
-    } catch (e) {
-      if (!isDisposed) {
-        controller.addError(e);
-      }
-    }
-  }
 
-  controller = StreamController<NotificationPreferences>(
-    onListen: () {
-      poll();
-      timer = Timer.periodic(const Duration(seconds: 60), (_) => poll());
-    },
-    onCancel: () {
-      isDisposed = true;
-      timer?.cancel();
-    },
-  );
+      controller = StreamController<NotificationPreferences>(
+        onListen: () {
+          poll();
+          timer = Timer.periodic(const Duration(seconds: 60), (_) => poll());
+        },
+        onCancel: () {
+          isDisposed = true;
+          timer?.cancel();
+        },
+      );
 
-  return controller.stream;
-});
+      return controller.stream;
+    });
 
 /// One-time fetch of notification preferences
-final notificationPreferencesProvider =
-    FutureProvider<NotificationPreferences>((ref) async {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) return const NotificationPreferences();
+final notificationPreferencesProvider = FutureProvider<NotificationPreferences>(
+  (ref) async {
+    final user = ref.watch(currentUserProvider);
+    if (user == null) return const NotificationPreferences();
 
-  final repository = ref.watch(userApiRepositoryProvider);
-  final settings = await repository.getSettings();
-  return NotificationPreferences.fromMap(settings);
-});
+    final repository = ref.watch(userApiRepositoryProvider);
+    final settings = await repository.getSettings();
+    return NotificationPreferences.fromMap(settings);
+  },
+);
 
 /// Notification preferences notifier for updating settings
 class NotificationPreferencesNotifier
@@ -179,8 +178,9 @@ class NotificationPreferencesNotifier
   final UserApiRepository _repository;
 
   NotificationPreferencesNotifier(
-      this._repository, NotificationPreferences initial)
-      : super(AsyncValue.data(initial));
+    this._repository,
+    NotificationPreferences initial,
+  ) : super(AsyncValue.data(initial));
 
   Future<void> updatePreferences(NotificationPreferences preferences) async {
     state = const AsyncValue.loading();
@@ -244,29 +244,34 @@ class NotificationPreferencesNotifier
     await updatePreferences(current.copyWith(systemNotifications: enabled));
   }
 
-  Future<void> setDoNotDisturb(bool enabled, {int? startHour, int? endHour}) async {
+  Future<void> setDoNotDisturb(
+    bool enabled, {
+    int? startHour,
+    int? endHour,
+  }) async {
     final current = state.valueOrNull ?? const NotificationPreferences();
-    await updatePreferences(current.copyWith(
-      doNotDisturb: enabled,
-      dndStartHour: startHour ?? current.dndStartHour,
-      dndEndHour: endHour ?? current.dndEndHour,
-    ));
+    await updatePreferences(
+      current.copyWith(
+        doNotDisturb: enabled,
+        dndStartHour: startHour ?? current.dndStartHour,
+        dndEndHour: endHour ?? current.dndEndHour,
+      ),
+    );
   }
 }
 
-final notificationPreferencesNotifierProvider = StateNotifierProvider<
-    NotificationPreferencesNotifier,
-    AsyncValue<NotificationPreferences>>((ref) {
-  final repository = ref.watch(userApiRepositoryProvider);
-  final prefsAsync = ref.watch(notificationPreferencesProvider);
+final notificationPreferencesNotifierProvider =
+    StateNotifierProvider<
+      NotificationPreferencesNotifier,
+      AsyncValue<NotificationPreferences>
+    >((ref) {
+      final repository = ref.watch(userApiRepositoryProvider);
+      final prefsAsync = ref.watch(notificationPreferencesProvider);
 
-  final initialPrefs = prefsAsync.maybeWhen(
-    data: (prefs) => prefs,
-    orElse: () => const NotificationPreferences(),
-  );
+      final initialPrefs = prefsAsync.maybeWhen(
+        data: (prefs) => prefs,
+        orElse: () => const NotificationPreferences(),
+      );
 
-  return NotificationPreferencesNotifier(
-    repository,
-    initialPrefs,
-  );
-});
+      return NotificationPreferencesNotifier(repository, initialPrefs);
+    });

@@ -47,11 +47,17 @@ class MeetupApiRepository implements MeetupRepository {
     }).toList();
   }
 
-  double _calculateDistance(double lat1, double lon1, double lat2, double lon2) {
+  double _calculateDistance(
+    double lat1,
+    double lon1,
+    double lat2,
+    double lon2,
+  ) {
     // Simple distance calculation (not accurate for large distances)
     const kmPerDegree = 111.0;
     final latDiff = (lat2 - lat1).abs() * kmPerDegree;
-    final lonDiff = (lon2 - lon1).abs() * kmPerDegree * 0.85; // Approximate at equator
+    final lonDiff =
+        (lon2 - lon1).abs() * kmPerDegree * 0.85; // Approximate at equator
     return (latDiff * latDiff + lonDiff * lonDiff).sqrt();
   }
 
@@ -150,9 +156,7 @@ class MeetupApiRepository implements MeetupRepository {
   Future<void> cancelMeetup(String meetupId, String? reason) async {
     await _apiClient.put<Map<String, dynamic>>(
       '/meetups/$meetupId/cancel',
-      data: {
-        if (reason != null) 'reason': reason,
-      },
+      data: {if (reason != null) 'reason': reason},
     );
   }
 
@@ -175,7 +179,13 @@ class MeetupApiRepository implements MeetupRepository {
 
 // Extension for sqrt
 extension on double {
-  double sqrt() => this < 0 ? 0 : isNaN ? 0 : isInfinite ? 0 : _sqrt(this);
+  double sqrt() => this < 0
+      ? 0
+      : isNaN
+      ? 0
+      : isInfinite
+      ? 0
+      : _sqrt(this);
 
   static double _sqrt(double x) {
     if (x == 0) return 0;

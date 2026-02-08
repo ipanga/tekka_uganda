@@ -24,7 +24,8 @@ class ScheduleMeetupSheet extends ConsumerStatefulWidget {
   final void Function(ScheduledMeetup meetup) onMeetupScheduled;
 
   @override
-  ConsumerState<ScheduleMeetupSheet> createState() => _ScheduleMeetupSheetState();
+  ConsumerState<ScheduleMeetupSheet> createState() =>
+      _ScheduleMeetupSheetState();
 }
 
 class _ScheduleMeetupSheetState extends ConsumerState<ScheduleMeetupSheet> {
@@ -88,10 +89,7 @@ class _ScheduleMeetupSheetState extends ConsumerState<ScheduleMeetupSheet> {
               children: [
                 const Icon(Icons.calendar_today, color: AppColors.primary),
                 const SizedBox(width: AppSpacing.space2),
-                Text(
-                  'Schedule Meetup',
-                  style: AppTypography.titleMedium,
-                ),
+                Text('Schedule Meetup', style: AppTypography.titleMedium),
               ],
             ),
           ),
@@ -106,47 +104,37 @@ class _ScheduleMeetupSheetState extends ConsumerState<ScheduleMeetupSheet> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Location section
-                  Text(
-                    'Location',
-                    style: AppTypography.labelLarge,
-                  ),
+                  Text('Location', style: AppTypography.labelLarge),
                   const SizedBox(height: AppSpacing.space2),
                   _buildLocationSelector(),
 
                   const SizedBox(height: AppSpacing.space6),
 
                   // Date section
-                  Text(
-                    'Date',
-                    style: AppTypography.labelLarge,
-                  ),
+                  Text('Date', style: AppTypography.labelLarge),
                   const SizedBox(height: AppSpacing.space2),
                   _buildDateSelector(),
 
                   const SizedBox(height: AppSpacing.space6),
 
                   // Time section
-                  Text(
-                    'Time',
-                    style: AppTypography.labelLarge,
-                  ),
+                  Text('Time', style: AppTypography.labelLarge),
                   const SizedBox(height: AppSpacing.space2),
                   _buildTimeSelector(),
 
                   const SizedBox(height: AppSpacing.space6),
 
                   // Notes section
-                  Text(
-                    'Notes (optional)',
-                    style: AppTypography.labelLarge,
-                  ),
+                  Text('Notes (optional)', style: AppTypography.labelLarge),
                   const SizedBox(height: AppSpacing.space2),
                   TextField(
                     controller: _notesController,
                     decoration: InputDecoration(
                       hintText: 'Any additional details...',
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
                       ),
                     ),
                     maxLines: 2,
@@ -159,16 +147,24 @@ class _ScheduleMeetupSheetState extends ConsumerState<ScheduleMeetupSheet> {
                       padding: const EdgeInsets.all(AppSpacing.space3),
                       decoration: BoxDecoration(
                         color: AppColors.error.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                          const Icon(
+                            Icons.error_outline,
+                            color: AppColors.error,
+                            size: 20,
+                          ),
                           const SizedBox(width: AppSpacing.space2),
                           Expanded(
                             child: Text(
                               meetupState.error!,
-                              style: AppTypography.bodySmall.copyWith(color: AppColors.error),
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.error,
+                              ),
                             ),
                           ),
                         ],
@@ -256,10 +252,7 @@ class _ScheduleMeetupSheetState extends ConsumerState<ScheduleMeetupSheet> {
                       ),
                     ),
             ),
-            Icon(
-              Icons.chevron_right,
-              color: AppColors.onSurfaceVariant,
-            ),
+            Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
           ],
         ),
       ),
@@ -297,10 +290,7 @@ class _ScheduleMeetupSheetState extends ConsumerState<ScheduleMeetupSheet> {
                 ),
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              color: AppColors.onSurfaceVariant,
-            ),
+            Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
           ],
         ),
       ),
@@ -338,10 +328,7 @@ class _ScheduleMeetupSheetState extends ConsumerState<ScheduleMeetupSheet> {
                 ),
               ),
             ),
-            Icon(
-              Icons.chevron_right,
-              color: AppColors.onSurfaceVariant,
-            ),
+            Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
           ],
         ),
       ),
@@ -385,7 +372,8 @@ class _ScheduleMeetupSheetState extends ConsumerState<ScheduleMeetupSheet> {
   }
 
   Future<void> _scheduleMeetup(ScheduleMeetupParams params) async {
-    if (!_isValid || _selectedLocation == null || _combinedDateTime == null) return;
+    if (!_isValid || _selectedLocation == null || _combinedDateTime == null)
+      return;
 
     final notifier = ref.read(scheduleMeetupProvider(params).notifier);
     notifier.selectLocation(_selectedLocation!);
@@ -405,18 +393,30 @@ class _ScheduleMeetupSheetState extends ConsumerState<ScheduleMeetupSheet> {
     final now = DateTime.now();
     final tomorrow = DateTime(now.year, now.month, now.day + 1);
 
-    if (date.year == now.year && date.month == now.month && date.day == now.day) {
+    if (date.year == now.year &&
+        date.month == now.month &&
+        date.day == now.day) {
       return 'Today';
     } else if (date.year == tomorrow.year &&
-               date.month == tomorrow.month &&
-               date.day == tomorrow.day) {
+        date.month == tomorrow.month &&
+        date.day == tomorrow.day) {
       return 'Tomorrow';
     }
 
     final weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
 
     return '${weekdays[date.weekday - 1]}, ${months[date.month - 1]} ${date.day}';

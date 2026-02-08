@@ -56,9 +56,7 @@ class _IdentityVerificationScreenState
           },
         ),
       ),
-      body: SafeArea(
-        child: _buildContent(status),
-      ),
+      body: SafeArea(child: _buildContent(status)),
     );
   }
 
@@ -132,22 +130,21 @@ class _IdentityVerificationScreenState
 
           const SizedBox(height: AppSpacing.space8),
 
-          Text(
-            'Select Document Type',
-            style: AppTypography.titleMedium,
-          ),
+          Text('Select Document Type', style: AppTypography.titleMedium),
 
           const SizedBox(height: AppSpacing.space4),
 
           // Document type options
-          ...IdDocumentType.values.map((type) => _DocumentTypeCard(
-                type: type,
-                onTap: () {
-                  ref
-                      .read(identityVerificationProvider.notifier)
-                      .setDocumentType(type);
-                },
-              )),
+          ...IdDocumentType.values.map(
+            (type) => _DocumentTypeCard(
+              type: type,
+              onTap: () {
+                ref
+                    .read(identityVerificationProvider.notifier)
+                    .setDocumentType(type);
+              },
+            ),
+          ),
 
           const Spacer(),
 
@@ -161,11 +158,7 @@ class _IdentityVerificationScreenState
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 20,
-                  color: AppColors.primary,
-                ),
+                Icon(Icons.info_outline, size: 20, color: AppColors.primary),
                 const SizedBox(width: AppSpacing.space3),
                 Expanded(
                   child: Text(
@@ -202,10 +195,7 @@ class _IdentityVerificationScreenState
             ),
             child: Row(
               children: [
-                Icon(
-                  Icons.badge_outlined,
-                  color: AppColors.primary,
-                ),
+                Icon(Icons.badge_outlined, color: AppColors.primary),
                 const SizedBox(width: AppSpacing.space3),
                 Text(
                   status.documentType!.displayName,
@@ -226,10 +216,7 @@ class _IdentityVerificationScreenState
 
           const SizedBox(height: AppSpacing.space6),
 
-          Text(
-            'Personal Details',
-            style: AppTypography.titleMedium,
-          ),
+          Text('Personal Details', style: AppTypography.titleMedium),
 
           const SizedBox(height: AppSpacing.space4),
 
@@ -300,10 +287,7 @@ class _IdentityVerificationScreenState
 
           const SizedBox(height: AppSpacing.space6),
 
-          Text(
-            'Document Photos',
-            style: AppTypography.titleMedium,
-          ),
+          Text('Document Photos', style: AppTypography.titleMedium),
 
           const SizedBox(height: AppSpacing.space2),
 
@@ -401,10 +385,7 @@ class _IdentityVerificationScreenState
               ),
             ),
             const SizedBox(height: AppSpacing.space6),
-            Text(
-              'Identity Verified',
-              style: AppTypography.headlineSmall,
-            ),
+            Text('Identity Verified', style: AppTypography.headlineSmall),
             const SizedBox(height: AppSpacing.space2),
             Text(
               'Your identity has been successfully verified. You now have a fully verified account.',
@@ -513,10 +494,7 @@ class _IdentityVerificationScreenState
               ),
             ),
             const SizedBox(height: AppSpacing.space6),
-            Text(
-              'Verification Rejected',
-              style: AppTypography.headlineSmall,
-            ),
+            Text('Verification Rejected', style: AppTypography.headlineSmall),
             const SizedBox(height: AppSpacing.space2),
             Text(
               'Your verification was not approved. Please try again with valid documents.',
@@ -535,8 +513,11 @@ class _IdentityVerificationScreenState
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.info_outline,
-                        color: AppColors.error, size: 20),
+                    const Icon(
+                      Icons.info_outline,
+                      color: AppColors.error,
+                      size: 20,
+                    ),
                     const SizedBox(width: AppSpacing.space2),
                     Expanded(
                       child: Text(
@@ -644,7 +625,9 @@ class _IdentityVerificationScreenState
 
     if (_frontImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload the front of your document')),
+        const SnackBar(
+          content: Text('Please upload the front of your document'),
+        ),
       );
       return;
     }
@@ -727,10 +710,7 @@ class _DocumentTypeCard extends StatelessWidget {
   final IdDocumentType type;
   final VoidCallback onTap;
 
-  const _DocumentTypeCard({
-    required this.type,
-    required this.onTap,
-  });
+  const _DocumentTypeCard({required this.type, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -765,10 +745,7 @@ class _DocumentTypeCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      type.displayName,
-                      style: AppTypography.titleSmall,
-                    ),
+                    Text(type.displayName, style: AppTypography.titleSmall),
                     Text(
                       type.description,
                       style: AppTypography.bodySmall.copyWith(
@@ -842,11 +819,7 @@ class _ImageUploadCard extends StatelessWidget {
                         height: 60,
                       ),
                     )
-                  : Icon(
-                      icon,
-                      color: AppColors.primary,
-                      size: 28,
-                    ),
+                  : Icon(icon, color: AppColors.primary, size: 28),
             ),
             const SizedBox(width: AppSpacing.space4),
             Expanded(

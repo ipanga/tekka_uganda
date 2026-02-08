@@ -40,8 +40,9 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
   Future<void> _tryBiometricUnlock() async {
     final appLockStatus = ref.read(appLockProvider);
     if (appLockStatus.canUseBiometric) {
-      final success =
-          await ref.read(appLockProvider.notifier).unlockWithBiometric();
+      final success = await ref
+          .read(appLockProvider.notifier)
+          .unlockWithBiometric();
       if (success) {
         widget.onUnlocked?.call();
       } else if (appLockStatus.canUsePin) {
@@ -113,11 +114,7 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
             color: AppColors.primaryContainer,
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Icon(
-            Icons.lock_outline,
-            size: 40,
-            color: AppColors.primary,
-          ),
+          child: Icon(Icons.lock_outline, size: 40, color: AppColors.primary),
         ),
         const SizedBox(height: AppSpacing.space4),
         Text(
@@ -176,9 +173,7 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
             maxLength: 6,
             obscureText: true,
             autofocus: true,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-            ],
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: const InputDecoration(
               counterText: '',
               border: InputBorder.none,
@@ -223,7 +218,11 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline, color: AppColors.error, size: 16),
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 16,
+                ),
                 const SizedBox(width: AppSpacing.space2),
                 Text(
                   status.errorMessage!,
@@ -279,14 +278,8 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
               shape: BoxShape.circle,
             ),
             child: appLockStatus.isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Icon(
-                    icon,
-                    size: 40,
-                    color: AppColors.primary,
-                  ),
+                ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                : Icon(icon, size: 40, color: AppColors.primary),
           ),
         ),
 
@@ -312,9 +305,7 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
             ),
             child: Text(
               appLockStatus.errorMessage!,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.error,
-              ),
+              style: AppTypography.bodySmall.copyWith(color: AppColors.error),
             ),
           ),
         ],

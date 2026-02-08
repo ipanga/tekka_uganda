@@ -25,7 +25,8 @@ class ReportApiRepository implements ReportRepository {
       data: {
         'reportedUserId': request.reportedUserId,
         'reason': request.reason.name.toUpperCase(),
-        if (request.additionalDetails != null) 'description': request.additionalDetails,
+        if (request.additionalDetails != null)
+          'description': request.additionalDetails,
         if (request.listingId != null) 'reportedListingId': request.listingId,
       },
     );

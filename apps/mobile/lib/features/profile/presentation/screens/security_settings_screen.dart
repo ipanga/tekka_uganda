@@ -22,9 +22,7 @@ class SecuritySettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Security'),
-      ),
+      appBar: AppBar(title: const Text('Security')),
       body: prefsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -96,10 +94,7 @@ class _SecuritySettingsContent extends ConsumerWidget {
             children: [
               _AppLockTile(),
               _BiometricTile(),
-              _TwoFactorTile(
-                prefs: prefs,
-                notifier: notifier,
-              ),
+              _TwoFactorTile(prefs: prefs, notifier: notifier),
             ],
           ),
         ),
@@ -141,10 +136,7 @@ class _SecuritySettingsContent extends ConsumerWidget {
 
         // Active Sessions Section
         _SectionHeader(title: 'Active Sessions'),
-        Container(
-          color: AppColors.surface,
-          child: _SessionsList(),
-        ),
+        Container(color: AppColors.surface, child: _SessionsList()),
 
         const SizedBox(height: AppSpacing.space4),
 
@@ -179,11 +171,7 @@ class _SecuritySettingsContent extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.shield_outlined,
-                  size: 20,
-                  color: AppColors.primary,
-                ),
+                Icon(Icons.shield_outlined, size: 20, color: AppColors.primary),
                 const SizedBox(width: AppSpacing.space3),
                 Expanded(
                   child: Text(
@@ -282,14 +270,8 @@ class _SettingsToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: AppColors.onSurfaceVariant,
-      ),
-      title: Text(
-        title,
-        style: AppTypography.bodyLarge,
-      ),
+      leading: Icon(icon, color: AppColors.onSurfaceVariant),
+      title: Text(title, style: AppTypography.bodyLarge),
       subtitle: Text(
         subtitle,
         style: AppTypography.bodySmall.copyWith(
@@ -321,14 +303,8 @@ class _ActionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: AppColors.onSurfaceVariant,
-      ),
-      title: Text(
-        title,
-        style: AppTypography.bodyLarge,
-      ),
+      leading: Icon(icon, color: AppColors.onSurfaceVariant),
+      title: Text(title, style: AppTypography.bodyLarge),
       subtitle: Text(
         subtitle,
         style: AppTypography.bodySmall.copyWith(
@@ -481,13 +457,13 @@ class _VerificationItem extends StatelessWidget {
           if (isVerified)
             const Icon(Icons.check_circle, color: AppColors.success, size: 20)
           else if (onVerify != null)
-            TextButton(
-              onPressed: onVerify,
-              child: const Text('Verify'),
-            )
+            TextButton(onPressed: onVerify, child: const Text('Verify'))
           else
-            Icon(Icons.circle_outlined,
-                color: AppColors.onSurfaceVariant, size: 20),
+            Icon(
+              Icons.circle_outlined,
+              color: AppColors.onSurfaceVariant,
+              size: 20,
+            ),
         ],
       ),
     );
@@ -506,7 +482,7 @@ class _VerificationItem extends StatelessWidget {
       'Sep',
       'Oct',
       'Nov',
-      'Dec'
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.year}';
   }
@@ -588,8 +564,11 @@ class _SessionsList extends ConsumerWidget {
         child: Center(
           child: Column(
             children: [
-              Icon(Icons.error_outline,
-                  color: AppColors.onSurfaceVariant, size: 32),
+              Icon(
+                Icons.error_outline,
+                color: AppColors.onSurfaceVariant,
+                size: 32,
+              ),
               const SizedBox(height: AppSpacing.space2),
               Text(
                 'Could not load sessions',
@@ -608,8 +587,11 @@ class _SessionsList extends ConsumerWidget {
             child: Center(
               child: Column(
                 children: [
-                  Icon(Icons.devices,
-                      color: AppColors.onSurfaceVariant, size: 32),
+                  Icon(
+                    Icons.devices,
+                    color: AppColors.onSurfaceVariant,
+                    size: 32,
+                  ),
                   const SizedBox(height: AppSpacing.space2),
                   Text(
                     'This is your only active session',
@@ -643,15 +625,14 @@ class _SessionTile extends ConsumerWidget {
     return ListTile(
       leading: Icon(
         _getDeviceIcon(session.deviceType),
-        color: session.isCurrent ? AppColors.primary : AppColors.onSurfaceVariant,
+        color: session.isCurrent
+            ? AppColors.primary
+            : AppColors.onSurfaceVariant,
       ),
       title: Row(
         children: [
           Expanded(
-            child: Text(
-              session.deviceName,
-              style: AppTypography.bodyMedium,
-            ),
+            child: Text(session.deviceName, style: AppTypography.bodyMedium),
           ),
           if (session.isCurrent)
             Container(
@@ -732,9 +713,9 @@ class _SessionTile extends ConsumerWidget {
               Navigator.pop(context);
               await ref.read(terminateSessionProvider(session.id))();
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Session ended')),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(const SnackBar(content: Text('Session ended')));
               }
             },
             child: const Text('End Session'),
@@ -746,10 +727,7 @@ class _SessionTile extends ConsumerWidget {
 }
 
 class _TwoFactorTile extends ConsumerWidget {
-  const _TwoFactorTile({
-    required this.prefs,
-    required this.notifier,
-  });
+  const _TwoFactorTile({required this.prefs, required this.notifier});
 
   final SecurityPreferences prefs;
   final SecurityPreferencesNotifier notifier;
@@ -874,7 +852,8 @@ class _BiometricTile extends ConsumerWidget {
 
     // Listen for errors
     ref.listen<BiometricStatus>(biometricAuthProvider, (prev, next) {
-      if (next.errorMessage != null && prev?.errorMessage != next.errorMessage) {
+      if (next.errorMessage != null &&
+          prev?.errorMessage != next.errorMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.errorMessage!),
@@ -924,8 +903,8 @@ class _BiometricTile extends ConsumerWidget {
                 color: biometricStatus.isEnabled
                     ? AppColors.success
                     : biometricStatus.isAvailable
-                        ? AppColors.primary
-                        : AppColors.gray400,
+                    ? AppColors.primary
+                    : AppColors.gray400,
               ),
       ),
       title: Text(
@@ -944,12 +923,19 @@ class _BiometricTile extends ConsumerWidget {
       ),
       trailing: Switch(
         value: biometricStatus.isEnabled,
-        onChanged: biometricStatus.isAvailable && biometricStatus.isEnrolled && !biometricStatus.isLoading
+        onChanged:
+            biometricStatus.isAvailable &&
+                biometricStatus.isEnrolled &&
+                !biometricStatus.isLoading
             ? (value) async {
                 if (value) {
-                  await ref.read(biometricAuthProvider.notifier).enableBiometric();
+                  await ref
+                      .read(biometricAuthProvider.notifier)
+                      .enableBiometric();
                 } else {
-                  await ref.read(biometricAuthProvider.notifier).disableBiometric();
+                  await ref
+                      .read(biometricAuthProvider.notifier)
+                      .disableBiometric();
                 }
               }
             : null,
@@ -976,13 +962,12 @@ class _AppLockTile extends ConsumerWidget {
         ),
         child: Icon(
           appLockStatus.isEnabled ? Icons.lock : Icons.lock_open,
-          color: appLockStatus.isEnabled ? AppColors.success : AppColors.primary,
+          color: appLockStatus.isEnabled
+              ? AppColors.success
+              : AppColors.primary,
         ),
       ),
-      title: Text(
-        'App Lock',
-        style: AppTypography.bodyLarge,
-      ),
+      title: Text('App Lock', style: AppTypography.bodyLarge),
       subtitle: Text(
         appLockStatus.isEnabled
             ? appLockStatus.mode.displayName

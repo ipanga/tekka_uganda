@@ -185,10 +185,7 @@ class ProfileScreen extends ConsumerWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'My Listings',
-                          style: AppTypography.titleMedium,
-                        ),
+                        Text('My Listings', style: AppTypography.titleMedium),
                         TextButton(
                           onPressed: () => context.push(AppRoutes.myListings),
                           child: const Text('See All'),
@@ -229,7 +226,9 @@ class ProfileScreen extends ConsumerWidget {
                                 TextButton(
                                   onPressed: () =>
                                       context.push(AppRoutes.createListing),
-                                  child: const Text('Create your first listing'),
+                                  child: const Text(
+                                    'Create your first listing',
+                                  ),
                                 ),
                               ],
                             ),
@@ -255,8 +254,10 @@ class ProfileScreen extends ConsumerWidget {
                                 listing: listing,
                                 onTap: () {
                                   context.push(
-                                    AppRoutes.listingDetail
-                                        .replaceFirst(':id', listing.id),
+                                    AppRoutes.listingDetail.replaceFirst(
+                                      ':id',
+                                      listing.id,
+                                    ),
                                   );
                                 },
                               ),
@@ -356,8 +357,18 @@ class ProfileScreen extends ConsumerWidget {
 
   String _formatMemberSince(DateTime date) {
     final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${months[date.month - 1]} ${date.year}';
   }
@@ -387,10 +398,7 @@ class ProfileScreen extends ConsumerWidget {
 }
 
 class _StatItem extends StatelessWidget {
-  const _StatItem({
-    required this.count,
-    required this.label,
-  });
+  const _StatItem({required this.count, required this.label});
 
   final String count;
   final String label;
@@ -401,25 +409,17 @@ class _StatItem extends StatelessWidget {
       children: [
         Text(
           count,
-          style: AppTypography.headlineSmall.copyWith(
-            color: AppColors.primary,
-          ),
+          style: AppTypography.headlineSmall.copyWith(color: AppColors.primary),
         ),
         const SizedBox(height: AppSpacing.space1),
-        Text(
-          label,
-          style: AppTypography.bodySmall,
-        ),
+        Text(label, style: AppTypography.bodySmall),
       ],
     );
   }
 }
 
 class _ListingThumbnail extends StatelessWidget {
-  const _ListingThumbnail({
-    required this.listing,
-    required this.onTap,
-  });
+  const _ListingThumbnail({required this.listing, required this.onTap});
 
   final Listing listing;
   final VoidCallback onTap;
@@ -451,10 +451,7 @@ class _ListingThumbnail extends StatelessWidget {
                         : null,
                   ),
                   child: listing.imageUrls.isEmpty
-                      ? const Icon(
-                          Icons.image,
-                          color: AppColors.gray400,
-                        )
+                      ? const Icon(Icons.image, color: AppColors.gray400)
                       : null,
                 ),
                 if (listing.status == ListingStatus.sold)

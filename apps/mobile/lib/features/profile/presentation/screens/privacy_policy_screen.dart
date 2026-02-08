@@ -10,9 +10,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Privacy Policy'),
-      ),
+      appBar: AppBar(title: const Text('Privacy Policy')),
       body: ListView(
         padding: AppSpacing.screenPadding,
         children: [
@@ -238,11 +236,7 @@ class PrivacyPolicyScreen extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.shield_outlined,
-                  size: 20,
-                  color: AppColors.primary,
-                ),
+                Icon(Icons.shield_outlined, size: 20, color: AppColors.primary),
                 const SizedBox(width: AppSpacing.space3),
                 Expanded(
                   child: Text(
@@ -274,9 +268,7 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.space2),
       child: Text(
         title,
-        style: AppTypography.titleMedium.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
+        style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

@@ -189,7 +189,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               if (queryParams.isEmpty) {
                 return AppRoutes.home;
               }
-              return Uri(path: AppRoutes.home, queryParameters: queryParams).toString();
+              return Uri(
+                path: AppRoutes.home,
+                queryParameters: queryParams,
+              ).toString();
             },
             pageBuilder: (context, state) => const NoTransitionPage(
               child: HomeScreen(), // Fallback, redirect should catch this
@@ -197,15 +200,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.chatList,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ChatListScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ChatListScreen()),
           ),
           GoRoute(
             path: AppRoutes.profile,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ProfileScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ProfileScreen()),
           ),
         ],
       ),
@@ -413,9 +414,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Text('Page not found: ${state.matchedLocation}'),
-      ),
+      body: Center(child: Text('Page not found: ${state.matchedLocation}')),
     ),
   );
 });

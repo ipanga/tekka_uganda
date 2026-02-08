@@ -150,7 +150,9 @@ class CategoryAttribute {
       isRequired: json['isRequired'] as bool? ?? false,
       sortOrder: json['sortOrder'] as int? ?? 0,
       attribute: json['attribute'] != null
-          ? AttributeDefinition.fromJson(json['attribute'] as Map<String, dynamic>)
+          ? AttributeDefinition.fromJson(
+              json['attribute'] as Map<String, dynamic>,
+            )
           : null,
     );
   }

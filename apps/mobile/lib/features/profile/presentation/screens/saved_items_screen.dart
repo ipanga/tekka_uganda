@@ -21,9 +21,7 @@ class SavedItemsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Saved Items'),
-      ),
+      appBar: AppBar(title: const Text('Saved Items')),
       body: favoritesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -32,7 +30,10 @@ class SavedItemsScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: AppSpacing.space4),
-              Text('Failed to load saved items', style: AppTypography.bodyLarge),
+              Text(
+                'Failed to load saved items',
+                style: AppTypography.bodyLarge,
+              ),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
                 onPressed: () => ref.invalidate(myFavoritesProvider),
@@ -88,10 +89,7 @@ class SavedItemsScreen extends ConsumerWidget {
               color: AppColors.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.space4),
-            Text(
-              'No saved items yet',
-              style: AppTypography.titleMedium,
-            ),
+            Text('No saved items yet', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.space2),
             Text(
               'Items you save will appear here',
@@ -191,7 +189,9 @@ class _FavoriteCard extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          listing.status == ListingStatus.sold ? 'Sold' : 'Unavailable',
+                          listing.status == ListingStatus.sold
+                              ? 'Sold'
+                              : 'Unavailable',
                           style: AppTypography.labelSmall.copyWith(
                             color: AppColors.white,
                             fontWeight: FontWeight.w600,
@@ -282,7 +282,9 @@ class _FavoriteCard extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Remove from Saved'),
-        content: const Text('Are you sure you want to remove this item from your saved items?'),
+        content: const Text(
+          'Are you sure you want to remove this item from your saved items?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -297,7 +299,9 @@ class _FavoriteCard extends ConsumerWidget {
     );
 
     if (confirmed == true) {
-      await ref.read(listingActionsProvider(listing.id).notifier).toggleFavorite();
+      await ref
+          .read(listingActionsProvider(listing.id).notifier)
+          .toggleFavorite();
       onRemoved();
 
       if (context.mounted) {

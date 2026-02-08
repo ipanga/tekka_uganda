@@ -18,9 +18,7 @@ class SellerAnalyticsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Seller Dashboard'),
-      ),
+      appBar: AppBar(title: const Text('Seller Dashboard')),
       body: analyticsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -112,10 +110,7 @@ class _EmptyState extends StatelessWidget {
               color: AppColors.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.space4),
-            Text(
-              'No listings yet',
-              style: AppTypography.titleLarge,
-            ),
+            Text('No listings yet', style: AppTypography.titleLarge),
             const SizedBox(height: AppSpacing.space2),
             Text(
               'Start selling to see your analytics',
@@ -263,7 +258,9 @@ class _RevenueCard extends StatelessWidget {
               const SizedBox(width: AppSpacing.space2),
               Text(
                 'Total Revenue',
-                style: AppTypography.titleMedium.copyWith(color: AppColors.white),
+                style: AppTypography.titleMedium.copyWith(
+                  color: AppColors.white,
+                ),
               ),
             ],
           ),
@@ -361,11 +358,7 @@ class _EngagementCard extends StatelessWidget {
                   label: 'Total Views',
                 ),
               ),
-              Container(
-                width: 1,
-                height: 50,
-                color: AppColors.outline,
-              ),
+              Container(width: 1, height: 50, color: AppColors.outline),
               Expanded(
                 child: _EngagementItem(
                   icon: Icons.favorite_border,
@@ -373,11 +366,7 @@ class _EngagementCard extends StatelessWidget {
                   label: 'Favorites',
                 ),
               ),
-              Container(
-                width: 1,
-                height: 50,
-                color: AppColors.outline,
-              ),
+              Container(width: 1, height: 50, color: AppColors.outline),
               Expanded(
                 child: _EngagementItem(
                   icon: Icons.star_border,
@@ -414,9 +403,7 @@ class _EngagementItem extends StatelessWidget {
         const SizedBox(height: AppSpacing.space2),
         Text(
           value,
-          style: AppTypography.titleLarge.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTypography.titleLarge.copyWith(fontWeight: FontWeight.bold),
         ),
         Text(
           label,
@@ -476,7 +463,9 @@ class _CategoryBreakdownCard extends StatelessWidget {
                   LinearProgressIndicator(
                     value: percentage / 100,
                     backgroundColor: AppColors.gray200,
-                    valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      AppColors.primary,
+                    ),
                     minHeight: 6,
                     borderRadius: BorderRadius.circular(3),
                   ),
@@ -518,7 +507,9 @@ class _ViewsChartCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: monthlyViews.entries.map((entry) {
-                final height = maxViews > 0 ? (entry.value / maxViews) * 80 : 0.0;
+                final height = maxViews > 0
+                    ? (entry.value / maxViews) * 80
+                    : 0.0;
                 return Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -631,10 +622,7 @@ class _RecentListingsCard extends StatelessWidget {
 }
 
 class _ListingPerformanceRow extends StatelessWidget {
-  const _ListingPerformanceRow({
-    required this.listing,
-    this.rank,
-  });
+  const _ListingPerformanceRow({required this.listing, this.rank});
 
   final ListingPerformance listing;
   final int? rank;
@@ -658,8 +646,8 @@ class _ListingPerformanceRow extends StatelessWidget {
                   color: rank == 1
                       ? AppColors.gold
                       : rank == 2
-                          ? AppColors.gray400
-                          : AppColors.secondary.withValues(alpha: 0.7),
+                      ? AppColors.gray400
+                      : AppColors.secondary.withValues(alpha: 0.7),
                   shape: BoxShape.circle,
                 ),
                 child: Center(

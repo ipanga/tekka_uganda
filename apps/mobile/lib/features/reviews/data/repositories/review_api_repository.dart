@@ -10,38 +10,44 @@ class ReviewApiRepository implements ReviewRepository {
   final Duration _pollInterval;
 
   ReviewApiRepository(this._apiClient, {Duration? pollInterval})
-      : _pollInterval = pollInterval ?? const Duration(seconds: 30);
+    : _pollInterval = pollInterval ?? const Duration(seconds: 30);
 
   @override
-  Future<List<Review>> getReviewsForUser(String userId, {int limit = 20}) async {
+  Future<List<Review>> getReviewsForUser(
+    String userId, {
+    int limit = 20,
+  }) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/reviews/user/$userId',
-      queryParameters: {
-        'type': 'received',
-        'limit': limit,
-      },
+      queryParameters: {'type': 'received', 'limit': limit},
     );
     final reviews = response['reviews'] as List<dynamic>? ?? [];
-    return reviews.map((e) => Review.fromJson(e as Map<String, dynamic>)).toList();
+    return reviews
+        .map((e) => Review.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
-  Future<List<Review>> getReviewsByUser(String reviewerId, {int limit = 20}) async {
+  Future<List<Review>> getReviewsByUser(
+    String reviewerId, {
+    int limit = 20,
+  }) async {
     final response = await _apiClient.get<Map<String, dynamic>>(
       '/reviews/user/$reviewerId',
-      queryParameters: {
-        'type': 'given',
-        'limit': limit,
-      },
+      queryParameters: {'type': 'given', 'limit': limit},
     );
     final reviews = response['reviews'] as List<dynamic>? ?? [];
-    return reviews.map((e) => Review.fromJson(e as Map<String, dynamic>)).toList();
+    return reviews
+        .map((e) => Review.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   @override
   Future<Review?> getReviewById(String reviewId) async {
     try {
-      final response = await _apiClient.get<Map<String, dynamic>>('/reviews/$reviewId');
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        '/reviews/$reviewId',
+      );
       return Review.fromJson(response);
     } catch (_) {
       return null;
@@ -64,14 +70,15 @@ class ReviewApiRepository implements ReviewRepository {
 
       if (listingId != null) {
         // Check for specific listing review
-        return !reviews.any((r) =>
-          (r as Map<String, dynamic>)['listingId'] == listingId ||
-          (r['listing'] as Map<String, dynamic>?)?['id'] == listingId
+        return !reviews.any(
+          (r) =>
+              (r as Map<String, dynamic>)['listingId'] == listingId ||
+              (r['listing'] as Map<String, dynamic>?)?['id'] == listingId,
         );
       } else {
         // Check if already reviewed this seller (any review)
-        return !reviews.any((r) =>
-          (r as Map<String, dynamic>)['revieweeId'] == revieweeId
+        return !reviews.any(
+          (r) => (r as Map<String, dynamic>)['revieweeId'] == revieweeId,
         );
       }
     } catch (_) {

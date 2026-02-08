@@ -5,13 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 /// Data export status
-enum DataExportStatus {
-  idle,
-  collecting,
-  packaging,
-  ready,
-  error,
-}
+enum DataExportStatus { idle, collecting, packaging, ready, error }
 
 /// Types of data that can be exported
 enum ExportDataType {
@@ -54,7 +48,8 @@ class DataExportState {
       status == DataExportStatus.collecting ||
       status == DataExportStatus.packaging;
 
-  bool get hasExport => exportFilePath != null && status == DataExportStatus.ready;
+  bool get hasExport =>
+      exportFilePath != null && status == DataExportStatus.ready;
 
   DataExportState copyWith({
     DataExportStatus? status,
@@ -72,7 +67,9 @@ class DataExportState {
       selectedTypes: selectedTypes ?? this.selectedTypes,
       progress: progress ?? this.progress,
       currentStep: currentStep ?? this.currentStep,
-      exportFilePath: clearExport ? null : (exportFilePath ?? this.exportFilePath),
+      exportFilePath: clearExport
+          ? null
+          : (exportFilePath ?? this.exportFilePath),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       exportDate: clearExport ? null : (exportDate ?? this.exportDate),
     );
@@ -81,17 +78,20 @@ class DataExportState {
 
 /// Provider for data export functionality
 class DataExportNotifier extends StateNotifier<DataExportState> {
-  DataExportNotifier() : super(const DataExportState(
-    selectedTypes: {
-      ExportDataType.profile,
-      ExportDataType.listings,
-      ExportDataType.purchases,
-      ExportDataType.sales,
-      ExportDataType.favorites,
-      ExportDataType.messages,
-      ExportDataType.reviews,
-    },
-  ));
+  DataExportNotifier()
+    : super(
+        const DataExportState(
+          selectedTypes: {
+            ExportDataType.profile,
+            ExportDataType.listings,
+            ExportDataType.purchases,
+            ExportDataType.sales,
+            ExportDataType.favorites,
+            ExportDataType.messages,
+            ExportDataType.reviews,
+          },
+        ),
+      );
 
   /// Toggle a data type for export
   void toggleDataType(ExportDataType type) {
@@ -106,9 +106,7 @@ class DataExportNotifier extends StateNotifier<DataExportState> {
 
   /// Select all data types
   void selectAll() {
-    state = state.copyWith(
-      selectedTypes: Set.from(ExportDataType.values),
-    );
+    state = state.copyWith(selectedTypes: Set.from(ExportDataType.values));
   }
 
   /// Deselect all data types
@@ -351,10 +349,7 @@ class DataExportNotifier extends StateNotifier<DataExportState> {
       }
     }
 
-    state = state.copyWith(
-      status: DataExportStatus.idle,
-      clearExport: true,
-    );
+    state = state.copyWith(status: DataExportStatus.idle, clearExport: true);
   }
 
   /// Clear any error messages
@@ -381,5 +376,5 @@ class DataExportNotifier extends StateNotifier<DataExportState> {
 /// Provider for data export
 final dataExportProvider =
     StateNotifierProvider<DataExportNotifier, DataExportState>((ref) {
-  return DataExportNotifier();
-});
+      return DataExportNotifier();
+    });

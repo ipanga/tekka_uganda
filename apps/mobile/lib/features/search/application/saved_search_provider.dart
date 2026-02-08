@@ -179,7 +179,7 @@ class SavedSearchNotifier extends StateNotifier<SavedSearchState> {
   final String _userId;
 
   SavedSearchNotifier(this._repository, this._userId)
-      : super(const SavedSearchState());
+    : super(const SavedSearchState());
 
   /// Save a new search
   Future<bool> saveSearch({
@@ -212,10 +212,7 @@ class SavedSearchNotifier extends StateNotifier<SavedSearchState> {
         condition: condition,
       );
 
-      state = state.copyWith(
-        isLoading: false,
-        lastOperationSuccess: true,
-      );
+      state = state.copyWith(isLoading: false, lastOperationSuccess: true);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -264,10 +261,7 @@ class SavedSearchNotifier extends StateNotifier<SavedSearchState> {
     try {
       await _repository.deleteSearch(searchId);
 
-      state = state.copyWith(
-        isLoading: false,
-        lastOperationSuccess: true,
-      );
+      state = state.copyWith(isLoading: false, lastOperationSuccess: true);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -288,10 +282,7 @@ class SavedSearchNotifier extends StateNotifier<SavedSearchState> {
     try {
       await _repository.deleteAll();
 
-      state = state.copyWith(
-        isLoading: false,
-        lastOperationSuccess: true,
-      );
+      state = state.copyWith(isLoading: false, lastOperationSuccess: true);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -312,14 +303,16 @@ class SavedSearchNotifier extends StateNotifier<SavedSearchState> {
 /// Provider for saved search operations
 final savedSearchProvider =
     StateNotifierProvider<SavedSearchNotifier, SavedSearchState>((ref) {
-  final user = ref.watch(currentUserProvider);
-  final repository = ref.watch(savedSearchRepositoryProvider);
-  return SavedSearchNotifier(repository, user?.uid ?? '');
-});
+      final user = ref.watch(currentUserProvider);
+      final repository = ref.watch(savedSearchRepositoryProvider);
+      return SavedSearchNotifier(repository, user?.uid ?? '');
+    });
 
 /// Check if a search is already saved
-final isSearchSavedProvider =
-    FutureProvider.family<bool, String>((ref, query) async {
+final isSearchSavedProvider = FutureProvider.family<bool, String>((
+  ref,
+  query,
+) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return false;
 

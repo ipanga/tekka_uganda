@@ -77,27 +77,32 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
         isLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 
   /// Get attributes for a category
-  Future<List<AttributeDefinition>> getAttributesForCategory(String categoryId) async {
+  Future<List<AttributeDefinition>> getAttributesForCategory(
+    String categoryId,
+  ) async {
     final categoryRepo = _ref.read(categoryApiRepositoryProvider);
     return categoryRepo.getCategoryAttributes(categoryId);
   }
 }
 
 /// Provider for category data
-final categoryProvider = StateNotifierProvider<CategoryNotifier, CategoryState>((ref) {
-  return CategoryNotifier(ref);
-});
+final categoryProvider = StateNotifierProvider<CategoryNotifier, CategoryState>(
+  (ref) {
+    return CategoryNotifier(ref);
+  },
+);
 
 /// Provider for category attributes (by category ID)
-final categoryAttributesProvider = FutureProvider.family<List<AttributeDefinition>, String>((ref, categoryId) async {
-  final categoryRepo = ref.watch(categoryApiRepositoryProvider);
-  return categoryRepo.getCategoryAttributes(categoryId);
-});
+final categoryAttributesProvider =
+    FutureProvider.family<List<AttributeDefinition>, String>((
+      ref,
+      categoryId,
+    ) async {
+      final categoryRepo = ref.watch(categoryApiRepositoryProvider);
+      return categoryRepo.getCategoryAttributes(categoryId);
+    });

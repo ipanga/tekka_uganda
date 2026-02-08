@@ -15,11 +15,7 @@ class BrowseScreen extends ConsumerStatefulWidget {
   final String? initialCategoryId;
   final String? initialSearch;
 
-  const BrowseScreen({
-    super.key,
-    this.initialCategoryId,
-    this.initialSearch,
-  });
+  const BrowseScreen({super.key, this.initialCategoryId, this.initialSearch});
 
   @override
   ConsumerState<BrowseScreen> createState() => _BrowseScreenState();
@@ -59,17 +55,17 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
   }
 
   ListingsFilter get _currentFilter => ListingsFilter(
-        categoryId: _selectedCategoryId,
-        cityId: _selectedCityId,
-        divisionId: _selectedDivisionId,
-        condition: _selectedCondition,
-        minPrice: _minPrice,
-        maxPrice: _maxPrice,
-        searchQuery: _searchController.text.isEmpty ? null : _searchController.text,
-        sortBy: _sortBy,
-        sortOrder: _sortOrder,
-        limit: 50,
-      );
+    categoryId: _selectedCategoryId,
+    cityId: _selectedCityId,
+    divisionId: _selectedDivisionId,
+    condition: _selectedCondition,
+    minPrice: _minPrice,
+    maxPrice: _maxPrice,
+    searchQuery: _searchController.text.isEmpty ? null : _searchController.text,
+    sortBy: _sortBy,
+    sortOrder: _sortOrder,
+    limit: 50,
+  );
 
   void _clearFilters() {
     setState(() {
@@ -109,10 +105,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
               tooltip: 'Save Search',
               onPressed: () => _saveSearch(context, ref),
             ),
-            TextButton(
-              onPressed: _clearFilters,
-              child: const Text('Clear'),
-            ),
+            TextButton(onPressed: _clearFilters, child: const Text('Clear')),
           ],
         ],
       ),
@@ -232,10 +225,14 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
 
   String _getLocationLabel(CategoryState categoryState) {
     if (_selectedCityId == null) return 'Location';
-    final city = categoryState.activeCities.where((c) => c.id == _selectedCityId).firstOrNull;
+    final city = categoryState.activeCities
+        .where((c) => c.id == _selectedCityId)
+        .firstOrNull;
     if (city == null) return 'Location';
     if (_selectedDivisionId != null) {
-      final division = city.activeDivisions.where((d) => d.id == _selectedDivisionId).firstOrNull;
+      final division = city.activeDivisions
+          .where((d) => d.id == _selectedDivisionId)
+          .firstOrNull;
       if (division != null) return '${city.name}, ${division.name}';
     }
     return city.name;
@@ -291,13 +288,11 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
           children: [
             const Icon(Icons.error_outline, size: 48, color: AppColors.error),
             const SizedBox(height: AppSpacing.space4),
-            Text(
-              'Failed to load listings',
-              style: AppTypography.bodyLarge,
-            ),
+            Text('Failed to load listings', style: AppTypography.bodyLarge),
             const SizedBox(height: AppSpacing.space2),
             TextButton(
-              onPressed: () => ref.invalidate(listingsFeedProvider(_currentFilter)),
+              onPressed: () =>
+                  ref.invalidate(listingsFeedProvider(_currentFilter)),
               child: const Text('Retry'),
             ),
           ],
@@ -313,16 +308,9 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: AppColors.onSurfaceVariant,
-            ),
+            Icon(Icons.search_off, size: 64, color: AppColors.onSurfaceVariant),
             const SizedBox(height: AppSpacing.space4),
-            Text(
-              'No results found',
-              style: AppTypography.titleMedium,
-            ),
+            Text('No results found', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.space2),
             Text(
               _hasActiveFilters
@@ -389,19 +377,29 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
         maxPrice: _maxPrice,
         sortBy: _sortBy,
         sortOrder: _sortOrder,
-        onApply: (categoryId, cityId, divisionId, condition, minPrice, maxPrice, sortBy, sortOrder) {
-          setState(() {
-            _selectedCategoryId = categoryId;
-            _selectedCityId = cityId;
-            _selectedDivisionId = divisionId;
-            _selectedCondition = condition;
-            _minPrice = minPrice;
-            _maxPrice = maxPrice;
-            _sortBy = sortBy;
-            _sortOrder = sortOrder;
-          });
-          Navigator.pop(context);
-        },
+        onApply:
+            (
+              categoryId,
+              cityId,
+              divisionId,
+              condition,
+              minPrice,
+              maxPrice,
+              sortBy,
+              sortOrder,
+            ) {
+              setState(() {
+                _selectedCategoryId = categoryId;
+                _selectedCityId = cityId;
+                _selectedDivisionId = divisionId;
+                _selectedCondition = condition;
+                _minPrice = minPrice;
+                _maxPrice = maxPrice;
+                _sortBy = sortBy;
+                _sortOrder = sortOrder;
+              });
+              Navigator.pop(context);
+            },
       ),
     );
   }
@@ -441,7 +439,10 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text('Category', style: AppTypography.titleLarge),
+                        child: Text(
+                          'Category',
+                          style: AppTypography.titleLarge,
+                        ),
                       ),
                       const SizedBox(height: 8),
                       Expanded(
@@ -450,7 +451,12 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                           children: [
                             ListTile(
                               title: const Text('All Categories'),
-                              trailing: _selectedCategoryId == null ? const Icon(Icons.check, color: AppColors.primary) : null,
+                              trailing: _selectedCategoryId == null
+                                  ? const Icon(
+                                      Icons.check,
+                                      color: AppColors.primary,
+                                    )
+                                  : null,
                               onTap: () {
                                 setState(() => _selectedCategoryId = null);
                                 Navigator.pop(context);
@@ -459,25 +465,36 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                             ...mainCategories.map((mainCat) {
                               final isExpanded = expandedMainId == mainCat.id;
                               final subs = mainCat.activeChildren;
-                              final isSelected = _selectedCategoryId == mainCat.id;
+                              final isSelected =
+                                  _selectedCategoryId == mainCat.id;
                               return Column(
                                 children: [
                                   ListTile(
                                     title: Text(
                                       mainCat.name,
                                       style: TextStyle(
-                                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                                        color: isSelected ? AppColors.primary : null,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                        color: isSelected
+                                            ? AppColors.primary
+                                            : null,
                                       ),
                                     ),
                                     trailing: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         if (isSelected)
-                                          const Icon(Icons.check, color: AppColors.primary, size: 20),
+                                          const Icon(
+                                            Icons.check,
+                                            color: AppColors.primary,
+                                            size: 20,
+                                          ),
                                         if (subs.isNotEmpty)
                                           Icon(
-                                            isExpanded ? Icons.expand_less : Icons.expand_more,
+                                            isExpanded
+                                                ? Icons.expand_less
+                                                : Icons.expand_more,
                                             color: AppColors.onSurfaceVariant,
                                           ),
                                       ],
@@ -485,10 +502,15 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                                     onTap: () {
                                       if (subs.isNotEmpty) {
                                         setSheetState(() {
-                                          expandedMainId = isExpanded ? null : mainCat.id;
+                                          expandedMainId = isExpanded
+                                              ? null
+                                              : mainCat.id;
                                         });
                                       } else {
-                                        setState(() => _selectedCategoryId = mainCat.id);
+                                        setState(
+                                          () =>
+                                              _selectedCategoryId = mainCat.id,
+                                        );
                                         Navigator.pop(context);
                                       }
                                     },
@@ -496,32 +518,57 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                                   if (isExpanded && subs.isNotEmpty) ...[
                                     // Select entire main category
                                     ListTile(
-                                      contentPadding: const EdgeInsets.only(left: 40, right: 16),
+                                      contentPadding: const EdgeInsets.only(
+                                        left: 40,
+                                        right: 16,
+                                      ),
                                       title: Text('All ${mainCat.name}'),
-                                      trailing: _selectedCategoryId == mainCat.id
-                                          ? const Icon(Icons.check, color: AppColors.primary, size: 20)
+                                      trailing:
+                                          _selectedCategoryId == mainCat.id
+                                          ? const Icon(
+                                              Icons.check,
+                                              color: AppColors.primary,
+                                              size: 20,
+                                            )
                                           : null,
                                       onTap: () {
-                                        setState(() => _selectedCategoryId = mainCat.id);
+                                        setState(
+                                          () =>
+                                              _selectedCategoryId = mainCat.id,
+                                        );
                                         Navigator.pop(context);
                                       },
                                     ),
                                     ...subs.map((sub) {
-                                      final isSubSelected = _selectedCategoryId == sub.id;
+                                      final isSubSelected =
+                                          _selectedCategoryId == sub.id;
                                       return ListTile(
-                                        contentPadding: const EdgeInsets.only(left: 40, right: 16),
+                                        contentPadding: const EdgeInsets.only(
+                                          left: 40,
+                                          right: 16,
+                                        ),
                                         title: Text(
                                           sub.name,
                                           style: TextStyle(
-                                            color: isSubSelected ? AppColors.primary : null,
-                                            fontWeight: isSubSelected ? FontWeight.w600 : FontWeight.normal,
+                                            color: isSubSelected
+                                                ? AppColors.primary
+                                                : null,
+                                            fontWeight: isSubSelected
+                                                ? FontWeight.w600
+                                                : FontWeight.normal,
                                           ),
                                         ),
                                         trailing: isSubSelected
-                                            ? const Icon(Icons.check, color: AppColors.primary, size: 20)
+                                            ? const Icon(
+                                                Icons.check,
+                                                color: AppColors.primary,
+                                                size: 20,
+                                              )
                                             : null,
                                         onTap: () {
-                                          setState(() => _selectedCategoryId = sub.id);
+                                          setState(
+                                            () => _selectedCategoryId = sub.id,
+                                          );
                                           Navigator.pop(context);
                                         },
                                       );
@@ -553,7 +600,9 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
           children: [
             ListTile(
               title: const Text('Any Condition'),
-              trailing: _selectedCondition == null ? const Icon(Icons.check, color: AppColors.primary) : null,
+              trailing: _selectedCondition == null
+                  ? const Icon(Icons.check, color: AppColors.primary)
+                  : null,
               onTap: () {
                 setState(() => _selectedCondition = null);
                 Navigator.pop(context);
@@ -562,7 +611,9 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
             ...ItemCondition.values.map((cond) {
               return ListTile(
                 title: Text(cond.displayName),
-                trailing: _selectedCondition == cond ? const Icon(Icons.check, color: AppColors.primary) : null,
+                trailing: _selectedCondition == cond
+                    ? const Icon(Icons.check, color: AppColors.primary)
+                    : null,
                 onTap: () {
                   setState(() => _selectedCondition = cond);
                   Navigator.pop(context);
@@ -653,7 +704,9 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
         String? tempCityId = _selectedCityId;
         return StatefulBuilder(
           builder: (context, setSheetState) {
-            final selectedCity = activeCities.where((c) => c.id == tempCityId).firstOrNull;
+            final selectedCity = activeCities
+                .where((c) => c.id == tempCityId)
+                .firstOrNull;
             final activeDivisions = selectedCity?.activeDivisions ?? [];
 
             return SafeArea(
@@ -680,13 +733,18 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         child: Text(
-                          tempCityId == null ? 'Select City' : 'Select Division',
+                          tempCityId == null
+                              ? 'Select City'
+                              : 'Select Division',
                           style: AppTypography.titleLarge,
                         ),
                       ),
                       if (tempCityId != null)
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 4,
+                          ),
                           child: Row(
                             children: [
                               GestureDetector(
@@ -695,7 +753,9 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                                 },
                                 child: Text(
                                   'Back to cities',
-                                  style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
+                                  style: AppTypography.bodySmall.copyWith(
+                                    color: AppColors.primary,
+                                  ),
                                 ),
                               ),
                             ],
@@ -711,7 +771,10 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                               ListTile(
                                 title: const Text('All Locations'),
                                 trailing: _selectedCityId == null
-                                    ? const Icon(Icons.check, color: AppColors.primary)
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: AppColors.primary,
+                                      )
                                     : null,
                                 onTap: () {
                                   setState(() {
@@ -725,10 +788,16 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                                 return ListTile(
                                   title: Text(city.name),
                                   trailing: city.activeDivisions.isNotEmpty
-                                      ? const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant)
+                                      ? const Icon(
+                                          Icons.chevron_right,
+                                          color: AppColors.onSurfaceVariant,
+                                        )
                                       : (_selectedCityId == city.id
-                                          ? const Icon(Icons.check, color: AppColors.primary)
-                                          : null),
+                                            ? const Icon(
+                                                Icons.check,
+                                                color: AppColors.primary,
+                                              )
+                                            : null),
                                   onTap: () {
                                     if (city.activeDivisions.isNotEmpty) {
                                       setSheetState(() => tempCityId = city.id);
@@ -746,8 +815,13 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                               // Division selection
                               ListTile(
                                 title: Text('All ${selectedCity?.name ?? ''}'),
-                                trailing: _selectedCityId == tempCityId && _selectedDivisionId == null
-                                    ? const Icon(Icons.check, color: AppColors.primary)
+                                trailing:
+                                    _selectedCityId == tempCityId &&
+                                        _selectedDivisionId == null
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: AppColors.primary,
+                                      )
                                     : null,
                                 onTap: () {
                                   setState(() {
@@ -758,12 +832,16 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                                 },
                               ),
                               ...activeDivisions.map((division) {
-                                final isSelected = _selectedCityId == tempCityId &&
+                                final isSelected =
+                                    _selectedCityId == tempCityId &&
                                     _selectedDivisionId == division.id;
                                 return ListTile(
                                   title: Text(division.name),
                                   trailing: isSelected
-                                      ? const Icon(Icons.check, color: AppColors.primary)
+                                      ? const Icon(
+                                          Icons.check,
+                                          color: AppColors.primary,
+                                        )
                                       : null,
                                   onTap: () {
                                     setState(() {
@@ -800,7 +878,10 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
               title: 'Newest',
               isSelected: _sortBy == 'createdAt' && _sortOrder == 'desc',
               onTap: () {
-                setState(() { _sortBy = 'createdAt'; _sortOrder = 'desc'; });
+                setState(() {
+                  _sortBy = 'createdAt';
+                  _sortOrder = 'desc';
+                });
                 Navigator.pop(context);
               },
             ),
@@ -808,7 +889,10 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
               title: 'Price: Low to High',
               isSelected: _sortBy == 'price' && _sortOrder == 'asc',
               onTap: () {
-                setState(() { _sortBy = 'price'; _sortOrder = 'asc'; });
+                setState(() {
+                  _sortBy = 'price';
+                  _sortOrder = 'asc';
+                });
                 Navigator.pop(context);
               },
             ),
@@ -816,7 +900,10 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
               title: 'Price: High to Low',
               isSelected: _sortBy == 'price' && _sortOrder == 'desc',
               onTap: () {
-                setState(() { _sortBy = 'price'; _sortOrder = 'desc'; });
+                setState(() {
+                  _sortBy = 'price';
+                  _sortOrder = 'desc';
+                });
                 Navigator.pop(context);
               },
             ),
@@ -824,7 +911,10 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
               title: 'Most Viewed',
               isSelected: _sortBy == 'viewCount' && _sortOrder == 'desc',
               onTap: () {
-                setState(() { _sortBy = 'viewCount'; _sortOrder = 'desc'; });
+                setState(() {
+                  _sortBy = 'viewCount';
+                  _sortOrder = 'desc';
+                });
                 Navigator.pop(context);
               },
             ),
@@ -883,14 +973,16 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
           FilledButton(
             onPressed: () async {
               Navigator.pop(context);
-              final success = await ref.read(savedSearchProvider.notifier).saveSearch(
-                query: _searchController.text,
-                categoryId: _selectedCategoryId,
-                categoryName: _getCategoryLabel(ref.read(categoryProvider)),
-                minPrice: _minPrice?.toDouble(),
-                maxPrice: _maxPrice?.toDouble(),
-                location: _getLocationLabel(ref.read(categoryProvider)),
-              );
+              final success = await ref
+                  .read(savedSearchProvider.notifier)
+                  .saveSearch(
+                    query: _searchController.text,
+                    categoryId: _selectedCategoryId,
+                    categoryName: _getCategoryLabel(ref.read(categoryProvider)),
+                    minPrice: _minPrice?.toDouble(),
+                    maxPrice: _maxPrice?.toDouble(),
+                    location: _getLocationLabel(ref.read(categoryProvider)),
+                  );
 
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -900,12 +992,15 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                           ? 'Search saved! You\'ll be notified of new matches.'
                           : 'Failed to save search',
                     ),
-                    backgroundColor: success ? AppColors.success : AppColors.error,
+                    backgroundColor: success
+                        ? AppColors.success
+                        : AppColors.error,
                     action: success
                         ? SnackBarAction(
                             label: 'View',
                             textColor: AppColors.white,
-                            onPressed: () => context.push(AppRoutes.savedSearches),
+                            onPressed: () =>
+                                context.push(AppRoutes.savedSearches),
                           )
                         : null,
                   ),
@@ -945,7 +1040,9 @@ class _SortOption extends StatelessWidget {
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
-      trailing: isSelected ? const Icon(Icons.check, color: AppColors.primary) : null,
+      trailing: isSelected
+          ? const Icon(Icons.check, color: AppColors.primary)
+          : null,
       onTap: onTap,
     );
   }
@@ -955,10 +1052,7 @@ class _SearchDetailRow extends StatelessWidget {
   final IconData icon;
   final String label;
 
-  const _SearchDetailRow({
-    required this.icon,
-    required this.label,
-  });
+  const _SearchDetailRow({required this.icon, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -1112,7 +1206,8 @@ class _FilterSheet extends StatefulWidget {
     int? maxPrice,
     String sortBy,
     String sortOrder,
-  ) onApply;
+  )
+  onApply;
 
   const _FilterSheet({
     required this.categoryState,
@@ -1241,23 +1336,37 @@ class _FilterSheetState extends State<_FilterSheet> {
                       children: [
                         ChoiceChip(
                           label: const Text('Newest'),
-                          selected: _sortBy == 'createdAt' && _sortOrder == 'desc',
-                          onSelected: (_) => setState(() { _sortBy = 'createdAt'; _sortOrder = 'desc'; }),
+                          selected:
+                              _sortBy == 'createdAt' && _sortOrder == 'desc',
+                          onSelected: (_) => setState(() {
+                            _sortBy = 'createdAt';
+                            _sortOrder = 'desc';
+                          }),
                         ),
                         ChoiceChip(
                           label: const Text('Price: Low-High'),
                           selected: _sortBy == 'price' && _sortOrder == 'asc',
-                          onSelected: (_) => setState(() { _sortBy = 'price'; _sortOrder = 'asc'; }),
+                          onSelected: (_) => setState(() {
+                            _sortBy = 'price';
+                            _sortOrder = 'asc';
+                          }),
                         ),
                         ChoiceChip(
                           label: const Text('Price: High-Low'),
                           selected: _sortBy == 'price' && _sortOrder == 'desc',
-                          onSelected: (_) => setState(() { _sortBy = 'price'; _sortOrder = 'desc'; }),
+                          onSelected: (_) => setState(() {
+                            _sortBy = 'price';
+                            _sortOrder = 'desc';
+                          }),
                         ),
                         ChoiceChip(
                           label: const Text('Most Viewed'),
-                          selected: _sortBy == 'viewCount' && _sortOrder == 'desc',
-                          onSelected: (_) => setState(() { _sortBy = 'viewCount'; _sortOrder = 'desc'; }),
+                          selected:
+                              _sortBy == 'viewCount' && _sortOrder == 'desc',
+                          onSelected: (_) => setState(() {
+                            _sortBy = 'viewCount';
+                            _sortOrder = 'desc';
+                          }),
                         ),
                       ],
                     ),
@@ -1280,7 +1389,8 @@ class _FilterSheetState extends State<_FilterSheet> {
                           return ChoiceChip(
                             label: Text(mainCat.name),
                             selected: _categoryId == mainCat.id,
-                            onSelected: (_) => setState(() => _categoryId = mainCat.id),
+                            onSelected: (_) =>
+                                setState(() => _categoryId = mainCat.id),
                           );
                         }),
                       ],
@@ -1288,26 +1398,31 @@ class _FilterSheetState extends State<_FilterSheet> {
 
                     // Sub-categories (if main category selected)
                     if (_categoryId != null) ...[
-                      Builder(builder: (context) {
-                        final mainCat = mainCategories.where((c) => c.id == _categoryId).firstOrNull;
-                        if (mainCat == null) return const SizedBox.shrink();
-                        final subs = mainCat.activeChildren;
-                        if (subs.isEmpty) return const SizedBox.shrink();
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8),
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: subs.map((sub) {
-                              return ChoiceChip(
-                                label: Text(sub.name),
-                                selected: _categoryId == sub.id,
-                                onSelected: (_) => setState(() => _categoryId = sub.id),
-                              );
-                            }).toList(),
-                          ),
-                        );
-                      }),
+                      Builder(
+                        builder: (context) {
+                          final mainCat = mainCategories
+                              .where((c) => c.id == _categoryId)
+                              .firstOrNull;
+                          if (mainCat == null) return const SizedBox.shrink();
+                          final subs = mainCat.activeChildren;
+                          if (subs.isEmpty) return const SizedBox.shrink();
+                          return Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: subs.map((sub) {
+                                return ChoiceChip(
+                                  label: Text(sub.name),
+                                  selected: _categoryId == sub.id,
+                                  onSelected: (_) =>
+                                      setState(() => _categoryId = sub.id),
+                                );
+                              }).toList(),
+                            ),
+                          );
+                        },
+                      ),
                     ],
 
                     const SizedBox(height: AppSpacing.space6),
@@ -1328,7 +1443,8 @@ class _FilterSheetState extends State<_FilterSheet> {
                           return ChoiceChip(
                             label: Text(cond.displayName),
                             selected: _condition == cond,
-                            onSelected: (_) => setState(() => _condition = cond),
+                            onSelected: (_) =>
+                                setState(() => _condition = cond),
                           );
                         }),
                       ],
@@ -1416,13 +1532,15 @@ class _FilterSheetState extends State<_FilterSheet> {
                           ChoiceChip(
                             label: const Text('All'),
                             selected: _divisionId == null,
-                            onSelected: (_) => setState(() => _divisionId = null),
+                            onSelected: (_) =>
+                                setState(() => _divisionId = null),
                           ),
                           ...activeDivisions.map((div) {
                             return ChoiceChip(
                               label: Text(div.name),
                               selected: _divisionId == div.id,
-                              onSelected: (_) => setState(() => _divisionId = div.id),
+                              onSelected: (_) =>
+                                  setState(() => _divisionId = div.id),
                             );
                           }),
                         ],

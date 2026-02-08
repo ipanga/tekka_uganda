@@ -119,11 +119,12 @@ class AppNotification {
       title: json['title'] as String,
       body: json['body'] as String,
       imageUrl: data['imageUrl'] as String?,
-      targetId: data['targetId'] as String? ??
-                data['offerId'] as String? ??
-                data['chatId'] as String? ??
-                data['listingId'] as String? ??
-                data['reviewId'] as String?,
+      targetId:
+          data['targetId'] as String? ??
+          data['offerId'] as String? ??
+          data['chatId'] as String? ??
+          data['listingId'] as String? ??
+          data['reviewId'] as String?,
       targetType: data['type'] as String? ?? data['targetType'] as String?,
       isRead: json['isRead'] as bool? ?? false,
       createdAt: DateTime.parse(json['createdAt'] as String),

@@ -24,9 +24,7 @@ class ReviewsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('$userName\'s Reviews'),
-      ),
+      appBar: AppBar(title: Text('$userName\'s Reviews')),
       body: reviewsAsync.when(
         data: (reviews) {
           if (reviews.isEmpty) {
@@ -76,22 +74,17 @@ class ReviewsScreen extends ConsumerWidget {
               SliverPadding(
                 padding: AppSpacing.screenPadding,
                 sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final review = reviews[index];
-                      return _ReviewCard(review: review);
-                    },
-                    childCount: reviews.length,
-                  ),
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final review = reviews[index];
+                    return _ReviewCard(review: review);
+                  }, childCount: reviews.length),
                 ),
               ),
             ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Text('Error loading reviews: $e'),
-        ),
+        error: (e, _) => Center(child: Text('Error loading reviews: $e')),
       ),
     );
   }
@@ -151,19 +144,21 @@ class _RatingSummary extends StatelessWidget {
             child: Column(
               children: [5, 4, 3, 2, 1].map((star) {
                 final count = rating.ratingDistribution[star] ?? 0;
-                final percentage =
-                    rating.totalReviews > 0 ? count / rating.totalReviews : 0.0;
+                final percentage = rating.totalReviews > 0
+                    ? count / rating.totalReviews
+                    : 0.0;
 
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 2),
                   child: Row(
                     children: [
-                      Text(
-                        '$star',
-                        style: AppTypography.bodySmall,
-                      ),
+                      Text('$star', style: AppTypography.bodySmall),
                       const SizedBox(width: 4),
-                      const Icon(Icons.star, size: 12, color: AppColors.warning),
+                      const Icon(
+                        Icons.star,
+                        size: 12,
+                        color: AppColors.warning,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: ClipRRect(
@@ -241,10 +236,7 @@ class _ReviewCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      review.reviewerName,
-                      style: AppTypography.titleSmall,
-                    ),
+                    Text(review.reviewerName, style: AppTypography.titleSmall),
                     Row(
                       children: [
                         ...List.generate(5, (index) {
@@ -269,10 +261,7 @@ class _ReviewCard extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: review.type == ReviewType.buyer
                       ? AppColors.primaryContainer
@@ -319,10 +308,7 @@ class _ReviewCard extends StatelessWidget {
           // Comment
           if (review.comment != null && review.comment!.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.space3),
-            Text(
-              review.comment!,
-              style: AppTypography.bodyMedium,
-            ),
+            Text(review.comment!, style: AppTypography.bodyMedium),
           ],
         ],
       ),

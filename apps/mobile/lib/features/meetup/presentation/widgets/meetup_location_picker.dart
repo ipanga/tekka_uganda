@@ -17,7 +17,8 @@ class MeetupLocationPicker extends ConsumerStatefulWidget {
   final void Function(MeetupLocation location) onLocationSelected;
 
   @override
-  ConsumerState<MeetupLocationPicker> createState() => _MeetupLocationPickerState();
+  ConsumerState<MeetupLocationPicker> createState() =>
+      _MeetupLocationPickerState();
 }
 
 class _MeetupLocationPickerState extends ConsumerState<MeetupLocationPicker> {
@@ -151,7 +152,8 @@ class _MeetupLocationPickerState extends ConsumerState<MeetupLocationPicker> {
                 return ListView.separated(
                   padding: const EdgeInsets.all(AppSpacing.space4),
                   itemCount: locations.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.space3),
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(height: AppSpacing.space3),
                   itemBuilder: (context, index) {
                     final location = locations[index];
                     return _LocationCard(
@@ -211,10 +213,7 @@ class _AreaChip extends StatelessWidget {
 }
 
 class _LocationCard extends StatelessWidget {
-  const _LocationCard({
-    required this.location,
-    required this.onTap,
-  });
+  const _LocationCard({required this.location, required this.onTap});
 
   final MeetupLocation location;
   final VoidCallback onTap;
@@ -339,10 +338,7 @@ class _LocationCard extends StatelessWidget {
             ),
 
             const SizedBox(width: AppSpacing.space2),
-            Icon(
-              Icons.chevron_right,
-              color: AppColors.onSurfaceVariant,
-            ),
+            Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
           ],
         ),
       ),

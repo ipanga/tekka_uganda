@@ -224,27 +224,20 @@ abstract class AppTypography {
   );
 
   /// Location/time metadata
-  static TextStyle get metadata => bodySmall.copyWith(
-    color: AppColors.onSurfaceVariant,
-  );
+  static TextStyle get metadata =>
+      bodySmall.copyWith(color: AppColors.onSurfaceVariant);
 
   /// Section label
-  static TextStyle get sectionLabel => titleSmall.copyWith(
-    color: AppColors.onSurface,
-  );
+  static TextStyle get sectionLabel =>
+      titleSmall.copyWith(color: AppColors.onSurface);
 
   /// Hint/placeholder text
-  static TextStyle get hint => bodyLarge.copyWith(
-    color: AppColors.gray400,
-  );
+  static TextStyle get hint => bodyLarge.copyWith(color: AppColors.gray400);
 
   /// Error text
-  static TextStyle get errorText => bodySmall.copyWith(
-    color: AppColors.error,
-  );
+  static TextStyle get errorText => bodySmall.copyWith(color: AppColors.error);
 
   /// Success text
-  static TextStyle get successText => bodySmall.copyWith(
-    color: AppColors.success,
-  );
+  static TextStyle get successText =>
+      bodySmall.copyWith(color: AppColors.success);
 }

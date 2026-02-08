@@ -4,11 +4,7 @@ abstract class AppException implements Exception {
   final String? code;
   final dynamic originalError;
 
-  const AppException({
-    required this.message,
-    this.code,
-    this.originalError,
-  });
+  const AppException({required this.message, this.code, this.originalError});
 
   @override
   String toString() => 'AppException: $message (code: $code)';
@@ -32,34 +28,32 @@ class AuthException extends AppException {
   });
 
   factory AuthException.invalidOtp() => const AuthException(
-        message: 'Invalid OTP. Please try again.',
-        code: 'invalid-otp',
-      );
+    message: 'Invalid OTP. Please try again.',
+    code: 'invalid-otp',
+  );
 
   factory AuthException.otpExpired() => const AuthException(
-        message: 'OTP has expired. Please request a new one.',
-        code: 'otp-expired',
-      );
+    message: 'OTP has expired. Please request a new one.',
+    code: 'otp-expired',
+  );
 
   factory AuthException.tooManyRequests() => const AuthException(
-        message: 'Too many requests. Please wait before trying again.',
-        code: 'too-many-requests',
-      );
+    message: 'Too many requests. Please wait before trying again.',
+    code: 'too-many-requests',
+  );
 
   factory AuthException.invalidPhone() => const AuthException(
-        message: 'Invalid phone number format.',
-        code: 'invalid-phone',
-      );
+    message: 'Invalid phone number format.',
+    code: 'invalid-phone',
+  );
 
-  factory AuthException.userNotFound() => const AuthException(
-        message: 'User not found.',
-        code: 'user-not-found',
-      );
+  factory AuthException.userNotFound() =>
+      const AuthException(message: 'User not found.', code: 'user-not-found');
 
   factory AuthException.sessionExpired() => const AuthException(
-        message: 'Your session has expired. Please login again.',
-        code: 'session-expired',
-      );
+    message: 'Your session has expired. Please login again.',
+    code: 'session-expired',
+  );
 }
 
 /// Validation exceptions
@@ -91,19 +85,19 @@ class ListingException extends AppException {
   });
 
   factory ListingException.notFound() => const ListingException(
-        message: 'Listing not found.',
-        code: 'listing-not-found',
-      );
+    message: 'Listing not found.',
+    code: 'listing-not-found',
+  );
 
   factory ListingException.limitReached() => const ListingException(
-        message: 'You have reached the maximum number of listings.',
-        code: 'listing-limit-reached',
-      );
+    message: 'You have reached the maximum number of listings.',
+    code: 'listing-limit-reached',
+  );
 
   factory ListingException.uploadFailed() => const ListingException(
-        message: 'Failed to upload images. Please try again.',
-        code: 'upload-failed',
-      );
+    message: 'Failed to upload images. Please try again.',
+    code: 'upload-failed',
+  );
 }
 
 /// Server exceptions
@@ -118,53 +112,49 @@ class ServerException extends AppException {
   });
 
   factory ServerException.internalError() => const ServerException(
-        message: 'An unexpected error occurred. Please try again.',
-        code: 'internal-error',
-        statusCode: 500,
-      );
+    message: 'An unexpected error occurred. Please try again.',
+    code: 'internal-error',
+    statusCode: 500,
+  );
 
   factory ServerException.serviceUnavailable() => const ServerException(
-        message: 'Service temporarily unavailable. Please try again later.',
-        code: 'service-unavailable',
-        statusCode: 503,
-      );
+    message: 'Service temporarily unavailable. Please try again later.',
+    code: 'service-unavailable',
+    statusCode: 503,
+  );
 }
 
 /// API-related exceptions
 class ApiException extends AppException {
-  const ApiException({
-    required super.message,
-    super.code,
-    super.originalError,
-  });
+  const ApiException({required super.message, super.code, super.originalError});
 
   factory ApiException.timeout() => const ApiException(
-        message: 'Connection timed out. Please try again.',
-        code: 'TIMEOUT',
-      );
+    message: 'Connection timed out. Please try again.',
+    code: 'TIMEOUT',
+  );
 
   factory ApiException.noConnection() => const ApiException(
-        message: 'No internet connection. Please check your network.',
-        code: 'NO_CONNECTION',
-      );
+    message: 'No internet connection. Please check your network.',
+    code: 'NO_CONNECTION',
+  );
 
   factory ApiException.unauthorized() => const ApiException(
-        message: 'Please login to continue.',
-        code: 'UNAUTHORIZED',
-      );
+    message: 'Please login to continue.',
+    code: 'UNAUTHORIZED',
+  );
 
   factory ApiException.forbidden() => const ApiException(
-        message: 'You do not have permission to perform this action.',
-        code: 'FORBIDDEN',
-      );
+    message: 'You do not have permission to perform this action.',
+    code: 'FORBIDDEN',
+  );
 
   factory ApiException.notFound() => const ApiException(
-        message: 'The requested resource was not found.',
-        code: 'NOT_FOUND',
-      );
+    message: 'The requested resource was not found.',
+    code: 'NOT_FOUND',
+  );
 
   factory ApiException.serverError() => const ApiException(
-        message: 'Server error. Please try again later.',
-        code: 'SERVER_ERROR',
-      );
+    message: 'Server error. Please try again later.',
+    code: 'SERVER_ERROR',
+  );
 }

@@ -16,8 +16,7 @@ class AccountDeletionScreen extends ConsumerStatefulWidget {
       _AccountDeletionScreenState();
 }
 
-class _AccountDeletionScreenState
-    extends ConsumerState<AccountDeletionScreen> {
+class _AccountDeletionScreenState extends ConsumerState<AccountDeletionScreen> {
   DeletionReason? _selectedReason;
   final _otherReasonController = TextEditingController();
   bool _confirmChecked = false;
@@ -53,9 +52,7 @@ class _AccountDeletionScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Delete Account'),
-      ),
+      appBar: AppBar(title: const Text('Delete Account')),
       body: SafeArea(
         child: status.isScheduled
             ? _buildScheduledView(status)
@@ -85,10 +82,7 @@ class _AccountDeletionScreenState
               ),
             ),
             const SizedBox(height: AppSpacing.space6),
-            Text(
-              'Deletion Scheduled',
-              style: AppTypography.headlineSmall,
-            ),
+            Text('Deletion Scheduled', style: AppTypography.headlineSmall),
             const SizedBox(height: AppSpacing.space2),
             Text(
               'Your account is scheduled for deletion in ${status.daysUntilDeletion} days.',
@@ -111,10 +105,7 @@ class _AccountDeletionScreenState
                     children: [
                       const Icon(Icons.calendar_today_outlined, size: 20),
                       const SizedBox(width: AppSpacing.space3),
-                      Text(
-                        'Deletion date',
-                        style: AppTypography.bodyMedium,
-                      ),
+                      Text('Deletion date', style: AppTypography.bodyMedium),
                       const Spacer(),
                       Text(
                         _formatDate(status.scheduledDeletionDate!),
@@ -161,7 +152,8 @@ class _AccountDeletionScreenState
   }
 
   Widget _buildDeletionForm(AccountDeletionStatus status, dynamic user) {
-    final isLoading = status.state == AccountDeletionState.deleting ||
+    final isLoading =
+        status.state == AccountDeletionState.deleting ||
         status.state == AccountDeletionState.confirming;
 
     return ListView(
@@ -213,10 +205,7 @@ class _AccountDeletionScreenState
         const SizedBox(height: AppSpacing.space6),
 
         // What will be deleted
-        Text(
-          'What will be deleted:',
-          style: AppTypography.titleMedium,
-        ),
+        Text('What will be deleted:', style: AppTypography.titleMedium),
         const SizedBox(height: AppSpacing.space3),
         _DeletionItem(text: 'Your profile and account information'),
         _DeletionItem(text: 'All your active and sold listings'),
@@ -228,10 +217,7 @@ class _AccountDeletionScreenState
         const SizedBox(height: AppSpacing.space6),
 
         // Reason selection
-        Text(
-          'Why are you leaving?',
-          style: AppTypography.titleMedium,
-        ),
+        Text('Why are you leaving?', style: AppTypography.titleMedium),
         const SizedBox(height: AppSpacing.space2),
         Text(
           'This helps us improve our service (optional)',
@@ -241,16 +227,18 @@ class _AccountDeletionScreenState
         ),
         const SizedBox(height: AppSpacing.space3),
 
-        ...DeletionReason.values.map((reason) => RadioListTile<DeletionReason>(
-              title: Text(reason.displayName),
-              value: reason,
-              groupValue: _selectedReason,
-              onChanged: (value) {
-                setState(() => _selectedReason = value);
-              },
-              contentPadding: EdgeInsets.zero,
-              dense: true,
-            )),
+        ...DeletionReason.values.map(
+          (reason) => RadioListTile<DeletionReason>(
+            title: Text(reason.displayName),
+            value: reason,
+            groupValue: _selectedReason,
+            onChanged: (value) {
+              setState(() => _selectedReason = value);
+            },
+            contentPadding: EdgeInsets.zero,
+            dense: true,
+          ),
+        ),
 
         if (_selectedReason == DeletionReason.other) ...[
           const SizedBox(height: AppSpacing.space2),
@@ -304,7 +292,11 @@ class _AccountDeletionScreenState
             ),
             child: Row(
               children: [
-                const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 20,
+                ),
                 const SizedBox(width: AppSpacing.space2),
                 Expanded(
                   child: Text(
@@ -328,9 +320,7 @@ class _AccountDeletionScreenState
             onPressed: _canDelete && !isLoading
                 ? () => _showDeleteConfirmation(context)
                 : null,
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             child: isLoading
                 ? const SizedBox(
                     height: 20,
@@ -380,9 +370,7 @@ class _AccountDeletionScreenState
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Choose how you want to delete your account:',
-            ),
+            const Text('Choose how you want to delete your account:'),
             const SizedBox(height: 16),
             Text(
               'Option 1: Schedule Deletion',
@@ -397,15 +385,11 @@ class _AccountDeletionScreenState
             const SizedBox(height: 12),
             Text(
               'Option 2: Delete Immediately',
-              style: AppTypography.titleSmall.copyWith(
-                color: AppColors.error,
-              ),
+              style: AppTypography.titleSmall.copyWith(color: AppColors.error),
             ),
             Text(
               'Your account will be deleted right now. This cannot be undone.',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.error,
-              ),
+              style: AppTypography.bodySmall.copyWith(color: AppColors.error),
             ),
           ],
         ),
@@ -435,10 +419,9 @@ class _AccountDeletionScreenState
   }
 
   Future<void> _scheduleAccountDeletion() async {
-    await ref.read(accountDeletionProvider.notifier).scheduleAccountDeletion(
-          reason: _reasonText,
-          gracePeriodDays: 7,
-        );
+    await ref
+        .read(accountDeletionProvider.notifier)
+        .scheduleAccountDeletion(reason: _reasonText, gracePeriodDays: 7);
   }
 
   Future<void> _deleteAccountImmediately() async {
@@ -455,8 +438,9 @@ class _AccountDeletionScreenState
   }
 
   Future<void> _cancelDeletion() async {
-    final success =
-        await ref.read(accountDeletionProvider.notifier).cancelScheduledDeletion();
+    final success = await ref
+        .read(accountDeletionProvider.notifier)
+        .cancelScheduledDeletion();
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -495,8 +479,18 @@ class _AccountDeletionScreenState
 
   String _formatDate(DateTime date) {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -520,12 +514,7 @@ class _DeletionItem extends StatelessWidget {
             color: AppColors.error,
           ),
           const SizedBox(width: AppSpacing.space2),
-          Expanded(
-            child: Text(
-              text,
-              style: AppTypography.bodyMedium,
-            ),
-          ),
+          Expanded(child: Text(text, style: AppTypography.bodyMedium)),
         ],
       ),
     );

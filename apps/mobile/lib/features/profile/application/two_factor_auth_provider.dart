@@ -6,10 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../core/providers/repository_providers.dart';
 
 /// Two-factor authentication methods
-enum TwoFactorMethod {
-  sms,
-  authenticatorApp,
-}
+enum TwoFactorMethod { sms, authenticatorApp }
 
 extension TwoFactorMethodX on TwoFactorMethod {
   String get displayName {
@@ -111,8 +108,8 @@ class TwoFactorStatus {
 /// Provider for 2FA state
 final twoFactorAuthProvider =
     StateNotifierProvider<TwoFactorAuthNotifier, TwoFactorStatus>(
-  (ref) => TwoFactorAuthNotifier(ref),
-);
+      (ref) => TwoFactorAuthNotifier(ref),
+    );
 
 /// Notifier for managing 2FA
 class TwoFactorAuthNotifier extends StateNotifier<TwoFactorStatus> {
@@ -329,10 +326,7 @@ class TwoFactorAuthNotifier extends StateNotifier<TwoFactorStatus> {
         value: jsonEncode(backupCodes),
       );
 
-      state = state.copyWith(
-        backupCodes: backupCodes,
-        isLoading: false,
-      );
+      state = state.copyWith(backupCodes: backupCodes, isLoading: false);
       return backupCodes;
     } catch (e) {
       state = state.copyWith(

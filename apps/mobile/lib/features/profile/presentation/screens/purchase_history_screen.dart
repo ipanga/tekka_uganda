@@ -30,9 +30,7 @@ class PurchaseHistoryScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Purchase History'),
-      ),
+      appBar: AppBar(title: const Text('Purchase History')),
       body: purchasesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
@@ -44,7 +42,8 @@ class PurchaseHistoryScreen extends ConsumerWidget {
               Text('Failed to load purchases: $e'),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
-                onPressed: () => ref.invalidate(purchaseHistoryProvider(user.uid)),
+                onPressed: () =>
+                    ref.invalidate(purchaseHistoryProvider(user.uid)),
                 child: const Text('Retry'),
               ),
             ],
@@ -111,18 +110,16 @@ class _PurchaseCard extends ConsumerWidget {
   final Listing listing;
   final String currentUserId;
 
-  const _PurchaseCard({
-    required this.listing,
-    required this.currentUserId,
-  });
+  const _PurchaseCard({required this.listing, required this.currentUserId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Check if user can review seller
-    final canReviewAsync = ref.watch(canReviewProvider(CanReviewParams(
-      revieweeId: listing.sellerId,
-      listingId: listing.id,
-    )));
+    final canReviewAsync = ref.watch(
+      canReviewProvider(
+        CanReviewParams(revieweeId: listing.sellerId, listingId: listing.id),
+      ),
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.space3),
@@ -136,7 +133,9 @@ class _PurchaseCard extends ConsumerWidget {
           // Main content - tappable
           InkWell(
             onTap: () {
-              context.push(AppRoutes.listingDetail.replaceFirst(':id', listing.id));
+              context.push(
+                AppRoutes.listingDetail.replaceFirst(':id', listing.id),
+              );
             },
             borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
             child: Padding(
@@ -153,7 +152,9 @@ class _PurchaseCard extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(8),
                       image: listing.imageUrls.isNotEmpty
                           ? DecorationImage(
-                              image: CachedNetworkImageProvider(listing.imageUrls.first),
+                              image: CachedNetworkImageProvider(
+                                listing.imageUrls.first,
+                              ),
                               fit: BoxFit.cover,
                             )
                           : null,
@@ -226,10 +227,7 @@ class _PurchaseCard extends ConsumerWidget {
                   ),
 
                   // Arrow
-                  Icon(
-                    Icons.chevron_right,
-                    color: AppColors.onSurfaceVariant,
-                  ),
+                  Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
                 ],
               ),
             ),
@@ -309,8 +307,18 @@ class _PurchaseCard extends ConsumerWidget {
       return '${(diff.inDays / 7).floor()} weeks ago';
     } else {
       final months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       return '${months[date.month - 1]} ${date.day}, ${date.year}';
     }

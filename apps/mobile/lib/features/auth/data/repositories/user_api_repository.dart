@@ -77,25 +77,33 @@ class UserApiRepository {
     bool? twoFactorEnabled,
   }) async {
     final data = <String, dynamic>{};
-    if (priceAlertsEnabled != null) data['priceAlertsEnabled'] = priceAlertsEnabled;
+    if (priceAlertsEnabled != null)
+      data['priceAlertsEnabled'] = priceAlertsEnabled;
     if (language != null) data['language'] = language;
     if (defaultLocation != null) data['defaultLocation'] = defaultLocation;
     if (pushEnabled != null) data['pushEnabled'] = pushEnabled;
     if (emailEnabled != null) data['emailEnabled'] = emailEnabled;
     if (marketingEnabled != null) data['marketingEnabled'] = marketingEnabled;
-    if (messageNotifications != null) data['messageNotifications'] = messageNotifications;
-    if (offerNotifications != null) data['offerNotifications'] = offerNotifications;
-    if (reviewNotifications != null) data['reviewNotifications'] = reviewNotifications;
-    if (listingNotifications != null) data['listingNotifications'] = listingNotifications;
-    if (systemNotifications != null) data['systemNotifications'] = systemNotifications;
+    if (messageNotifications != null)
+      data['messageNotifications'] = messageNotifications;
+    if (offerNotifications != null)
+      data['offerNotifications'] = offerNotifications;
+    if (reviewNotifications != null)
+      data['reviewNotifications'] = reviewNotifications;
+    if (listingNotifications != null)
+      data['listingNotifications'] = listingNotifications;
+    if (systemNotifications != null)
+      data['systemNotifications'] = systemNotifications;
     if (doNotDisturb != null) data['doNotDisturb'] = doNotDisturb;
     if (dndStartHour != null) data['dndStartHour'] = dndStartHour;
     if (dndEndHour != null) data['dndEndHour'] = dndEndHour;
     if (pinEnabled != null) data['pinEnabled'] = pinEnabled;
     if (biometricEnabled != null) data['biometricEnabled'] = biometricEnabled;
     if (loginAlerts != null) data['loginAlerts'] = loginAlerts;
-    if (requireTransactionConfirmation != null) data['requireTransactionConfirmation'] = requireTransactionConfirmation;
-    if (transactionThreshold != null) data['transactionThreshold'] = transactionThreshold;
+    if (requireTransactionConfirmation != null)
+      data['requireTransactionConfirmation'] = requireTransactionConfirmation;
+    if (transactionThreshold != null)
+      data['transactionThreshold'] = transactionThreshold;
     if (twoFactorEnabled != null) data['twoFactorEnabled'] = twoFactorEnabled;
 
     await _apiClient.put('/users/me/settings', data: data);
@@ -108,7 +116,9 @@ class UserApiRepository {
 
   /// Get current user's stats
   Future<UserStats> getMyStats() async {
-    final response = await _apiClient.get<Map<String, dynamic>>('/users/me/stats');
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/users/me/stats',
+    );
     return UserStats.fromJson(response);
   }
 
@@ -128,7 +138,9 @@ class UserApiRepository {
   /// Get blocked users
   Future<List<AppUser>> getBlockedUsers() async {
     final response = await _apiClient.get<List<dynamic>>('/users/me/blocked');
-    return response.map((json) => AppUser.fromJson(json as Map<String, dynamic>)).toList();
+    return response
+        .map((json) => AppUser.fromJson(json as Map<String, dynamic>))
+        .toList();
   }
 
   /// Block a user
@@ -143,13 +155,17 @@ class UserApiRepository {
 
   /// Get public profile of any user
   Future<AppUser> getPublicProfile(String userId) async {
-    final response = await _apiClient.get<Map<String, dynamic>>('/users/$userId');
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/users/$userId',
+    );
     return AppUser.fromJson(response);
   }
 
   /// Get stats of any user
   Future<UserStats> getUserStats(String userId) async {
-    final response = await _apiClient.get<Map<String, dynamic>>('/users/$userId/stats');
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/users/$userId/stats',
+    );
     return UserStats.fromJson(response);
   }
 
@@ -171,7 +187,9 @@ class UserApiRepository {
 
   /// Get verification status
   Future<Map<String, dynamic>> getVerificationStatus() async {
-    return _apiClient.get<Map<String, dynamic>>('/users/me/verification-status');
+    return _apiClient.get<Map<String, dynamic>>(
+      '/users/me/verification-status',
+    );
   }
 
   // 2FA Methods
@@ -224,7 +242,9 @@ class UserApiRepository {
 
   /// Get identity verification status
   Future<Map<String, dynamic>> getIdentityVerificationStatus() async {
-    return _apiClient.get<Map<String, dynamic>>('/users/me/identity-verification');
+    return _apiClient.get<Map<String, dynamic>>(
+      '/users/me/identity-verification',
+    );
   }
 
   /// Submit identity verification
@@ -297,15 +317,20 @@ class UserApiRepository {
     bool? allowProfileSharing,
   }) async {
     final data = <String, dynamic>{};
-    if (profileVisibility != null) data['profileVisibility'] = profileVisibility;
+    if (profileVisibility != null)
+      data['profileVisibility'] = profileVisibility;
     if (showLocation != null) data['showLocation'] = showLocation;
     if (showPhoneNumber != null) data['showPhoneNumber'] = showPhoneNumber;
-    if (messagePermission != null) data['messagePermission'] = messagePermission;
+    if (messagePermission != null)
+      data['messagePermission'] = messagePermission;
     if (showOnlineStatus != null) data['showOnlineStatus'] = showOnlineStatus;
-    if (showPurchaseHistory != null) data['showPurchaseHistory'] = showPurchaseHistory;
-    if (showListingsCount != null) data['showListingsCount'] = showListingsCount;
+    if (showPurchaseHistory != null)
+      data['showPurchaseHistory'] = showPurchaseHistory;
+    if (showListingsCount != null)
+      data['showListingsCount'] = showListingsCount;
     if (appearInSearch != null) data['appearInSearch'] = appearInSearch;
-    if (allowProfileSharing != null) data['allowProfileSharing'] = allowProfileSharing;
+    if (allowProfileSharing != null)
+      data['allowProfileSharing'] = allowProfileSharing;
 
     final response = await _apiClient.put<Map<String, dynamic>>(
       '/users/me/privacy',

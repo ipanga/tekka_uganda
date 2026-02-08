@@ -14,15 +14,13 @@ import '../../domain/entities/listing.dart';
 
 /// Listing detail screen - displays full item information
 class ListingDetailScreen extends ConsumerStatefulWidget {
-  const ListingDetailScreen({
-    super.key,
-    required this.listingId,
-  });
+  const ListingDetailScreen({super.key, required this.listingId});
 
   final String listingId;
 
   @override
-  ConsumerState<ListingDetailScreen> createState() => _ListingDetailScreenState();
+  ConsumerState<ListingDetailScreen> createState() =>
+      _ListingDetailScreenState();
 }
 
 class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
@@ -34,7 +32,9 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
     super.initState();
     // Increment view count
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(listingActionsProvider(widget.listingId).notifier).incrementView();
+      ref
+          .read(listingActionsProvider(widget.listingId).notifier)
+          .incrementView();
     });
   }
 
@@ -50,9 +50,8 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
     final currentUser = ref.watch(currentUserProvider);
 
     return listingAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
         body: Center(
@@ -64,7 +63,8 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
               Text('Failed to load listing', style: AppTypography.bodyLarge),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
-                onPressed: () => ref.invalidate(listingProvider(widget.listingId)),
+                onPressed: () =>
+                    ref.invalidate(listingProvider(widget.listingId)),
                 child: const Text('Retry'),
               ),
             ],
@@ -159,10 +159,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                         const SizedBox(height: AppSpacing.space2),
 
                         // Title
-                        Text(
-                          listing.title,
-                          style: AppTypography.titleLarge,
-                        ),
+                        Text(listing.title, style: AppTypography.titleLarge),
                         const SizedBox(height: AppSpacing.space2),
 
                         // Location & Time
@@ -208,10 +205,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                         const SizedBox(height: AppSpacing.space6),
 
                         // Details section
-                        Text(
-                          'Details',
-                          style: AppTypography.titleMedium,
-                        ),
+                        Text('Details', style: AppTypography.titleMedium),
                         const SizedBox(height: AppSpacing.space4),
 
                         _DetailRow(
@@ -266,10 +260,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                         const SizedBox(height: AppSpacing.space6),
 
                         // Description
-                        Text(
-                          'Description',
-                          style: AppTypography.titleMedium,
-                        ),
+                        Text('Description', style: AppTypography.titleMedium),
                         const SizedBox(height: AppSpacing.space3),
                         Text(
                           listing.description.isNotEmpty
@@ -283,10 +274,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                         const SizedBox(height: AppSpacing.space6),
 
                         // Seller info
-                        Text(
-                          'Seller',
-                          style: AppTypography.titleMedium,
-                        ),
+                        Text('Seller', style: AppTypography.titleMedium),
                         const SizedBox(height: AppSpacing.space4),
 
                         Row(
@@ -295,7 +283,9 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                               radius: AppSpacing.avatarSmall / 2,
                               backgroundColor: AppColors.primaryContainer,
                               backgroundImage: listing.sellerPhotoUrl != null
-                                  ? CachedNetworkImageProvider(listing.sellerPhotoUrl!)
+                                  ? CachedNetworkImageProvider(
+                                      listing.sellerPhotoUrl!,
+                                    )
                                   : null,
                               child: listing.sellerPhotoUrl == null
                                   ? const Icon(
@@ -347,7 +337,8 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
           ),
 
           // Bottom action bar (only show for non-owners and active listings)
-          bottomNavigationBar: !isOwner && listing.status == ListingStatus.active
+          bottomNavigationBar:
+              !isOwner && listing.status == ListingStatus.active
               ? Container(
                   padding: AppSpacing.screenPadding,
                   decoration: BoxDecoration(
@@ -372,7 +363,8 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
   }
 
   void _shareListing(Listing listing) async {
-    final shareText = '''
+    final shareText =
+        '''
 Check out "${listing.title}" on Tekka!
 
 ${listing.formattedPrice}
@@ -400,11 +392,15 @@ Download Tekka to browse more fashion items!
 
     try {
       // Create or get existing chat
-      final chat = await ref.read(createChatProvider.notifier).createChat(
+      final chat = await ref
+          .read(createChatProvider.notifier)
+          .createChat(
             CreateChatRequest(
               listingId: listing.id,
               listingTitle: listing.title,
-              listingImageUrl: listing.imageUrls.isNotEmpty ? listing.imageUrls.first : null,
+              listingImageUrl: listing.imageUrls.isNotEmpty
+                  ? listing.imageUrls.first
+                  : null,
               listingPrice: listing.price,
               sellerId: listing.sellerId,
               sellerName: listing.sellerName,
@@ -418,16 +414,16 @@ Download Tekka to browse more fashion items!
       if (chat != null) {
         context.push(AppRoutes.chat.replaceFirst(':id', chat.id));
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to start chat')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to start chat')));
       }
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context); // Dismiss loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -435,11 +431,7 @@ Download Tekka to browse more fashion items!
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        icon: const Icon(
-          Icons.celebration,
-          color: AppColors.success,
-          size: 48,
-        ),
+        icon: const Icon(Icons.celebration, color: AppColors.success, size: 48),
         title: const Text('Item Sold!'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -472,7 +464,9 @@ Download Tekka to browse more fashion items!
               // In a real app, the buyer would be recorded during the transaction
               ScaffoldMessenger.of(this.context).showSnackBar(
                 const SnackBar(
-                  content: Text('You can leave a review from your chat with the buyer'),
+                  content: Text(
+                    'You can leave a review from your chat with the buyer',
+                  ),
                 ),
               );
             },
@@ -502,23 +496,30 @@ Download Tekka to browse more fashion items!
     if (listing.attributes == null || listing.attributes!.isEmpty) {
       // Return legacy fields if no attributes JSON
       return [
-        if (listing.size != null) _DetailRow(label: 'Size', value: listing.size!),
-        if (listing.brand != null) _DetailRow(label: 'Brand', value: listing.brand!),
-        if (listing.color != null) _DetailRow(label: 'Color', value: listing.color!),
-        if (listing.material != null) _DetailRow(label: 'Material', value: listing.material!),
+        if (listing.size != null)
+          _DetailRow(label: 'Size', value: listing.size!),
+        if (listing.brand != null)
+          _DetailRow(label: 'Brand', value: listing.brand!),
+        if (listing.color != null)
+          _DetailRow(label: 'Color', value: listing.color!),
+        if (listing.material != null)
+          _DetailRow(label: 'Material', value: listing.material!),
       ];
     }
 
     // Build widgets from all attributes in the JSON
     return listing.attributes!.entries.map((entry) {
-      final label = _attributeLabelMap[entry.key] ??
+      final label =
+          _attributeLabelMap[entry.key] ??
           entry.key
               .replaceAll('-', ' ')
               .replaceAll('_', ' ')
               .split(' ')
-              .map((word) => word.isNotEmpty
-                  ? '${word[0].toUpperCase()}${word.substring(1)}'
-                  : '')
+              .map(
+                (word) => word.isNotEmpty
+                    ? '${word[0].toUpperCase()}${word.substring(1)}'
+                    : '',
+              )
               .join(' ');
       final value = entry.value is List
           ? (entry.value as List).join(', ')
@@ -530,16 +531,16 @@ Download Tekka to browse more fashion items!
   void _handleOwnerAction(String action, Listing listing) async {
     switch (action) {
       case 'edit':
-        context.push(
-          AppRoutes.editListing.replaceFirst(':id', listing.id),
-        );
+        context.push(AppRoutes.editListing.replaceFirst(':id', listing.id));
         break;
       case 'sold':
         final confirm = await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Mark as Sold'),
-            content: const Text('Are you sure you want to mark this listing as sold?'),
+            content: const Text(
+              'Are you sure you want to mark this listing as sold?',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -553,7 +554,9 @@ Download Tekka to browse more fashion items!
           ),
         );
         if (confirm == true) {
-          await ref.read(listingActionsProvider(listing.id).notifier).markAsSold();
+          await ref
+              .read(listingActionsProvider(listing.id).notifier)
+              .markAsSold();
           ref.invalidate(listingProvider(listing.id));
 
           if (mounted) {
@@ -567,7 +570,9 @@ Download Tekka to browse more fashion items!
           context: context,
           builder: (context) => AlertDialog(
             title: const Text('Delete Listing'),
-            content: const Text('Are you sure you want to delete this listing? This cannot be undone.'),
+            content: const Text(
+              'Are you sure you want to delete this listing? This cannot be undone.',
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -582,7 +587,9 @@ Download Tekka to browse more fashion items!
           ),
         );
         if (confirm == true) {
-          await ref.read(listingActionsProvider(listing.id).notifier).deleteListing();
+          await ref
+              .read(listingActionsProvider(listing.id).notifier)
+              .deleteListing();
           if (mounted) context.pop();
         }
         break;
@@ -645,7 +652,11 @@ class _ImageGallery extends StatelessWidget {
                 ),
                 errorWidget: (context, url, error) => Container(
                   color: AppColors.gray100,
-                  child: const Icon(Icons.broken_image, size: 64, color: AppColors.gray400),
+                  child: const Icon(
+                    Icons.broken_image,
+                    size: 64,
+                    color: AppColors.gray400,
+                  ),
                 ),
               ),
             );
@@ -691,7 +702,8 @@ class _FullScreenImageGallery extends StatefulWidget {
   final int initialIndex;
 
   @override
-  State<_FullScreenImageGallery> createState() => _FullScreenImageGalleryState();
+  State<_FullScreenImageGallery> createState() =>
+      _FullScreenImageGalleryState();
 }
 
 class _FullScreenImageGalleryState extends State<_FullScreenImageGallery> {
@@ -756,10 +768,7 @@ class _FullScreenImageGalleryState extends State<_FullScreenImageGallery> {
 }
 
 class _FavoriteButton extends ConsumerWidget {
-  const _FavoriteButton({
-    required this.listingId,
-    required this.userId,
-  });
+  const _FavoriteButton({required this.listingId, required this.userId});
 
   final String listingId;
   final String? userId;
@@ -780,10 +789,8 @@ class _FavoriteButton extends ConsumerWidget {
     final isFavoritedAsync = ref.watch(isFavoritedProvider(listingId));
 
     return isFavoritedAsync.when(
-      loading: () => const IconButton(
-        icon: Icon(Icons.favorite_border),
-        onPressed: null,
-      ),
+      loading: () =>
+          const IconButton(icon: Icon(Icons.favorite_border), onPressed: null),
       error: (_, __) => IconButton(
         icon: const Icon(Icons.favorite_border),
         onPressed: () => _toggleFavorite(context, ref),
@@ -809,7 +816,9 @@ class _FavoriteButton extends ConsumerWidget {
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isFavorited ? 'Added to favorites' : 'Removed from favorites'),
+          content: Text(
+            isFavorited ? 'Added to favorites' : 'Removed from favorites',
+          ),
           duration: const Duration(seconds: 1),
         ),
       );
@@ -866,10 +875,7 @@ class _StatusBadge extends StatelessWidget {
 }
 
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({
-    required this.label,
-    required this.value,
-  });
+  const _DetailRow({required this.label, required this.value});
 
   final String label;
   final String value;
@@ -887,10 +893,7 @@ class _DetailRow extends StatelessWidget {
               color: AppColors.onSurfaceVariant,
             ),
           ),
-          Text(
-            value,
-            style: AppTypography.bodyMedium,
-          ),
+          Text(value, style: AppTypography.bodyMedium),
         ],
       ),
     );

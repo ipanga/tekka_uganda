@@ -40,14 +40,22 @@ class MeetupsListScreen extends ConsumerWidget {
         body: upcomingMeetupsAsync.when(
           data: (meetups) {
             final now = DateTime.now();
-            final upcoming = meetups.where((m) =>
-                m.scheduledAt.isAfter(now) &&
-                m.status != MeetupStatus.completed &&
-                m.status != MeetupStatus.cancelled).toList();
-            final past = meetups.where((m) =>
-                m.scheduledAt.isBefore(now) ||
-                m.status == MeetupStatus.completed ||
-                m.status == MeetupStatus.cancelled).toList();
+            final upcoming = meetups
+                .where(
+                  (m) =>
+                      m.scheduledAt.isAfter(now) &&
+                      m.status != MeetupStatus.completed &&
+                      m.status != MeetupStatus.cancelled,
+                )
+                .toList();
+            final past = meetups
+                .where(
+                  (m) =>
+                      m.scheduledAt.isBefore(now) ||
+                      m.status == MeetupStatus.completed ||
+                      m.status == MeetupStatus.cancelled,
+                )
+                .toList();
 
             return TabBarView(
               children: [
@@ -71,11 +79,7 @@ class MeetupsListScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.error_outline,
-                  size: 48,
-                  color: AppColors.error,
-                ),
+                Icon(Icons.error_outline, size: 48, color: AppColors.error),
                 const SizedBox(height: AppSpacing.space4),
                 Text(
                   'Failed to load meetups',
@@ -230,7 +234,9 @@ class _MeetupCard extends StatelessWidget {
                     child: Text(
                       isBuyer ? 'Buying' : 'Selling',
                       style: AppTypography.labelSmall.copyWith(
-                        color: isBuyer ? AppColors.primary : AppColors.secondary,
+                        color: isBuyer
+                            ? AppColors.primary
+                            : AppColors.secondary,
                       ),
                     ),
                   ),
@@ -323,7 +329,9 @@ class _MeetupCard extends StatelessWidget {
                       padding: const EdgeInsets.all(AppSpacing.space2),
                       decoration: BoxDecoration(
                         color: AppColors.gray100,
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,7 +362,9 @@ class _MeetupCard extends StatelessWidget {
                       padding: const EdgeInsets.all(AppSpacing.space2),
                       decoration: BoxDecoration(
                         color: AppColors.warning.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusSm,
+                        ),
                       ),
                       child: Row(
                         children: [

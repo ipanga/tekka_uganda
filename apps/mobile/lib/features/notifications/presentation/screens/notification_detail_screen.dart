@@ -11,22 +11,19 @@ import '../../domain/entities/app_notification.dart';
 /// Single notification provider
 final singleNotificationProvider =
     FutureProvider.family<AppNotification?, String>((ref, id) async {
-  final notifications = await ref.watch(notificationsProvider.future);
-  try {
-    return notifications.firstWhere((n) => n.id == id);
-  } catch (_) {
-    return null;
-  }
-});
+      final notifications = await ref.watch(notificationsProvider.future);
+      try {
+        return notifications.firstWhere((n) => n.id == id);
+      } catch (_) {
+        return null;
+      }
+    });
 
 /// Screen showing notification details
 class NotificationDetailScreen extends ConsumerStatefulWidget {
   final String notificationId;
 
-  const NotificationDetailScreen({
-    super.key,
-    required this.notificationId,
-  });
+  const NotificationDetailScreen({super.key, required this.notificationId});
 
   @override
   ConsumerState<NotificationDetailScreen> createState() =>
@@ -48,8 +45,9 @@ class _NotificationDetailScreenState
 
   @override
   Widget build(BuildContext context) {
-    final notificationAsync =
-        ref.watch(singleNotificationProvider(widget.notificationId));
+    final notificationAsync = ref.watch(
+      singleNotificationProvider(widget.notificationId),
+    );
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -70,12 +68,15 @@ class _NotificationDetailScreenState
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: AppSpacing.space4),
-              Text('Failed to load notification',
-                  style: AppTypography.bodyLarge),
+              Text(
+                'Failed to load notification',
+                style: AppTypography.bodyLarge,
+              ),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
                 onPressed: () => ref.invalidate(
-                    singleNotificationProvider(widget.notificationId)),
+                  singleNotificationProvider(widget.notificationId),
+                ),
                 child: const Text('Retry'),
               ),
             ],
@@ -136,9 +137,7 @@ class _NotificationDetailScreenState
           const SizedBox(height: AppSpacing.space6),
 
           // Icon/Image
-          Center(
-            child: _buildNotificationIcon(notification),
-          ),
+          Center(child: _buildNotificationIcon(notification)),
 
           const SizedBox(height: AppSpacing.space6),
 
@@ -225,11 +224,7 @@ class _NotificationDetailScreenState
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.info_outline,
-                    size: 20,
-                    color: AppColors.primary,
-                  ),
+                  Icon(Icons.info_outline, size: 20, color: AppColors.primary),
                   const SizedBox(width: AppSpacing.space3),
                   Expanded(
                     child: Text(
@@ -295,7 +290,9 @@ class _NotificationDetailScreenState
   }
 
   Widget _buildActionButton(
-      BuildContext context, AppNotification notification) {
+    BuildContext context,
+    AppNotification notification,
+  ) {
     final targetType = notification.targetType;
     final targetId = notification.targetId;
 
@@ -351,16 +348,18 @@ class _NotificationDetailScreenState
             buttonText = 'View Listing';
             buttonIcon = Icons.shopping_bag_outlined;
             onPressed = () {
-              context
-                  .push(AppRoutes.listingDetail.replaceFirst(':id', targetId));
+              context.push(
+                AppRoutes.listingDetail.replaceFirst(':id', targetId),
+              );
             };
             break;
           case NotificationType.newFollower:
             buttonText = 'View Profile';
             buttonIcon = Icons.person_outline;
             onPressed = () {
-              context
-                  .push(AppRoutes.userProfile.replaceFirst(':userId', targetId));
+              context.push(
+                AppRoutes.userProfile.replaceFirst(':userId', targetId),
+              );
             };
             break;
           case NotificationType.offer:
@@ -482,7 +481,7 @@ class _NotificationDetailScreenState
       'September',
       'October',
       'November',
-      'December'
+      'December',
     ];
     final hour = dateTime.hour > 12 ? dateTime.hour - 12 : dateTime.hour;
     final period = dateTime.hour >= 12 ? 'PM' : 'AM';
@@ -496,8 +495,9 @@ class _NotificationDetailScreenState
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Notification'),
-        content:
-            const Text('Are you sure you want to delete this notification?'),
+        content: const Text(
+          'Are you sure you want to delete this notification?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -514,9 +514,7 @@ class _NotificationDetailScreenState
                 const SnackBar(content: Text('Notification deleted')),
               );
             },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Delete'),
           ),
         ],
@@ -545,11 +543,7 @@ class _TypeBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            _getIcon(),
-            size: 14,
-            color: _getColor(),
-          ),
+          Icon(_getIcon(), size: 14, color: _getColor()),
           const SizedBox(width: 4),
           Text(
             _getLabel(),
