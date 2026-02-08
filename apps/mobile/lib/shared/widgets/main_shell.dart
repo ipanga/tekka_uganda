@@ -28,10 +28,10 @@ class _BottomNavBar extends ConsumerWidget {
   int _getCurrentIndex(BuildContext context) {
     final location = GoRouterState.of(context).matchedLocation;
     if (location.startsWith('/home')) return 0;
-    if (location.startsWith('/browse'))
-      return 0; // Browse now redirects to home
-    if (location.startsWith('/chat')) return 2;
-    if (location.startsWith('/profile')) return 3;
+    if (location.startsWith('/browse')) return 0;
+    if (location.startsWith('/saved')) return 1;
+    if (location.startsWith('/chat')) return 3;
+    if (location.startsWith('/profile')) return 4;
     return 0;
   }
 
@@ -41,12 +41,15 @@ class _BottomNavBar extends ConsumerWidget {
         context.go(AppRoutes.home);
         break;
       case 1:
-        context.push(AppRoutes.createListing);
+        context.go(AppRoutes.saved);
         break;
       case 2:
-        context.go(AppRoutes.chatList);
+        context.push(AppRoutes.createListing);
         break;
       case 3:
+        context.go(AppRoutes.chatList);
+        break;
+      case 4:
         context.go(AppRoutes.profile);
         break;
     }
@@ -75,21 +78,28 @@ class _BottomNavBar extends ConsumerWidget {
                 isActive: currentIndex == 0,
                 onTap: () => _onItemTapped(context, 0),
               ),
-              _SellButton(onTap: () => _onItemTapped(context, 1)),
+              _NavItem(
+                icon: Icons.favorite_border,
+                activeIcon: Icons.favorite,
+                label: 'Saved',
+                isActive: currentIndex == 1,
+                onTap: () => _onItemTapped(context, 1),
+              ),
+              _SellButton(onTap: () => _onItemTapped(context, 2)),
               _NavItem(
                 icon: Icons.chat_bubble_outline,
                 activeIcon: Icons.chat_bubble,
                 label: 'Chat',
-                isActive: currentIndex == 2,
-                onTap: () => _onItemTapped(context, 2),
+                isActive: currentIndex == 3,
+                onTap: () => _onItemTapped(context, 3),
                 badge: unreadCount,
               ),
               _NavItem(
                 icon: Icons.person_outline,
                 activeIcon: Icons.person,
                 label: 'Profile',
-                isActive: currentIndex == 3,
-                onTap: () => _onItemTapped(context, 3),
+                isActive: currentIndex == 4,
+                onTap: () => _onItemTapped(context, 4),
               ),
             ],
           ),

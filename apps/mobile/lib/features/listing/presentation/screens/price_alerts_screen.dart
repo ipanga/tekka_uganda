@@ -174,7 +174,7 @@ class PriceAlertsScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.space6),
             if (alertsEnabled)
               FilledButton.icon(
-                onPressed: () => context.push(AppRoutes.savedItems),
+                onPressed: () => context.go(AppRoutes.saved),
                 icon: const Icon(Icons.favorite_border),
                 label: const Text('View Saved Items'),
               ),

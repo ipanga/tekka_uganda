@@ -21,7 +21,10 @@ class SavedItemsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Saved Items')),
+      appBar: AppBar(
+        title: const Text('Saved Items'),
+        automaticallyImplyLeading: false,
+      ),
       body: favoritesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
