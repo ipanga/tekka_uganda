@@ -32,6 +32,7 @@ class AppUser {
   final bool isSuspended;
   final String? suspendedReason;
   final UserRole role;
+  final bool showPhoneNumber;
 
   const AppUser({
     required this.uid,
@@ -52,6 +53,7 @@ class AppUser {
     this.isSuspended = false,
     this.suspendedReason,
     this.role = UserRole.user,
+    this.showPhoneNumber = false,
   });
 
   AppUser copyWith({
@@ -73,6 +75,7 @@ class AppUser {
     bool? isSuspended,
     String? suspendedReason,
     UserRole? role,
+    bool? showPhoneNumber,
   }) {
     return AppUser(
       uid: uid ?? this.uid,
@@ -93,6 +96,7 @@ class AppUser {
       isSuspended: isSuspended ?? this.isSuspended,
       suspendedReason: suspendedReason ?? this.suspendedReason,
       role: role ?? this.role,
+      showPhoneNumber: showPhoneNumber ?? this.showPhoneNumber,
     );
   }
 
@@ -116,6 +120,7 @@ class AppUser {
       'isSuspended': isSuspended,
       'suspendedReason': suspendedReason,
       'role': role.name.toUpperCase(),
+      'showPhoneNumber': showPhoneNumber,
     };
   }
 
@@ -146,6 +151,7 @@ class AppUser {
       isSuspended: json['isSuspended'] as bool? ?? false,
       suspendedReason: json['suspendedReason'] as String?,
       role: UserRole.fromString(json['role'] as String? ?? 'USER'),
+      showPhoneNumber: json['showPhoneNumber'] as bool? ?? false,
     );
   }
 
@@ -178,6 +184,7 @@ class AppUser {
       isSuspended: map['isSuspended'] as bool? ?? false,
       suspendedReason: map['suspendedReason'] as String?,
       role: UserRole.fromString(map['role'] as String? ?? 'USER'),
+      showPhoneNumber: map['showPhoneNumber'] as bool? ?? false,
     );
   }
 

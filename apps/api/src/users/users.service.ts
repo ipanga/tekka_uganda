@@ -135,14 +135,20 @@ export class UsersService {
     const {
       firebaseUid: _firebaseUid,
       email: _email,
-      phoneNumber: _phoneNumber,
+      phoneNumber,
       priceAlertsEnabled: _priceAlertsEnabled,
       language: _language,
       defaultLocation: _defaultLocation,
+      showPhoneNumber,
       ...publicProfile
     } = profile;
 
-    return publicProfile;
+    // Only include phone number if user has enabled it
+    return {
+      ...publicProfile,
+      phoneNumber: showPhoneNumber ? phoneNumber : undefined,
+      showPhoneNumber,
+    };
   }
 
   async getStats(userId: string) {
@@ -346,9 +352,6 @@ export class UsersService {
     await this.prisma.$transaction(async (tx) => {
       // Delete user's listings
       await tx.listing.deleteMany({ where: { sellerId: userId } });
-
-      // Delete user's offers (sent)
-      await tx.offer.deleteMany({ where: { buyerId: userId } });
 
       // Delete user's reviews (written)
       await tx.review.deleteMany({ where: { reviewerId: userId } });
@@ -856,12 +859,13 @@ export class UsersService {
       case 'public':
         return { canView: true };
       case 'buyersOnly': {
-        // Check if current user has purchased from target user via accepted offers
-        const purchase = await this.prisma.offer.findFirst({
+        // Check if current user has purchased from target user via Purchase model
+        const purchase = await this.prisma.purchase.findFirst({
           where: {
-            sellerId: targetUserId,
             buyerId: currentUserId,
-            status: 'ACCEPTED',
+            listing: {
+              sellerId: targetUserId,
+            },
           },
         });
         return { canView: !!purchase };

@@ -115,11 +115,12 @@ export class NotificationsService {
     });
 
     return {
-      notifications,
+      data: notifications,
       nextCursor:
         notifications.length === limit
           ? notifications[notifications.length - 1].id
           : null,
+      hasMore: notifications.length === limit,
     };
   }
 
@@ -201,11 +202,6 @@ export class NotificationsService {
   private getChannelId(type: NotificationType): string {
     const channelMap: Partial<Record<NotificationType, string>> = {
       [NotificationType.MESSAGE]: 'messages',
-      [NotificationType.OFFER]: 'offers',
-      [NotificationType.OFFER_ACCEPTED]: 'offers',
-      [NotificationType.OFFER_DECLINED]: 'offers',
-      [NotificationType.OFFER_COUNTERED]: 'offers',
-      [NotificationType.OFFER_EXPIRED]: 'offers',
       [NotificationType.NEW_REVIEW]: 'reviews',
       [NotificationType.LISTING_APPROVED]: 'listings',
       [NotificationType.LISTING_REJECTED]: 'listings',
@@ -235,65 +231,6 @@ export class NotificationsService {
       title: senderName,
       body: message.length > 100 ? message.substring(0, 100) + '...' : message,
       data: { chatId, type: 'message' },
-    });
-  }
-
-  async sendNewOffer(
-    sellerId: string,
-    buyerName: string,
-    listingTitle: string,
-    amount: number,
-    offerId: string,
-  ) {
-    return this.send({
-      userId: sellerId,
-      type: NotificationType.OFFER,
-      title: 'New Offer',
-      body: `${buyerName} offered UGX ${amount.toLocaleString()} for ${listingTitle}`,
-      data: { offerId, type: 'offer' },
-    });
-  }
-
-  async sendOfferAccepted(
-    buyerId: string,
-    listingTitle: string,
-    offerId: string,
-  ) {
-    return this.send({
-      userId: buyerId,
-      type: NotificationType.OFFER_ACCEPTED,
-      title: 'Offer Accepted!',
-      body: `Your offer on ${listingTitle} was accepted`,
-      data: { offerId, type: 'offer_accepted' },
-    });
-  }
-
-  async sendOfferDeclined(
-    buyerId: string,
-    listingTitle: string,
-    offerId: string,
-  ) {
-    return this.send({
-      userId: buyerId,
-      type: NotificationType.OFFER_DECLINED,
-      title: 'Offer Declined',
-      body: `Your offer on ${listingTitle} was declined`,
-      data: { offerId, type: 'offer_declined' },
-    });
-  }
-
-  async sendCounterOffer(
-    buyerId: string,
-    listingTitle: string,
-    counterAmount: number,
-    offerId: string,
-  ) {
-    return this.send({
-      userId: buyerId,
-      type: NotificationType.OFFER_COUNTERED,
-      title: 'Counter Offer',
-      body: `Seller countered with UGX ${counterAmount.toLocaleString()} for ${listingTitle}`,
-      data: { offerId, type: 'counter_offer' },
     });
   }
 
@@ -353,6 +290,23 @@ export class NotificationsService {
       title: 'Listing Rejected',
       body: `Your listing "${listingTitle}" was rejected: ${reason}`,
       data: { listingId, type: 'listing_rejected' },
+    });
+  }
+
+  async sendListingSuspended(
+    userId: string,
+    listingTitle: string,
+    reason: string | undefined,
+    listingId: string,
+  ) {
+    return this.send({
+      userId,
+      type: NotificationType.LISTING_REJECTED, // Using rejected type for suspended
+      title: 'Listing Suspended',
+      body: reason
+        ? `Your listing "${listingTitle}" has been suspended for review: ${reason}`
+        : `Your listing "${listingTitle}" has been suspended and is pending review`,
+      data: { listingId, type: 'listing_suspended' },
     });
   }
 }

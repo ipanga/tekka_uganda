@@ -7,7 +7,6 @@ import '../features/auth/presentation/screens/phone_input_screen.dart';
 import '../features/auth/presentation/screens/otp_verification_screen.dart';
 import '../features/auth/presentation/screens/onboarding_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
-import '../features/listing/presentation/screens/browse_screen.dart';
 import '../features/listing/presentation/screens/listing_detail_screen.dart';
 import '../features/listing/presentation/screens/create_listing_screen.dart';
 import '../features/listing/presentation/screens/edit_listing_screen.dart';
@@ -20,8 +19,6 @@ import '../features/profile/presentation/screens/saved_items_screen.dart';
 import '../features/profile/presentation/screens/settings_screen.dart';
 import '../features/profile/presentation/screens/purchase_history_screen.dart';
 import '../features/profile/presentation/screens/user_profile_screen.dart';
-import '../features/offers/presentation/screens/my_offers_screen.dart';
-import '../features/offers/presentation/screens/offer_detail_screen.dart';
 import '../features/profile/presentation/screens/help_screen.dart';
 import '../features/profile/presentation/screens/safety_tips_screen.dart';
 import '../features/profile/presentation/screens/blocked_users_screen.dart';
@@ -73,7 +70,6 @@ abstract class AppRoutes {
   static const String savedItems = '/profile/saved';
   static const String settings = '/profile/settings';
   static const String purchaseHistory = '/profile/purchases';
-  static const String myOffers = '/profile/offers';
   static const String help = '/profile/help';
   static const String safetyTips = '/profile/safety';
   static const String blockedUsers = '/profile/blocked';
@@ -105,7 +101,6 @@ abstract class AppRoutes {
   static const String meetupDetail = '/meetups/:id';
   static const String safeLocations = '/meetups/locations';
   static const String reportListing = '/listing/:id/report';
-  static const String offerDetail = '/offers/:id';
   static const String notificationDetail = '/notifications/:id';
 }
 
@@ -174,14 +169,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(
             path: AppRoutes.home,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: HomeScreen(),
-            ),
+            pageBuilder: (context, state) {
+              // Parse query parameters for filters
+              final categoryId = state.uri.queryParameters['categoryId'];
+              final search = state.uri.queryParameters['search'];
+              return NoTransitionPage(
+                child: HomeScreen(
+                  initialCategoryId: categoryId,
+                  initialSearch: search,
+                ),
+              );
+            },
           ),
           GoRoute(
             path: AppRoutes.browse,
+            redirect: (context, state) {
+              // Redirect /browse to /home with preserved query params
+              final queryParams = state.uri.queryParameters;
+              if (queryParams.isEmpty) {
+                return AppRoutes.home;
+              }
+              return Uri(path: AppRoutes.home, queryParameters: queryParams).toString();
+            },
             pageBuilder: (context, state) => const NoTransitionPage(
-              child: BrowseScreen(),
+              child: HomeScreen(), // Fallback, redirect should catch this
             ),
           ),
           GoRoute(
@@ -244,10 +255,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.purchaseHistory,
         builder: (context, state) => const PurchaseHistoryScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.myOffers,
-        builder: (context, state) => const MyOffersScreen(),
       ),
       GoRoute(
         path: AppRoutes.help,
@@ -395,13 +402,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             sellerId: params['sellerId'] as String,
             sellerName: params['sellerName'] as String,
           );
-        },
-      ),
-      GoRoute(
-        path: AppRoutes.offerDetail,
-        builder: (context, state) {
-          final id = state.pathParameters['id']!;
-          return OfferDetailScreen(offerId: id);
         },
       ),
       GoRoute(

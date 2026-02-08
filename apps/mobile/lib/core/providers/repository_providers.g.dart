@@ -83,26 +83,6 @@ final chatApiRepositoryProvider = Provider<ChatApiRepository>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef ChatApiRepositoryRef = ProviderRef<ChatApiRepository>;
-String _$offerApiRepositoryHash() =>
-    r'7d7a36229cd55b78761faf8e51a406392e42a7e8';
-
-/// Offer API repository
-///
-/// Copied from [offerApiRepository].
-@ProviderFor(offerApiRepository)
-final offerApiRepositoryProvider = Provider<OfferApiRepository>.internal(
-  offerApiRepository,
-  name: r'offerApiRepositoryProvider',
-  debugGetCreateSourceHash: const bool.fromEnvironment('dart.vm.product')
-      ? null
-      : _$offerApiRepositoryHash,
-  dependencies: null,
-  allTransitiveDependencies: null,
-);
-
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
-typedef OfferApiRepositoryRef = ProviderRef<OfferApiRepository>;
 String _$categoryApiRepositoryHash() =>
     r'144f687dbe131865748113b2e52e270ecd44c099';
 

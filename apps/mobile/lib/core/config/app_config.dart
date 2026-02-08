@@ -44,7 +44,7 @@ class AppConfig {
   static const int minPhotosPerListing = 3;
   static const int maxListingsPerUser = 15;
   static const int maxDescriptionLength = 1000;
-  static const int maxTitleLength = 100;
+  static const int maxTitleLength = 150;
 
   /// Image settings
   static const int maxImageWidth = 1200;

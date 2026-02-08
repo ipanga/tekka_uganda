@@ -47,11 +47,14 @@ class ListingApiRepository {
   Future<PaginatedListings> search({
     String? query,
     ListingCategory? category,
+    String? categoryId, // New hierarchical category ID
     ItemCondition? condition,
     Occasion? occasion,
     int? minPrice,
     int? maxPrice,
     String? location,
+    String? cityId,
+    String? divisionId,
     String? sellerId,
     String? sortBy,
     String? sortOrder,
@@ -64,12 +67,15 @@ class ListingApiRepository {
     };
 
     if (query != null && query.isNotEmpty) queryParams['search'] = query;
-    if (category != null) queryParams['category'] = category.apiValue;
+    if (categoryId != null) queryParams['categoryId'] = categoryId;
+    if (category != null && categoryId == null) queryParams['category'] = category.apiValue;
     if (condition != null) queryParams['condition'] = condition.apiValue;
     if (occasion != null) queryParams['occasion'] = occasion.apiValue;
     if (minPrice != null) queryParams['minPrice'] = minPrice.toString();
     if (maxPrice != null) queryParams['maxPrice'] = maxPrice.toString();
     if (location != null) queryParams['location'] = location;
+    if (cityId != null) queryParams['cityId'] = cityId;
+    if (divisionId != null) queryParams['divisionId'] = divisionId;
     if (sellerId != null) queryParams['sellerId'] = sellerId;
     if (sortBy != null) queryParams['sortBy'] = sortBy;
     if (sortOrder != null) queryParams['sortOrder'] = sortOrder;

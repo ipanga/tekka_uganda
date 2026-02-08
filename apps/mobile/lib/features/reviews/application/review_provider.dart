@@ -52,11 +52,11 @@ final canReviewProvider = FutureProvider.family<bool, CanReviewParams>((ref, par
 /// Parameters for canReviewProvider
 class CanReviewParams {
   final String revieweeId;
-  final String listingId;
+  final String? listingId;
 
   const CanReviewParams({
     required this.revieweeId,
-    required this.listingId,
+    this.listingId,
   });
 
   @override
@@ -68,7 +68,7 @@ class CanReviewParams {
           listingId == other.listingId;
 
   @override
-  int get hashCode => revieweeId.hashCode ^ listingId.hashCode;
+  int get hashCode => revieweeId.hashCode ^ (listingId?.hashCode ?? 0);
 }
 
 /// Create review notifier
@@ -95,8 +95,8 @@ class CreateReviewNotifier extends StateNotifier<CreateReviewState> {
 
   Future<bool> submit({
     required String revieweeId,
-    required String listingId,
-    required String listingTitle,
+    String? listingId,
+    String? listingTitle,
     required ReviewType type,
   }) async {
     if (state.rating == 0) {

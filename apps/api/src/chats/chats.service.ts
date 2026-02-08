@@ -309,10 +309,6 @@ export class ChatsService {
         type: dto.type || MessageType.TEXT,
         status: MessageStatus.SENT,
         ...(dto.type === MessageType.IMAGE && { imageUrl: dto.content }),
-        ...(dto.type === MessageType.OFFER &&
-          dto.metadata?.offerAmount && {
-            offerAmount: dto.metadata.offerAmount,
-          }),
         ...(dto.type === MessageType.MEETUP &&
           dto.metadata && {
             meetupData: dto.metadata,

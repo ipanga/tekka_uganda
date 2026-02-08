@@ -102,7 +102,7 @@ class SavedItemsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: AppSpacing.space6),
             ElevatedButton(
-              onPressed: () => context.go(AppRoutes.browse),
+              onPressed: () => context.go(AppRoutes.home),
               child: const Text('Browse Listings'),
             ),
           ],

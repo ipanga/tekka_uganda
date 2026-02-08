@@ -4,6 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { ListingsService } from '../listings/listings.service';
 import {
   ListingStatus,
   UserRole,
@@ -14,7 +15,10 @@ import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AdminService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private listingsService: ListingsService,
+  ) {}
 
   // ===== DASHBOARD STATS =====
   async getDashboardStats() {
@@ -24,7 +28,7 @@ export class AdminService {
       totalListings,
       activeListings,
       pendingListings,
-      totalOffers,
+      soldListings,
       pendingReports,
     ] = await Promise.all([
       this.prisma.user.count(),
@@ -38,7 +42,7 @@ export class AdminService {
       this.prisma.listing.count(),
       this.prisma.listing.count({ where: { status: ListingStatus.ACTIVE } }),
       this.prisma.listing.count({ where: { status: ListingStatus.PENDING } }),
-      this.prisma.offer.count(),
+      this.prisma.listing.count({ where: { status: ListingStatus.SOLD } }),
       this.prisma.report.count({ where: { status: ReportStatus.PENDING } }),
     ]);
 
@@ -48,7 +52,7 @@ export class AdminService {
       totalListings,
       activeListings,
       pendingListings,
-      totalTransactions: totalOffers,
+      totalTransactions: soldListings,
       pendingReports,
     };
   }
@@ -124,8 +128,6 @@ export class AdminService {
             listings: true,
             reviewsGiven: true,
             reviewsReceived: true,
-            offersAsBuyer: true,
-            offersAsSeller: true,
           },
         },
       },
@@ -212,13 +214,38 @@ export class AdminService {
               photoUrl: true,
             },
           },
+          // Include category hierarchy for new category system
+          categoryRef: {
+            include: {
+              parent: {
+                include: {
+                  parent: true, // Include grandparent (main category)
+                },
+              },
+            },
+          },
+          // Include location references
+          cityRef: true,
+          divisionRef: true,
         },
       }),
       this.prisma.listing.count({ where }),
     ]);
 
+    // Transform listings to include properly named category/location data
+    const transformedListings = listings.map((listing) => {
+      const { categoryRef, cityRef, divisionRef, ...rest } = listing as any;
+      return {
+        ...rest,
+        // Map Prisma relations to frontend expected names
+        categoryData: categoryRef,
+        city: cityRef,
+        division: divisionRef,
+      };
+    });
+
     return {
-      data: listings,
+      data: transformedListings,
       total,
       page,
       limit,
@@ -226,11 +253,8 @@ export class AdminService {
     };
   }
 
-  async deleteListing(id: string, _adminId: string) {
-    await this.prisma.listing.delete({
-      where: { id },
-    });
-
+  async deleteListing(id: string, adminId: string) {
+    await this.listingsService.adminDelete(id, adminId);
     return { success: true };
   }
 
@@ -308,94 +332,21 @@ export class AdminService {
     return report;
   }
 
-  // ===== OFFERS =====
-  async getOffers(params: { page?: number; limit?: number; status?: string }) {
-    const page = params.page || 1;
-    const limit = params.limit || 10;
-    const skip = (page - 1) * limit;
-
-    const where: any = {};
-
-    if (params.status) {
-      where.status = params.status;
-    }
-
-    const [offers, total] = await Promise.all([
-      this.prisma.offer.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          buyer: {
-            select: {
-              id: true,
-              displayName: true,
-              phoneNumber: true,
-            },
-          },
-          listing: {
-            select: {
-              id: true,
-              title: true,
-              price: true,
-              seller: {
-                select: {
-                  id: true,
-                  displayName: true,
-                },
-              },
-            },
-          },
-        },
-      }),
-      this.prisma.offer.count({ where }),
-    ]);
-
-    return {
-      data: offers,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
-  }
-
-  async getOffer(id: string) {
-    const offer = await this.prisma.offer.findUnique({
-      where: { id },
-      include: {
-        buyer: true,
-        listing: {
-          include: {
-            seller: true,
-          },
-        },
-      },
-    });
-
-    if (!offer) {
-      throw new NotFoundException('Offer not found');
-    }
-
-    return offer;
-  }
-
   // ===== ANALYTICS =====
   async getAnalyticsOverview(period?: string) {
     const days = period === 'week' ? 7 : period === 'year' ? 365 : 30;
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-    const [newUsers, newListings, completedOffers] = await Promise.all([
+    const [newUsers, newListings, soldListings] = await Promise.all([
       this.prisma.user.count({
         where: { createdAt: { gte: startDate } },
       }),
       this.prisma.listing.count({
         where: { createdAt: { gte: startDate } },
       }),
-      this.prisma.offer.count({
+      this.prisma.listing.count({
         where: {
-          status: 'ACCEPTED',
+          status: ListingStatus.SOLD,
           updatedAt: { gte: startDate },
         },
       }),
@@ -405,7 +356,7 @@ export class AdminService {
       period: period || 'month',
       newUsers,
       newListings,
-      completedOffers,
+      completedTransactions: soldListings,
     };
   }
 
@@ -438,22 +389,6 @@ export class AdminService {
     return {
       period: period || 'month',
       data: listings,
-    };
-  }
-
-  async getTransactionAnalytics(period?: string) {
-    const days = period === 'week' ? 7 : period === 'year' ? 365 : 30;
-    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-
-    const offers = await this.prisma.offer.groupBy({
-      by: ['status'],
-      where: { createdAt: { gte: startDate } },
-      _count: true,
-    });
-
-    return {
-      period: period || 'month',
-      data: offers,
     };
   }
 
@@ -747,103 +682,6 @@ export class AdminService {
 
     await this.prisma.division.delete({ where: { id } });
     return { success: true };
-  }
-
-  // ===== TRANSACTIONS (Offers as transactions) =====
-  async getTransactions(params: {
-    page?: number;
-    limit?: number;
-    status?: string;
-    search?: string;
-  }) {
-    const page = params.page || 1;
-    const limit = params.limit || 10;
-    const skip = (page - 1) * limit;
-
-    const where: any = {};
-
-    if (params.status) {
-      where.status = params.status;
-    }
-
-    if (params.search) {
-      where.OR = [
-        {
-          listing: { title: { contains: params.search, mode: 'insensitive' } },
-        },
-        {
-          buyer: {
-            displayName: { contains: params.search, mode: 'insensitive' },
-          },
-        },
-      ];
-    }
-
-    const [transactions, total] = await Promise.all([
-      this.prisma.offer.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          buyer: {
-            select: {
-              id: true,
-              displayName: true,
-              phoneNumber: true,
-              photoUrl: true,
-            },
-          },
-          listing: {
-            select: {
-              id: true,
-              title: true,
-              price: true,
-              imageUrls: true,
-              seller: {
-                select: { id: true, displayName: true, phoneNumber: true },
-              },
-            },
-          },
-        },
-      }),
-      this.prisma.offer.count({ where }),
-    ]);
-
-    return {
-      data: transactions,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
-  }
-
-  async getTransaction(id: string) {
-    const transaction = await this.prisma.offer.findUnique({
-      where: { id },
-      include: {
-        buyer: true,
-        listing: { include: { seller: true } },
-      },
-    });
-
-    if (!transaction) {
-      throw new NotFoundException('Transaction not found');
-    }
-
-    return transaction;
-  }
-
-  async cancelTransaction(id: string, _reason: string, _adminId: string) {
-    const transaction = await this.prisma.offer.update({
-      where: { id },
-      data: {
-        status: 'WITHDRAWN',
-      },
-    });
-
-    return transaction;
   }
 
   // ===== VERIFICATIONS =====

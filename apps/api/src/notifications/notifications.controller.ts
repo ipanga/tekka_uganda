@@ -49,7 +49,7 @@ export class NotificationsController {
   @ApiResponse({ status: 200, description: 'Unread count' })
   async getUnreadCount(@CurrentUser() user: Prisma.User) {
     const count = await this.notificationsService.getUnreadCount(user.id);
-    return { unreadCount: count };
+    return { count };
   }
 
   @Get(':id')

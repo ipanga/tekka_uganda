@@ -209,6 +209,23 @@ class UserProfileScreen extends ConsumerWidget {
                 child: SizedBox(height: AppSpacing.space4),
               ),
 
+              // Action buttons (Message, Contact, Review)
+              SliverToBoxAdapter(
+                child: Container(
+                  color: AppColors.surface,
+                  padding: AppSpacing.screenPadding,
+                  child: _ActionButtons(
+                    userId: userId,
+                    user: user,
+                    privacy: privacy,
+                  ),
+                ),
+              ),
+
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppSpacing.space4),
+              ),
+
               // Member since
               SliverToBoxAdapter(
                 child: Container(
@@ -767,6 +784,121 @@ class _ProfileActionsMenu extends ConsumerWidget {
 }
 
 /// Widget shown when a user's profile is private
+/// Action buttons for messaging, contact, and review
+class _ActionButtons extends ConsumerStatefulWidget {
+  final String userId;
+  final dynamic user;
+  final PrivacyPreferences privacy;
+
+  const _ActionButtons({
+    required this.userId,
+    required this.user,
+    required this.privacy,
+  });
+
+  @override
+  ConsumerState<_ActionButtons> createState() => _ActionButtonsState();
+}
+
+class _ActionButtonsState extends ConsumerState<_ActionButtons> {
+  bool _showingPhoneNumber = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = ref.watch(currentUserProvider);
+    final isLoggedIn = currentUser != null;
+
+    return Row(
+      children: [
+        // Message button
+        Expanded(
+          child: FilledButton.icon(
+            onPressed: () => _handleMessage(context),
+            icon: const Icon(Icons.chat_bubble_outline, size: 18),
+            label: const Text('Message'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.space2),
+
+        // Show Contact button (only if seller allows it)
+        if (widget.user.showPhoneNumber == true) ...[
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: () {
+                setState(() {
+                  _showingPhoneNumber = !_showingPhoneNumber;
+                });
+              },
+              icon: const Icon(Icons.phone_outlined, size: 18),
+              label: Text(
+                _showingPhoneNumber
+                    ? widget.user.phoneNumber ?? 'N/A'
+                    : 'Contact',
+                overflow: TextOverflow.ellipsis,
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.space2),
+        ],
+
+        // Review button
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: isLoggedIn
+                ? () => _handleReview(context)
+                : () => _showLoginRequired(context),
+            icon: const Icon(Icons.rate_review_outlined, size: 18),
+            label: const Text('Review'),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _handleMessage(BuildContext context) {
+    // Show a message that they should tap on a listing to start a chat
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Tap on a listing below to start a chat with this seller'),
+        duration: Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _handleReview(BuildContext context) {
+    context.push(
+      AppRoutes.createReview,
+      extra: {
+        'revieweeId': widget.userId,
+        'revieweeName': widget.user.displayName ?? 'User',
+      },
+    );
+  }
+
+  void _showLoginRequired(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Please sign in to continue'),
+        action: SnackBarAction(
+          label: 'Sign In',
+          onPressed: () {
+            context.go(AppRoutes.phoneInput);
+          },
+        ),
+      ),
+    );
+  }
+}
+
 class _PrivateProfileView extends StatelessWidget {
   final dynamic user;
   final String userId;

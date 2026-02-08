@@ -46,7 +46,7 @@ export function Sidebar() {
     <div className="flex h-full w-64 flex-col bg-gray-900">
       {/* Logo */}
       <div className="flex h-16 items-center justify-center border-b border-gray-800">
-        <span className="text-2xl font-bold text-white">Tekka Admin</span>
+        <span className="text-2xl font-bold text-white">Tekka.ug Admin</span>
       </div>
 
       {/* Navigation */}

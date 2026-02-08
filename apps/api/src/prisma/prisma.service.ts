@@ -46,8 +46,6 @@ export class PrismaService
       'meetup',
       'message',
       'chat',
-      'offer',
-      'purchase',
       'savedItem',
       'quickReplyTemplate',
       'listing',

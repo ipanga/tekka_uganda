@@ -7,7 +7,6 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ListingsModule } from './listings/listings.module';
 import { ChatsModule } from './chats/chats.module';
-import { OffersModule } from './offers/offers.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { ReportsModule } from './reports/reports.module';
@@ -34,7 +33,6 @@ import { LocationsModule } from './locations/locations.module';
     UsersModule,
     ListingsModule,
     ChatsModule,
-    OffersModule,
     ReviewsModule,
     NotificationsModule,
     ReportsModule,

@@ -14,9 +14,9 @@ import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class CreateListingDto {
-  @ApiProperty({ description: 'Listing title', maxLength: 100 })
+  @ApiProperty({ description: 'Listing title', maxLength: 150 })
   @IsString()
-  @MaxLength(100)
+  @MaxLength(150)
   title: string;
 
   @ApiProperty({ description: 'Listing description', maxLength: 2000 })
@@ -138,10 +138,10 @@ export class CreateListingDto {
 }
 
 export class UpdateListingDto {
-  @ApiPropertyOptional({ description: 'Listing title', maxLength: 100 })
+  @ApiPropertyOptional({ description: 'Listing title', maxLength: 150 })
   @IsOptional()
   @IsString()
-  @MaxLength(100)
+  @MaxLength(150)
   title?: string;
 
   @ApiPropertyOptional({ description: 'Listing description', maxLength: 2000 })

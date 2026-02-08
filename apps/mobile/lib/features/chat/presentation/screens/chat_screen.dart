@@ -733,30 +733,12 @@ class _MessageBubble extends StatelessWidget {
   Widget _buildMessageContent() {
     switch (message.type) {
       case MessageType.offer:
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Offer',
-              style: AppTypography.labelSmall.copyWith(
-                color: isMe ? AppColors.white.withValues(alpha: 0.8) : AppColors.onSurfaceVariant,
-              ),
-            ),
-            Text(
-              'UGX ${message.offerAmount}',
-              style: AppTypography.titleMedium.copyWith(
-                color: isMe ? AppColors.white : AppColors.primary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            if (message.content.isNotEmpty)
-              Text(
-                message.content,
-                style: AppTypography.bodyMedium.copyWith(
-                  color: isMe ? AppColors.white : AppColors.onSurface,
-                ),
-              ),
-          ],
+        // Legacy offer messages - display as text
+        return Text(
+          message.content.isNotEmpty ? message.content : 'Sent an offer',
+          style: AppTypography.bodyMedium.copyWith(
+            color: isMe ? AppColors.white : AppColors.onSurface,
+          ),
         );
       case MessageType.image:
         return Column(

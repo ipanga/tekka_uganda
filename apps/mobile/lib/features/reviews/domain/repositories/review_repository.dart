@@ -11,21 +11,22 @@ abstract class ReviewRepository {
   /// Get a single review by ID
   Future<Review?> getReviewById(String reviewId);
 
-  /// Check if user can review another user for a specific listing
+  /// Check if user can review another user (optionally for a specific listing)
   Future<bool> canReview({
     required String reviewerId,
     required String revieweeId,
-    required String listingId,
+    String? listingId,
   });
 
   /// Create a new review
+  /// Note: listingId is now optional - users can review sellers without a specific listing
   Future<Review> createReview({
     required String reviewerId,
     required String reviewerName,
     String? reviewerPhotoUrl,
     required String revieweeId,
-    required String listingId,
-    required String listingTitle,
+    String? listingId,
+    String? listingTitle,
     required int rating,
     String? comment,
     required ReviewType type,

@@ -14,10 +14,10 @@ export class CreateReviewDto {
   @IsNotEmpty()
   revieweeId: string;
 
-  @ApiProperty({ description: 'ID of the listing this review is for' })
+  @ApiPropertyOptional({ description: 'ID of the listing this review is for (optional - can review sellers without a specific listing)' })
   @IsString()
-  @IsNotEmpty()
-  listingId: string;
+  @IsOptional()
+  listingId?: string;
 
   @ApiProperty({ description: 'Rating from 1 to 5', minimum: 1, maximum: 5 })
   @IsNumber()

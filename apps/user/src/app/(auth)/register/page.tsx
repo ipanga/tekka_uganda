@@ -4,8 +4,11 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import { api } from '@/lib/api';
+import { City, Division } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { PageLoader } from '@/components/ui/Spinner';
@@ -21,9 +24,14 @@ function RegisterContent() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [displayName, setDisplayName] = useState('');
-  const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Location state (same pattern as product creation)
+  const [cities, setCities] = useState<City[]>([]);
+  const [citiesLoading, setCitiesLoading] = useState(false);
+  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [selectedDivision, setSelectedDivision] = useState<Division | null>(null);
 
   // Check if we should skip to profile step (coming from login)
   useEffect(() => {
@@ -33,26 +41,75 @@ function RegisterContent() {
     }
   }, [searchParams, user]);
 
+  // Load cities when entering profile step
+  useEffect(() => {
+    if (step === 'profile' && cities.length === 0) {
+      const loadCities = async () => {
+        setCitiesLoading(true);
+        try {
+          const citiesData = await api.getCitiesWithDivisions();
+          setCities(citiesData);
+        } catch (err) {
+          console.error('Failed to load cities:', err);
+        } finally {
+          setCitiesLoading(false);
+        }
+      };
+      loadCities();
+    }
+  }, [step, cities.length]);
+
+  /**
+   * Normalize phone number to E.164 format for Uganda (+2567XXXXXXXX)
+   * Handles:
+   * - Input with leading 0 (0712345678 → +256712345678)
+   * - Input without leading 0 (712345678 → +256712345678)
+   * - Input with country code (256712345678 → +256712345678)
+   * - Already normalized (+256712345678 → +256712345678)
+   */
+  const normalizePhoneNumber = (phone: string): string => {
+    // Remove all non-digit characters except +
+    let cleaned = phone.replace(/[^\d+]/g, '');
+
+    // Handle already normalized number
+    if (cleaned.startsWith('+256')) {
+      return cleaned;
+    }
+
+    // Handle number with 256 prefix (no +)
+    if (cleaned.startsWith('256') && cleaned.length >= 12) {
+      return '+' + cleaned;
+    }
+
+    // Handle number with leading 0 (local format)
+    if (cleaned.startsWith('0')) {
+      return '+256' + cleaned.substring(1);
+    }
+
+    // Handle number without country code (assume Uganda)
+    return '+256' + cleaned;
+  };
+
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      // Format phone number for Uganda
-      let formattedPhone = phoneNumber.trim();
-      if (formattedPhone.startsWith('0')) {
-        formattedPhone = '+256' + formattedPhone.slice(1);
-      } else if (!formattedPhone.startsWith('+')) {
-        formattedPhone = '+256' + formattedPhone;
+      const formattedPhone = normalizePhoneNumber(phoneNumber);
+
+      // Validate final format: +256 followed by 9 digits (total 13 characters)
+      if (!/^\+256[0-9]{9}$/.test(formattedPhone)) {
+        throw new Error('Please enter a valid 9-digit Ugandan phone number');
       }
 
       const success = await sendOTP(formattedPhone);
       if (success) {
         setStep('otp');
       }
-    } catch {
-      setError('Failed to send verification code. Please try again.');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to send verification code. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -79,9 +136,18 @@ function RegisterContent() {
     setLoading(true);
 
     try {
+      // Format location from selected city/division (same format as product creation)
+      let locationString: string | undefined;
+      if (selectedCity) {
+        locationString = selectedCity.name;
+        if (selectedDivision) {
+          locationString += `, ${selectedDivision.name}`;
+        }
+      }
+
       await completeProfile({
         displayName: displayName.trim(),
-        location: location.trim() || undefined,
+        location: locationString,
       });
       router.push('/');
     } catch {
@@ -157,17 +223,36 @@ function RegisterContent() {
             {/* Phone Step */}
             {step === 'phone' && (
               <form onSubmit={handleSendOTP} className="space-y-6">
-                <Input
-                  label="Phone Number"
-                  type="tel"
-                  placeholder="0700 000 000"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  required
-                  helperText="We'll send you a verification code"
-                />
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Phone Number
+                  </label>
+                  <div className="flex">
+                    <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">
+                      🇺🇬 +256
+                    </span>
+                    <input
+                      id="phone"
+                      type="tel"
+                      inputMode="numeric"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      required
+                      maxLength={10}
+                      className="flex-1 block w-full rounded-r-lg border border-gray-300 px-3 py-2 focus:border-pink-500 focus:outline-none focus:ring-1 focus:ring-pink-500"
+                      placeholder="712 345 678"
+                      autoComplete="tel-national"
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs text-gray-500">
+                    Enter your number with or without the leading 0
+                  </p>
+                </div>
 
-                <Button type="submit" className="w-full" loading={loading}>
+                <Button type="submit" className="w-full" loading={loading} disabled={loading || phoneNumber.length < 9}>
                   Send Verification Code
                 </Button>
 
@@ -221,14 +306,45 @@ function RegisterContent() {
                   helperText="This is how other users will see you"
                 />
 
-                <Input
-                  label="Location (optional)"
-                  type="text"
-                  placeholder="e.g., Kampala, Entebbe"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  helperText="Helps buyers find items near them"
-                />
+                {/* Location Selection - Same pattern as product creation */}
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Location (optional)
+                  </label>
+                  <p className="text-xs text-gray-500 -mt-2">Helps buyers find items near them</p>
+
+                  {citiesLoading ? (
+                    <div className="flex items-center py-2">
+                      <div className="w-4 h-4 border-2 border-pink-600 border-t-transparent rounded-full animate-spin" />
+                      <span className="ml-2 text-sm text-gray-500">Loading locations...</span>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Select
+                        options={cities.map((c) => ({ value: c.id, label: c.name }))}
+                        value={selectedCity?.id || ''}
+                        onChange={(e) => {
+                          const city = cities.find((c) => c.id === e.target.value);
+                          setSelectedCity(city || null);
+                          setSelectedDivision(null);
+                        }}
+                        placeholder="Select city"
+                      />
+
+                      {selectedCity && selectedCity.divisions && selectedCity.divisions.length > 0 && (
+                        <Select
+                          options={selectedCity.divisions.map((d) => ({ value: d.id, label: d.name }))}
+                          value={selectedDivision?.id || ''}
+                          onChange={(e) => {
+                            const division = selectedCity.divisions?.find((d) => d.id === e.target.value);
+                            setSelectedDivision(division || null);
+                          }}
+                          placeholder="Select area"
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 <Button type="submit" className="w-full" loading={loading}>
                   Complete Registration

@@ -7,18 +7,7 @@ import { Footer } from '@/components/layout/Footer';
 import { ListingCard } from '@/components/listings/ListingCard';
 import { FunnelIcon, Squares2X2Icon, ListBulletIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
-import type { Listing, PaginatedResponse } from '@/types';
-
-const categories = [
-  { label: 'All', value: '' },
-  { label: 'Dresses', value: 'DRESSES' },
-  { label: 'Tops', value: 'TOPS' },
-  { label: 'Bottoms', value: 'BOTTOMS' },
-  { label: 'Traditional Wear', value: 'TRADITIONAL_WEAR' },
-  { label: 'Shoes', value: 'SHOES' },
-  { label: 'Accessories', value: 'ACCESSORIES' },
-  { label: 'Bags', value: 'BAGS' },
-];
+import type { Listing, PaginatedResponse, Category, City } from '@/types';
 
 const conditions = [
   { label: 'Any Condition', value: '' },
@@ -35,24 +24,65 @@ const sortOptions = [
   { label: 'Most Viewed', value: 'viewCount:desc' },
 ];
 
+
 function ExploreContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [cities, setCities] = useState<City[]>([]);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [category, setCategory] = useState('');
-  const [condition, setCondition] = useState('');
-  const [sort, setSort] = useState('createdAt:desc');
+  const [categoryId, setCategoryId] = useState(searchParams.get('categoryId') || '');
+  const [condition, setCondition] = useState(searchParams.get('condition') || '');
+  const [minPrice, setMinPrice] = useState(searchParams.get('minPrice') || '');
+  const [maxPrice, setMaxPrice] = useState(searchParams.get('maxPrice') || '');
+  const [cityId, setCityId] = useState(searchParams.get('cityId') || '');
+  const [divisionId, setDivisionId] = useState(searchParams.get('divisionId') || '');
+  const [sort, setSort] = useState(
+    searchParams.get('sortBy') && searchParams.get('sortOrder')
+      ? `${searchParams.get('sortBy')}:${searchParams.get('sortOrder')}`
+      : 'createdAt:desc'
+  );
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  // Sync search query from URL params when they change
+  // Fetch categories and cities on mount
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [cats, citiesData] = await Promise.all([
+          api.getCategories(),
+          api.getCitiesWithDivisions(),
+        ]);
+        setCategories(cats);
+        setCities(citiesData);
+      } catch (error) {
+        console.error('Failed to load filter data:', error);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  // Sync filters from URL params when they change
   useEffect(() => {
     const urlSearch = searchParams.get('search') || '';
-    if (urlSearch !== searchQuery) {
-      setSearchQuery(urlSearch);
-    }
+    const urlCategoryId = searchParams.get('categoryId') || '';
+    const urlCondition = searchParams.get('condition') || '';
+    const urlMinPrice = searchParams.get('minPrice') || '';
+    const urlMaxPrice = searchParams.get('maxPrice') || '';
+    const urlCityId = searchParams.get('cityId') || '';
+    const urlDivisionId = searchParams.get('divisionId') || '';
+    if (urlSearch !== searchQuery) setSearchQuery(urlSearch);
+    if (urlCategoryId !== categoryId) setCategoryId(urlCategoryId);
+    if (urlCondition !== condition) setCondition(urlCondition);
+    if (urlMinPrice !== minPrice) setMinPrice(urlMinPrice);
+    if (urlMaxPrice !== maxPrice) setMaxPrice(urlMaxPrice);
+    if (urlCityId !== cityId) setCityId(urlCityId);
+    if (urlDivisionId !== divisionId) setDivisionId(urlDivisionId);
   }, [searchParams]);
 
   const fetchListings = useCallback(async () => {
@@ -60,8 +90,12 @@ function ExploreContent() {
     try {
       const params = new URLSearchParams();
       if (searchQuery.trim()) params.append('search', searchQuery.trim());
-      if (category) params.append('category', category);
+      if (categoryId) params.append('categoryId', categoryId);
       if (condition) params.append('condition', condition);
+      if (minPrice) params.append('minPrice', minPrice);
+      if (maxPrice) params.append('maxPrice', maxPrice);
+      if (cityId) params.append('cityId', cityId);
+      if (divisionId) params.append('divisionId', divisionId);
       params.append('status', 'ACTIVE');
       const [sortField, sortOrder] = sort.split(':');
       params.append('sortBy', sortField);
@@ -75,7 +109,20 @@ function ExploreContent() {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, category, condition, sort]);
+  }, [searchQuery, categoryId, condition, minPrice, maxPrice, cityId, divisionId, sort]);
+
+  // Build flat list of categories for display (main + subcategories)
+  const categoryOptions = categories.flatMap(cat => [
+    { id: cat.id, name: cat.name, level: 1 },
+    ...(cat.children || []).map(sub => ({ id: sub.id, name: `  ${sub.name}`, level: 2 }))
+  ]);
+
+  // Get divisions for selected city
+  const selectedCity = cities.find(c => c.id === cityId);
+  const divisions = selectedCity?.divisions?.filter(d => d.isActive) || [];
+
+  // Count active filters (excluding search and sort)
+  const activeFilterCount = [categoryId, condition, minPrice, maxPrice, cityId, divisionId].filter(Boolean).length;
 
   useEffect(() => {
     const debounce = setTimeout(() => {
@@ -84,17 +131,49 @@ function ExploreContent() {
     return () => clearTimeout(debounce);
   }, [fetchListings]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Update URL to reflect search
+  const updateUrl = useCallback(() => {
     const params = new URLSearchParams();
     if (searchQuery.trim()) params.set('search', searchQuery.trim());
+    if (categoryId) params.set('categoryId', categoryId);
+    if (condition) params.set('condition', condition);
+    if (minPrice) params.set('minPrice', minPrice);
+    if (maxPrice) params.set('maxPrice', maxPrice);
+    if (cityId) params.set('cityId', cityId);
+    if (divisionId) params.set('divisionId', divisionId);
+    const [sortField, sortOrder] = sort.split(':');
+    if (sortField !== 'createdAt' || sortOrder !== 'desc') {
+      params.set('sortBy', sortField);
+      params.set('sortOrder', sortOrder);
+    }
     router.replace(`/explore${params.toString() ? `?${params}` : ''}`);
+  }, [searchQuery, categoryId, condition, minPrice, maxPrice, cityId, divisionId, sort, router]);
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateUrl();
   };
 
   const clearSearch = () => {
     setSearchQuery('');
     router.replace('/explore');
+  };
+
+  const clearAllFilters = () => {
+    setSearchQuery('');
+    setCategoryId('');
+    setCondition('');
+    setMinPrice('');
+    setMaxPrice('');
+    setCityId('');
+    setDivisionId('');
+    setSort('createdAt:desc');
+    router.replace('/explore');
+  };
+
+  // Reset divisionId when city changes
+  const handleCityChange = (newCityId: string) => {
+    setCityId(newCityId);
+    setDivisionId('');
   };
 
   return (
@@ -129,7 +208,13 @@ function ExploreContent() {
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-4 md:mb-0">
-              {searchQuery ? `Results for "${searchQuery}"` : 'Explore'}
+              {searchQuery
+                ? `Results for "${searchQuery}"`
+                : categoryId
+                  ? categories.find(c => c.id === categoryId)?.name ||
+                    categories.flatMap(c => c.children || []).find(s => s.id === categoryId)?.name ||
+                    'Explore'
+                  : 'Explore'}
             </h1>
 
             <div className="flex items-center space-x-4">
@@ -149,10 +234,19 @@ function ExploreContent() {
               {/* Filter Toggle */}
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+                className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
+                  activeFilterCount > 0
+                    ? 'border-pink-500 bg-pink-50 text-pink-600'
+                    : 'border-gray-300 hover:bg-gray-50'
+                }`}
               >
                 <FunnelIcon className="h-5 w-5 mr-2" />
                 Filters
+                {activeFilterCount > 0 && (
+                  <span className="ml-2 inline-flex items-center justify-center h-5 w-5 rounded-full bg-pink-600 text-white text-xs font-medium">
+                    {activeFilterCount}
+                  </span>
+                )}
               </button>
 
               {/* View Mode */}
@@ -173,25 +267,29 @@ function ExploreContent() {
             </div>
           </div>
 
-          {/* Filters */}
+          {/* Filters Panel */}
           {showFilters && (
             <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Category */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                   <select
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    value={categoryId}
+                    onChange={(e) => setCategoryId(e.target.value)}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                    disabled={categoriesLoading}
                   >
-                    {categories.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
+                    <option value="">All Categories</option>
+                    {categoryOptions.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.name}
                       </option>
                     ))}
                   </select>
                 </div>
 
+                {/* Condition */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Condition</label>
                   <select
@@ -206,26 +304,126 @@ function ExploreContent() {
                     ))}
                   </select>
                 </div>
+
+                {/* City */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                  <select
+                    value={cityId}
+                    onChange={(e) => handleCityChange(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  >
+                    <option value="">All Cities</option>
+                    {cities.filter(c => c.isActive).map((city) => (
+                      <option key={city.id} value={city.id}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Min Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Min Price (UGX)</label>
+                  <input
+                    type="number"
+                    value={minPrice}
+                    onChange={(e) => setMinPrice(e.target.value)}
+                    placeholder="e.g. 10000"
+                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                </div>
+
+                {/* Max Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Max Price (UGX)</label>
+                  <input
+                    type="number"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                    placeholder="e.g. 500000"
+                    min="0"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                  />
+                </div>
+
+                {/* Division (shown when city is selected) */}
+                {cityId && divisions.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Division</label>
+                    <select
+                      value={divisionId}
+                      onChange={(e) => setDivisionId(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                    >
+                      <option value="">All Divisions</option>
+                      {divisions.map((div) => (
+                        <option key={div.id} value={div.id}>
+                          {div.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
+
+              {/* Filter actions */}
+              {activeFilterCount > 0 && (
+                <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end">
+                  <button
+                    onClick={clearAllFilters}
+                    className="text-sm font-medium text-pink-600 hover:text-pink-700"
+                  >
+                    Clear all filters
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
-          {/* Category Pills */}
-          <div className="flex flex-wrap gap-2 mb-6">
+          {/* Category Pills - Show main categories */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <button
+              onClick={() => setCategoryId('')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                categoryId === ''
+                  ? 'bg-pink-600 text-white'
+                  : 'bg-white text-gray-700 hover:bg-pink-50 hover:text-pink-600 border border-gray-200'
+              }`}
+            >
+              All
+            </button>
             {categories.map((cat) => (
               <button
-                key={cat.value}
-                onClick={() => setCategory(cat.value)}
+                key={cat.id}
+                onClick={() => setCategoryId(cat.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  category === cat.value
+                  categoryId === cat.id
                     ? 'bg-pink-600 text-white'
                     : 'bg-white text-gray-700 hover:bg-pink-50 hover:text-pink-600 border border-gray-200'
                 }`}
               >
-                {cat.label}
+                {cat.name}
               </button>
             ))}
           </div>
+
+          {/* Subcategory Pills - Show when a main category is selected */}
+          {categoryId && categories.find(c => c.id === categoryId)?.children && (
+            <div className="flex flex-wrap gap-2 mb-4">
+              {categories.find(c => c.id === categoryId)?.children?.map((sub) => (
+                <button
+                  key={sub.id}
+                  onClick={() => setCategoryId(sub.id)}
+                  className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-pink-50 hover:text-pink-600 border border-gray-200 transition-colors"
+                >
+                  {sub.name}
+                </button>
+              ))}
+            </div>
+          )}
+
 
           {/* Listings Grid */}
           {loading ? (
@@ -237,12 +435,12 @@ function ExploreContent() {
               <p className="text-gray-500">
                 {searchQuery ? `No results for "${searchQuery}"` : 'No listings found'}
               </p>
-              {searchQuery && (
+              {(searchQuery || activeFilterCount > 0) && (
                 <button
-                  onClick={clearSearch}
+                  onClick={clearAllFilters}
                   className="mt-3 text-pink-600 hover:text-pink-700 font-medium"
                 >
-                  Clear search
+                  Clear all filters
                 </button>
               )}
             </div>

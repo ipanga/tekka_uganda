@@ -4,7 +4,6 @@ import '../../features/auth/data/repositories/user_api_repository.dart';
 import '../../features/listing/data/repositories/listing_api_repository.dart';
 import '../../features/listing/data/repositories/category_api_repository.dart';
 import '../../features/chat/data/repositories/chat_api_repository.dart';
-import '../../features/offers/data/repositories/offer_api_repository.dart';
 
 part 'repository_providers.g.dart';
 
@@ -30,12 +29,6 @@ ListingApiRepository listingApiRepository(ListingApiRepositoryRef ref) {
 @Riverpod(keepAlive: true)
 ChatApiRepository chatApiRepository(ChatApiRepositoryRef ref) {
   return ChatApiRepository(ref.watch(apiClientProvider));
-}
-
-/// Offer API repository
-@Riverpod(keepAlive: true)
-OfferApiRepository offerApiRepository(OfferApiRepositoryRef ref) {
-  return OfferApiRepository(ref.watch(apiClientProvider));
 }
 
 /// Category API repository (for hierarchical categories and locations)

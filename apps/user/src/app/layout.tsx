@@ -9,7 +9,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Tekka - Fashion Marketplace',
+  title: 'Tekka.ug - Fashion Marketplace',
   description: 'Buy and sell pre-loved fashion in Uganda',
 };
 

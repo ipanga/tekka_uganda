@@ -48,7 +48,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
           tabs: const [
             Tab(text: 'All'),
             Tab(text: 'Active'),
-            Tab(text: 'Pending'),
+            Tab(text: 'Under Review'),
             Tab(text: 'Sold'),
           ],
         ),
@@ -75,8 +75,11 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
           final activeListings = listings
               .where((l) => l.status == ListingStatus.active)
               .toList();
-          final pendingListings = listings
-              .where((l) => l.status == ListingStatus.pending)
+          // Include both pending and rejected listings in "Under Review" tab
+          final underReviewListings = listings
+              .where((l) =>
+                  l.status == ListingStatus.pending ||
+                  l.status == ListingStatus.rejected)
               .toList();
           final soldListings = listings
               .where((l) => l.status == ListingStatus.sold)
@@ -98,8 +101,8 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
                 onEmptyAction: () => context.push(AppRoutes.createListing),
               ),
               _ListingsGrid(
-                listings: pendingListings,
-                emptyMessage: 'No pending listings',
+                listings: underReviewListings,
+                emptyMessage: 'No listings under review',
                 emptyAction: null,
                 onEmptyAction: null,
               ),

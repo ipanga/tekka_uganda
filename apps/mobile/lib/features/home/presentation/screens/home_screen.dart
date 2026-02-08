@@ -6,33 +6,79 @@ import '../../../../core/theme/theme.dart';
 import '../../../../router/app_router.dart';
 import '../../../../shared/widgets/listing_card.dart';
 import '../../../listing/application/listing_provider.dart';
+import '../../../listing/application/category_provider.dart';
 import '../../../listing/domain/entities/listing.dart';
+import '../../../listing/domain/entities/category.dart' as cat;
 import '../../../notifications/application/notification_provider.dart';
 
 /// Home screen with featured and recent listings
 class HomeScreen extends ConsumerStatefulWidget {
-  const HomeScreen({super.key});
+  final String? initialCategoryId;
+  final String? initialSearch;
+
+  const HomeScreen({
+    super.key,
+    this.initialCategoryId,
+    this.initialSearch,
+  });
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
-  ListingCategory? _selectedCategory;
+  String? _selectedCategoryId;
+  String? _searchQuery;
+  final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize from widget parameters
+    _selectedCategoryId = widget.initialCategoryId;
+    _searchQuery = widget.initialSearch;
+    if (widget.initialSearch != null) {
+      _searchController.text = widget.initialSearch!;
+    }
+    // Load categories on init
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(categoryProvider.notifier).loadData();
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final categoryState = ref.watch(categoryProvider);
     final filter = ListingsFilter(
-      category: _selectedCategory,
-      limit: 20,
+      categoryId: _selectedCategoryId,
+      searchQuery: _searchQuery,
+      limit: 24,
     );
     final listingsAsync = ref.watch(listingsFeedProvider(filter));
+
+    // Check if any filters are active
+    final hasFilters = _selectedCategoryId != null || (_searchQuery != null && _searchQuery!.isNotEmpty);
+
+    // Get main categories (level 1) from state
+    final mainCategories = categoryState.mainCategories;
+
+    // Get all subcategories for name lookups
+    final allSubcategories = <cat.Category>[];
+    for (final mainCat in mainCategories) {
+      allSubcategories.addAll(mainCat.activeChildren);
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          'Tekka',
+          'Tekka.ug',
           style: AppTypography.titleLarge.copyWith(
             color: AppColors.primary,
             fontWeight: FontWeight.w700,
@@ -55,90 +101,64 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // Search bar
               Padding(
                 padding: AppSpacing.screenHorizontal,
-                child: GestureDetector(
-                  onTap: () => context.go(AppRoutes.browse),
-                  child: Container(
-                    height: AppSpacing.searchBarHeight,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: AppSpacing.searchBarRadius,
-                      border: Border.all(color: AppColors.outline),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.search,
-                          color: AppColors.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Search fashion items...',
-                          style: AppTypography.bodyLarge.copyWith(
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
+                child: Container(
+                  height: AppSpacing.searchBarHeight,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: AppSpacing.searchBarRadius,
+                    border: Border.all(color: AppColors.outline),
                   ),
-                ),
-              ),
-
-              const SizedBox(height: AppSpacing.space5),
-
-              // Quick Access - Traditional Wear
-              Padding(
-                padding: AppSpacing.screenHorizontal,
-                child: Text('Quick Access', style: AppTypography.titleSmall),
-              ),
-
-              const SizedBox(height: AppSpacing.space3),
-
-              Padding(
-                padding: AppSpacing.screenHorizontal,
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() => _selectedCategory = ListingCategory.traditionalWear);
-                  },
-                  child: Container(
-                    height: 72,
-                    decoration: BoxDecoration(
-                      gradient: AppColors.primaryGradient,
-                      borderRadius: AppSpacing.cardRadius,
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Row(
-                        children: [
-                          Text(
-                            'Traditional Wear',
-                            style: AppTypography.titleMedium.copyWith(
-                              color: AppColors.white,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            Icons.arrow_forward,
-                            color: AppColors.white,
-                          ),
-                        ],
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.search,
+                        color: AppColors.onSurfaceVariant,
                       ),
-                    ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: TextField(
+                          controller: _searchController,
+                          decoration: InputDecoration(
+                            hintText: 'Search fashion items...',
+                            hintStyle: AppTypography.bodyLarge.copyWith(
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                            border: InputBorder.none,
+                            isDense: true,
+                            contentPadding: EdgeInsets.zero,
+                          ),
+                          style: AppTypography.bodyLarge,
+                          textInputAction: TextInputAction.search,
+                          onSubmitted: (value) {
+                            setState(() {
+                              _searchQuery = value.isEmpty ? null : value;
+                            });
+                          },
+                        ),
+                      ),
+                      if (_searchController.text.isNotEmpty)
+                        GestureDetector(
+                          onTap: () {
+                            _searchController.clear();
+                            setState(() {
+                              _searchQuery = null;
+                            });
+                          },
+                          child: Icon(
+                            Icons.clear,
+                            color: AppColors.onSurfaceVariant,
+                            size: 20,
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
 
               const SizedBox(height: AppSpacing.space5),
 
-              // Categories
+              // Main Categories from database
               Padding(
                 padding: AppSpacing.screenHorizontal,
                 child: Text('Categories', style: AppTypography.titleSmall),
@@ -146,39 +166,115 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
               const SizedBox(height: AppSpacing.space3),
 
-              // Category chips
-              SizedBox(
-                height: 36,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: AppSpacing.screenHorizontal,
-                  children: [
-                    _CategoryChip(
-                      label: 'All',
-                      isSelected: _selectedCategory == null,
-                      onSelected: () => setState(() => _selectedCategory = null),
-                    ),
-                    ...ListingCategory.values.map((category) {
-                      return _CategoryChip(
-                        label: category.displayName,
-                        isSelected: _selectedCategory == category,
-                        onSelected: () => setState(() => _selectedCategory = category),
+              // Main category chips (level 1) - horizontal scroll
+              if (categoryState.isLoading)
+                const SizedBox(
+                  height: 44,
+                  child: Center(child: CircularProgressIndicator()),
+                )
+              else if (mainCategories.isEmpty)
+                const SizedBox(height: 44)
+              else
+                SizedBox(
+                  height: 44,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: AppSpacing.screenHorizontal,
+                    itemCount: mainCategories.length,
+                    itemBuilder: (context, index) {
+                      final category = mainCategories[index];
+                      return _MainCategoryCard(
+                        name: category.name,
+                        isSelected: _selectedCategoryId == category.id,
+                        onTap: () {
+                          setState(() {
+                            _selectedCategoryId = _selectedCategoryId == category.id
+                                ? null
+                                : category.id;
+                          });
+                        },
                       );
-                    }),
-                  ],
+                    },
+                  ),
                 ),
-              ),
+
+              // Subcategories - shown when a main category is selected
+              if (_selectedCategoryId != null) ...[
+                const SizedBox(height: AppSpacing.space3),
+                Builder(builder: (context) {
+                  final selectedMain = mainCategories
+                      .where((c) => c.id == _selectedCategoryId)
+                      .firstOrNull;
+                  if (selectedMain == null) return const SizedBox.shrink();
+                  final subs = selectedMain.activeChildren;
+                  if (subs.isEmpty) return const SizedBox.shrink();
+                  return SizedBox(
+                    height: 40,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: AppSpacing.screenHorizontal,
+                      itemCount: subs.length,
+                      itemBuilder: (context, index) {
+                        final subcategory = subs[index];
+                        return _SubcategoryChip(
+                          label: subcategory.name,
+                          onTap: () {
+                            setState(() {
+                              _selectedCategoryId = subcategory.id;
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  );
+                }),
+              ],
 
               const SizedBox(height: AppSpacing.space5),
 
-              // Recent Listings
+              // Listings header
               Padding(
                 padding: AppSpacing.screenHorizontal,
-                child: Text(
-                  _selectedCategory != null
-                      ? _selectedCategory!.displayName
-                      : 'Recent Listings',
-                  style: AppTypography.titleSmall,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _searchQuery != null && _searchQuery!.isNotEmpty
+                            ? 'Results for "$_searchQuery"'
+                            : _selectedCategoryId != null
+                                ? mainCategories
+                                        .where((c) => c.id == _selectedCategoryId)
+                                        .firstOrNull
+                                        ?.name ??
+                                    allSubcategories
+                                        .where((c) => c.id == _selectedCategoryId)
+                                        .firstOrNull
+                                        ?.name ??
+                                    'Recent Listings'
+                                : 'Recent Listings',
+                        style: AppTypography.titleSmall,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (hasFilters)
+                      GestureDetector(
+                        onTap: () {
+                          _searchController.clear();
+                          setState(() {
+                            _selectedCategoryId = null;
+                            _searchQuery = null;
+                          });
+                        },
+                        child: Text(
+                          'Clear filters',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
 
@@ -256,9 +352,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             const SizedBox(height: AppSpacing.space4),
             Text(
-              _selectedCategory != null
-                  ? 'No ${_selectedCategory!.displayName.toLowerCase()} found'
-                  : 'No listings yet',
+              'No listings yet',
               style: AppTypography.titleMedium,
             ),
             const SizedBox(height: AppSpacing.space2),
@@ -303,34 +397,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
-class _CategoryChip extends StatelessWidget {
-  final String label;
-  final bool isSelected;
-  final VoidCallback onSelected;
-
-  const _CategoryChip({
-    required this.label,
-    required this.isSelected,
-    required this.onSelected,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (_) => onSelected(),
-        selectedColor: AppColors.primaryContainer,
-        checkmarkColor: AppColors.primary,
-        side: BorderSide(
-          color: isSelected ? AppColors.primary : AppColors.outline,
-        ),
-      ),
-    );
-  }
-}
 
 class _LoadingCard extends StatelessWidget {
   @override
@@ -413,6 +479,83 @@ class _NotificationButton extends ConsumerWidget {
         child: const Icon(Icons.notifications_outlined),
       ),
       onPressed: () => context.push(AppRoutes.notifications),
+    );
+  }
+}
+
+class _MainCategoryCard extends StatelessWidget {
+  final String name;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _MainCategoryCard({
+    required this.name,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : AppColors.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : AppColors.outline,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              name,
+              style: AppTypography.bodySmall.copyWith(
+                color: isSelected ? Colors.white : AppColors.onSurface,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SubcategoryChip extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const _SubcategoryChip({
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: AppColors.outline),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: AppTypography.bodySmall.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

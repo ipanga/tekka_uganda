@@ -216,14 +216,17 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
 
                         _DetailRow(
                           label: 'Category',
-                          value: listing.category.displayName,
+                          // Use categoryName from new system, fallback to legacy
+                          value: (listing.categoryName?.isNotEmpty == true)
+                              ? listing.categoryName!
+                              : listing.category.displayName,
                         ),
-                        if (listing.size != null)
-                          _DetailRow(label: 'Size', value: listing.size!),
                         _DetailRow(
                           label: 'Condition',
                           value: listing.condition.displayName,
                         ),
+                        // Display all attributes from JSON or legacy fields
+                        ..._buildAdditionalAttributes(listing),
 
                         // Occasion
                         if (listing.occasion != null) ...[
@@ -352,24 +355,13 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                     boxShadow: AppTheme.stickyShadow,
                   ),
                   child: SafeArea(
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _makeOffer(listing),
-                            icon: const Icon(Icons.local_offer_outlined),
-                            label: const Text('Make Offer'),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.space3),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _startChat(listing),
-                            icon: const Icon(Icons.chat_bubble_outline),
-                            label: const Text('Message'),
-                          ),
-                        ),
-                      ],
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _startChat(listing),
+                        icon: const Icon(Icons.chat_bubble_outline),
+                        label: const Text('Message Seller'),
+                      ),
                     ),
                   ),
                 )
@@ -396,154 +388,6 @@ Download Tekka to browse more fashion items!
       shareText,
       subject: 'Check out this item on Tekka: ${listing.title}',
     );
-  }
-
-  void _makeOffer(Listing listing) {
-    final offerController = TextEditingController();
-    final messageController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-        ),
-        child: Container(
-          padding: AppSpacing.screenPadding,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.gray200,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-
-              Text('Make an Offer', style: AppTypography.titleLarge),
-              const SizedBox(height: AppSpacing.space2),
-              Text(
-                'Asking price: ${listing.formattedPrice}',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.space6),
-
-              // Offer amount
-              TextField(
-                controller: offerController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Your offer (UGX)',
-                  prefixText: 'UGX ',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.space4),
-
-              // Optional message
-              TextField(
-                controller: messageController,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'Message (optional)',
-                  hintText: 'Add a note to your offer...',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.space6),
-
-              // Submit button
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final amount = int.tryParse(
-                      offerController.text.replaceAll(',', ''),
-                    );
-                    if (amount == null || amount <= 0) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please enter a valid amount')),
-                      );
-                      return;
-                    }
-
-                    Navigator.pop(context);
-                    _sendOffer(listing, amount, messageController.text);
-                  },
-                  child: const Text('Send Offer'),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.space4),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _sendOffer(Listing listing, int amount, String message) async {
-    // Show loading indicator
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
-
-    try {
-      // Create or get existing chat
-      final chat = await ref.read(createChatProvider.notifier).createChat(
-            CreateChatRequest(
-              listingId: listing.id,
-              listingTitle: listing.title,
-              listingImageUrl: listing.imageUrls.isNotEmpty ? listing.imageUrls.first : null,
-              listingPrice: listing.price,
-              sellerId: listing.sellerId,
-              sellerName: listing.sellerName,
-              sellerPhotoUrl: listing.sellerPhotoUrl,
-            ),
-          );
-
-      if (!mounted) return;
-
-      if (chat != null) {
-        // Send offer message
-        await ref.read(chatActionsProvider(chat.id).notifier).sendMessage(
-              message.isNotEmpty ? message : 'I would like to make an offer.',
-              type: MessageType.offer,
-              offerAmount: amount,
-            );
-
-        if (!mounted) return;
-        Navigator.pop(context); // Dismiss loading
-        context.push(AppRoutes.chat.replaceFirst(':id', chat.id));
-      } else {
-        if (!mounted) return;
-        Navigator.pop(context); // Dismiss loading
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to send offer')),
-        );
-      }
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.pop(context); // Dismiss loading
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
-    }
   }
 
   void _startChat(Listing listing) async {
@@ -637,6 +481,81 @@ Download Tekka to browse more fashion items!
         ],
       ),
     );
+  }
+
+  /// Map attribute keys to display labels
+  static const _attributeLabelMap = {
+    'size': 'Size',
+    'size-clothing': 'Size',
+    'size-shoes': 'Shoe Size',
+    'brand': 'Brand',
+    'brand-fashion': 'Brand',
+    'brand-consoles': 'Brand',
+    'color': 'Color',
+    'material': 'Material',
+    'storage-capacity': 'Storage',
+    'console-model': 'Model',
+  };
+
+  /// Get attribute value from new attributes JSON or fallback to legacy field
+  String? _getAttributeValue(Listing listing, String key) {
+    // Try new attributes JSON first - check both exact key and variations
+    if (listing.attributes != null) {
+      // Check for exact key match or common variations
+      final keysToCheck = [key, '$key-clothing', '$key-fashion', '$key-shoes', '$key-consoles'];
+      for (final k in keysToCheck) {
+        if (listing.attributes!.containsKey(k)) {
+          final value = listing.attributes![k];
+          if (value is List) {
+            return value.join(', ');
+          }
+          return value?.toString();
+        }
+      }
+    }
+    // Fallback to legacy fields
+    switch (key) {
+      case 'size':
+        return listing.size;
+      case 'brand':
+        return listing.brand;
+      case 'color':
+        return listing.color;
+      case 'material':
+        return listing.material;
+      default:
+        return null;
+    }
+  }
+
+  /// Build all attribute widgets from JSON
+  List<Widget> _buildAdditionalAttributes(Listing listing) {
+    if (listing.attributes == null || listing.attributes!.isEmpty) {
+      // Return legacy fields if no attributes JSON
+      return [
+        if (listing.size != null) _DetailRow(label: 'Size', value: listing.size!),
+        if (listing.brand != null) _DetailRow(label: 'Brand', value: listing.brand!),
+        if (listing.color != null) _DetailRow(label: 'Color', value: listing.color!),
+        if (listing.material != null) _DetailRow(label: 'Material', value: listing.material!),
+      ];
+    }
+
+    // Build widgets from all attributes in the JSON
+    return listing.attributes!.entries.map((entry) {
+      final label = _attributeLabelMap[entry.key] ??
+          entry.key
+              .replaceAll('-', ' ')
+              .replaceAll('_', ' ')
+              .split(' ')
+              .map((word) => word.isNotEmpty
+                  ? '${word[0].toUpperCase()}${word.substring(1)}'
+                  : '')
+              .join(' ');
+      final value = entry.value is List
+          ? (entry.value as List).join(', ')
+          : entry.value.toString();
+      return _DetailRow(label: label, value: value);
+    }).toList();
   }
 
   void _handleOwnerAction(String action, Listing listing) async {

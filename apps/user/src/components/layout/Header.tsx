@@ -16,7 +16,6 @@ import {
   ShoppingBagIcon,
   ArrowRightOnRectangleIcon,
   TagIcon,
-  CurrencyDollarIcon,
 } from '@heroicons/react/24/outline';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
@@ -95,11 +94,11 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="text-2xl font-bold text-pink-600">Tekka</span>
+            <span className="text-2xl font-bold text-pink-600">Tekka.ug</span>
           </Link>
 
           {/* Search Bar - Desktop */}
-          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-lg mx-8">
+          <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-2xl mx-8">
             <div className="relative w-full">
               <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
               <input
@@ -114,12 +113,6 @@ export function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-4">
-            <Link
-              href="/explore"
-              className="text-gray-600 hover:text-pink-600 transition-colors px-2"
-            >
-              Explore
-            </Link>
             {isAuthenticated ? (
               <>
                 {/* Saved */}
@@ -217,19 +210,6 @@ export function Header() {
                         <MenuItem>
                           {({ active }) => (
                             <Link
-                              href="/offers"
-                              className={`${
-                                active ? 'bg-gray-50' : ''
-                              } flex items-center px-4 py-2 text-sm text-gray-700`}
-                            >
-                              <CurrencyDollarIcon className="w-5 h-5 mr-3 text-gray-400" />
-                              My Offers
-                            </Link>
-                          )}
-                        </MenuItem>
-                        <MenuItem>
-                          {({ active }) => (
-                            <Link
                               href="/settings"
                               className={`${
                                 active ? 'bg-gray-50' : ''
@@ -317,13 +297,6 @@ export function Header() {
               </div>
             </form>
             <nav className="flex flex-col space-y-3">
-              <Link
-                href="/explore"
-                className="text-gray-600 hover:text-pink-600 py-2"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Explore
-              </Link>
               {isAuthenticated ? (
                 <>
                   <Link
@@ -363,13 +336,6 @@ export function Header() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     My Listings
-                  </Link>
-                  <Link
-                    href="/offers"
-                    className="text-gray-600 hover:text-pink-600 py-2"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    My Offers
                   </Link>
                   <Link
                     href="/profile"

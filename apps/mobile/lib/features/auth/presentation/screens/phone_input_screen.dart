@@ -104,7 +104,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                 const SizedBox(height: AppSpacing.space2),
 
                 Text(
-                  'We\'ll send you a verification code via SMS',
+                  'We\'ll send you a verification code',
                   style: AppTypography.bodyMedium.copyWith(
                     color: AppColors.onSurfaceVariant,
                   ),
@@ -119,11 +119,13 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                   textInputAction: TextInputAction.done,
                   validator: _validatePhone,
                   inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[0-9+\s\-]')),
-                    LengthLimitingTextInputFormatter(15),
+                    // Only allow digits (we handle the +256 prefix visually)
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(10),
                   ],
                   decoration: InputDecoration(
-                    hintText: '07XX XXX XXX',
+                    hintText: '712 345 678',
+                    helperText: 'Enter with or without the leading 0',
                     prefixIcon: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       child: Row(
@@ -136,7 +138,9 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                           const SizedBox(width: 8),
                           Text(
                             AppConstants.ugandaCountryCode,
-                            style: AppTypography.bodyLarge,
+                            style: AppTypography.bodyLarge.copyWith(
+                              fontWeight: FontWeight.w500,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Container(

@@ -76,7 +76,7 @@ export default function SavedSearchesPage() {
     if (search.minPrice) params.set('minPrice', search.minPrice.toString());
     if (search.maxPrice) params.set('maxPrice', search.maxPrice.toString());
     if (search.location) params.set('location', search.location);
-    return `/explore?${params.toString()}`;
+    return `/?${params.toString()}`;
   };
 
   const getFilterSummary = (search: SavedSearch): string[] => {
@@ -137,7 +137,7 @@ export default function SavedSearchesPage() {
                 <p className="text-gray-500 mb-6">
                   Save your searches to get notified when new items are listed
                 </p>
-                <Button onClick={() => router.push('/explore')}>
+                <Button onClick={() => router.push('/')}>
                   Start Browsing
                 </Button>
               </CardContent>

@@ -11,6 +11,8 @@ import {
   ShieldCheckIcon,
   StarIcon,
   NoSymbolIcon,
+  PencilSquareIcon,
+  PhoneIcon,
 } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
 import { User, Listing, UserStats, Review } from '@/types';
@@ -24,6 +26,7 @@ import { Card, CardContent } from '@/components/ui/Card';
 import { PageLoader } from '@/components/ui/Spinner';
 import { ListingCard } from '@/components/listings/ListingCard';
 import { ReviewCard } from '@/components/reviews/ReviewCard';
+import { ReviewForm } from '@/components/reviews/ReviewForm';
 import { ReportModal } from '@/components/modals/ReportModal';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -42,7 +45,9 @@ export default function PublicProfilePage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('listings');
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [showPhoneNumber, setShowPhoneNumber] = useState(false);
 
   // Redirect to own profile if viewing self
   useEffect(() => {
@@ -128,7 +133,7 @@ export default function PublicProfilePage() {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-2">User not found</h1>
             <p className="text-gray-500 mb-6">This profile may not exist or has been removed.</p>
-            <Button onClick={() => router.push('/explore')}>Browse Listings</Button>
+            <Button onClick={() => router.push('/')}>Browse Listings</Button>
           </div>
         </main>
         <Footer />
@@ -194,10 +199,27 @@ export default function PublicProfilePage() {
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  <Button onClick={handleMessage}>
-                    <ChatBubbleLeftRightIcon className="w-5 h-5 mr-2" />
-                    Message
-                  </Button>
+                  <div className="flex flex-wrap gap-2">
+                    <Button onClick={handleMessage}>
+                      <ChatBubbleLeftRightIcon className="w-5 h-5 mr-2" />
+                      Message
+                    </Button>
+                    {profileUser.showPhoneNumber && profileUser.phoneNumber && (
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowPhoneNumber(!showPhoneNumber)}
+                      >
+                        <PhoneIcon className="w-5 h-5 mr-2" />
+                        {showPhoneNumber ? profileUser.phoneNumber : 'Show Contact'}
+                      </Button>
+                    )}
+                    {isAuthenticated && (
+                      <Button variant="outline" onClick={() => setShowReviewModal(true)}>
+                        <PencilSquareIcon className="w-5 h-5 mr-2" />
+                        Review
+                      </Button>
+                    )}
+                  </div>
                   <div className="flex gap-2">
                     <Button
                       variant="ghost"
@@ -293,6 +315,26 @@ export default function PublicProfilePage() {
           isOpen={showReportModal}
           onClose={() => setShowReportModal(false)}
           userId={userId}
+        />
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && (
+        <ReviewForm
+          isOpen={showReviewModal}
+          onClose={() => setShowReviewModal(false)}
+          revieweeId={userId}
+          onSuccess={(review) => {
+            // Add the new review to the reviews list
+            setReviews((prev) => [review, ...prev]);
+            // Update stats if needed
+            if (stats) {
+              setStats({
+                ...stats,
+                totalReviews: stats.totalReviews + 1,
+              });
+            }
+          }}
         />
       )}
     </div>

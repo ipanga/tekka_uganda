@@ -238,7 +238,9 @@ final sellerAnalyticsProvider = FutureProvider<SellerAnalytics>((ref) async {
 
   // Calculate basic stats
   final activeListings = listings.where((l) => l.status == ListingStatus.active).length;
-  final pendingListings = listings.where((l) => l.status == ListingStatus.pending).length;
+  // Include both pending and rejected listings in the "under review" count
+  final pendingListings = listings.where((l) =>
+      l.status == ListingStatus.pending || l.status == ListingStatus.rejected).length;
   final soldListings = listings.where((l) => l.status == ListingStatus.sold).toList();
   final soldCount = soldListings.length;
 

@@ -51,7 +51,7 @@ export class ListingsController {
     @CurrentUser() user: Prisma.User,
     @Query('status') status?: string,
   ) {
-    return this.listingsService.getMyListings(user.id, status as any);
+    return this.listingsService.getMyListings(user.id, status);
   }
 
   // Get saved listings
@@ -180,5 +180,16 @@ export class ListingsController {
     @Body() dto: AdminListingActionDto,
   ) {
     return this.listingsService.rejectListing(id, admin.id, dto.reason);
+  }
+
+  // Suspend a listing (puts it back to pending for review)
+  @Post('admin/:id/suspend')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async suspendListing(
+    @Param('id') id: string,
+    @CurrentUser() admin: Prisma.User,
+    @Body() dto: AdminListingActionDto,
+  ) {
+    return this.listingsService.suspendListing(id, admin.id, dto.reason);
   }
 }
