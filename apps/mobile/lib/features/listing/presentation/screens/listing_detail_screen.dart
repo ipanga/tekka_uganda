@@ -497,37 +497,6 @@ Download Tekka to browse more fashion items!
     'console-model': 'Model',
   };
 
-  /// Get attribute value from new attributes JSON or fallback to legacy field
-  String? _getAttributeValue(Listing listing, String key) {
-    // Try new attributes JSON first - check both exact key and variations
-    if (listing.attributes != null) {
-      // Check for exact key match or common variations
-      final keysToCheck = [key, '$key-clothing', '$key-fashion', '$key-shoes', '$key-consoles'];
-      for (final k in keysToCheck) {
-        if (listing.attributes!.containsKey(k)) {
-          final value = listing.attributes![k];
-          if (value is List) {
-            return value.join(', ');
-          }
-          return value?.toString();
-        }
-      }
-    }
-    // Fallback to legacy fields
-    switch (key) {
-      case 'size':
-        return listing.size;
-      case 'brand':
-        return listing.brand;
-      case 'color':
-        return listing.color;
-      case 'material':
-        return listing.material;
-      default:
-        return null;
-    }
-  }
-
   /// Build all attribute widgets from JSON
   List<Widget> _buildAdditionalAttributes(Listing listing) {
     if (listing.attributes == null || listing.attributes!.isEmpty) {

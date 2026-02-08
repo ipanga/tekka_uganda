@@ -535,7 +535,7 @@ class ListingActionsNotifier extends StateNotifier<AsyncValue<void>> {
       await _repository.save(listingId);
       state = const AsyncValue.data(null);
       return true;
-    } catch (e, st) {
+    } catch (e, _) {
       // If save fails, try unsave (toggle behavior)
       try {
         await _repository.unsave(listingId);

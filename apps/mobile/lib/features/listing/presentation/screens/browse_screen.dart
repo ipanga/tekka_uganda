@@ -9,8 +9,6 @@ import '../../../search/application/saved_search_provider.dart';
 import '../../application/listing_provider.dart';
 import '../../application/category_provider.dart';
 import '../../domain/entities/listing.dart';
-import '../../domain/entities/category.dart' as cat;
-import '../../domain/entities/location.dart';
 
 /// Browse/Search screen with filters
 class BrowseScreen extends ConsumerStatefulWidget {
