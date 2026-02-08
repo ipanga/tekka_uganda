@@ -7,19 +7,24 @@ import '../../../report/application/report_provider.dart';
 
 /// Provider for blocked users with their details
 /// Uses the API-based blockedUsersProvider which returns full AppUser objects
-final blockedUsersWithDetailsProvider =
-    FutureProvider<List<BlockedUserInfo>>((ref) async {
+final blockedUsersWithDetailsProvider = FutureProvider<List<BlockedUserInfo>>((
+  ref,
+) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return [];
 
   // Use the API-based blocked users provider which returns full user objects
   final blockedAppUsers = await ref.watch(blockedUsersProvider.future);
 
-  return blockedAppUsers.map((appUser) => BlockedUserInfo(
-    id: appUser.uid,
-    displayName: appUser.displayName ?? 'Unknown User',
-    photoUrl: appUser.photoUrl,
-  )).toList();
+  return blockedAppUsers
+      .map(
+        (appUser) => BlockedUserInfo(
+          id: appUser.uid,
+          displayName: appUser.displayName ?? 'Unknown User',
+          photoUrl: appUser.photoUrl,
+        ),
+      )
+      .toList();
 });
 
 /// Blocked user info
@@ -45,9 +50,7 @@ class BlockedUsersScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Blocked Users'),
-      ),
+      appBar: AppBar(title: const Text('Blocked Users')),
       body: blockedUsersAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -56,8 +59,10 @@ class BlockedUsersScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: AppSpacing.space4),
-              Text('Failed to load blocked users',
-                  style: AppTypography.bodyLarge),
+              Text(
+                'Failed to load blocked users',
+                style: AppTypography.bodyLarge,
+              ),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
                 onPressed: () =>
@@ -100,10 +105,7 @@ class BlockedUsersScreen extends ConsumerWidget {
               color: AppColors.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.space4),
-            Text(
-              'No blocked users',
-              style: AppTypography.titleMedium,
-            ),
+            Text('No blocked users', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.space2),
             Text(
               "You haven't blocked anyone yet. Blocked users won't be able to contact you or see your listings.",
@@ -168,10 +170,7 @@ class BlockedUsersScreen extends ConsumerWidget {
 }
 
 class _BlockedUserTile extends StatelessWidget {
-  const _BlockedUserTile({
-    required this.user,
-    required this.onUnblock,
-  });
+  const _BlockedUserTile({required this.user, required this.onUnblock});
 
   final BlockedUserInfo user;
   final VoidCallback onUnblock;
@@ -181,8 +180,9 @@ class _BlockedUserTile extends StatelessWidget {
     return ListTile(
       leading: CircleAvatar(
         backgroundColor: AppColors.primaryContainer,
-        backgroundImage:
-            user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
+        backgroundImage: user.photoUrl != null
+            ? NetworkImage(user.photoUrl!)
+            : null,
         child: user.photoUrl == null
             ? Text(
                 user.displayName.isNotEmpty
@@ -194,10 +194,7 @@ class _BlockedUserTile extends StatelessWidget {
               )
             : null,
       ),
-      title: Text(
-        user.displayName,
-        style: AppTypography.bodyLarge,
-      ),
+      title: Text(user.displayName, style: AppTypography.bodyLarge),
       trailing: OutlinedButton(
         onPressed: onUnblock,
         child: const Text('Unblock'),

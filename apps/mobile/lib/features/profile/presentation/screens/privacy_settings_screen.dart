@@ -17,9 +17,7 @@ class PrivacySettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Privacy Settings'),
-      ),
+      appBar: AppBar(title: const Text('Privacy Settings')),
       body: prefsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -31,7 +29,8 @@ class PrivacySettingsScreen extends ConsumerWidget {
               Text('Failed to load settings', style: AppTypography.bodyLarge),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
-                onPressed: () => ref.invalidate(privacyPreferencesStreamProvider),
+                onPressed: () =>
+                    ref.invalidate(privacyPreferencesStreamProvider),
                 child: const Text('Retry'),
               ),
             ],
@@ -210,11 +209,7 @@ class _PrivacySettingsContent extends ConsumerWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 20,
-                  color: AppColors.primary,
-                ),
+                Icon(Icons.info_outline, size: 20, color: AppColors.primary),
                 const SizedBox(width: AppSpacing.space3),
                 Expanded(
                   child: Text(
@@ -278,14 +273,8 @@ class _SettingsToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListTile(
-      leading: Icon(
-        icon,
-        color: AppColors.onSurfaceVariant,
-      ),
-      title: Text(
-        title,
-        style: AppTypography.bodyLarge,
-      ),
+      leading: Icon(icon, color: AppColors.onSurfaceVariant),
+      title: Text(title, style: AppTypography.bodyLarge),
       subtitle: Text(
         subtitle,
         style: AppTypography.bodySmall.copyWith(
@@ -370,15 +359,10 @@ class _MessagePermissionSelector extends StatelessWidget {
         Icons.chat_bubble_outline,
         color: AppColors.onSurfaceVariant,
       ),
-      title: const Text(
-        'Who Can Message You',
-        style: AppTypography.bodyLarge,
-      ),
+      title: const Text('Who Can Message You', style: AppTypography.bodyLarge),
       subtitle: Text(
         currentPermission.displayName,
-        style: AppTypography.bodySmall.copyWith(
-          color: AppColors.primary,
-        ),
+        style: AppTypography.bodySmall.copyWith(color: AppColors.primary),
       ),
       trailing: const Icon(
         Icons.chevron_right,
@@ -423,13 +407,17 @@ class _MessagePermissionSelector extends StatelessWidget {
               return ListTile(
                 leading: Icon(
                   _getIconForPermission(permission),
-                  color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+                  color: isSelected
+                      ? AppColors.primary
+                      : AppColors.onSurfaceVariant,
                 ),
                 title: Text(
                   permission.displayName,
                   style: AppTypography.bodyLarge.copyWith(
                     color: isSelected ? AppColors.primary : AppColors.onSurface,
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                   ),
                 ),
                 subtitle: Text(

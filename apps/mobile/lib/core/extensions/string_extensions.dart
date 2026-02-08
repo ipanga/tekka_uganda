@@ -24,11 +24,14 @@ extension StringExtensions on String {
 
     // Check formats: +256XXXXXXXXX, 256XXXXXXXXX, 0XXXXXXXXX, XXXXXXXXX
     if (cleaned.startsWith('+256')) {
-      return cleaned.length == 13 && RegExp(r'^\+256[7][0-9]{8}$').hasMatch(cleaned);
+      return cleaned.length == 13 &&
+          RegExp(r'^\+256[7][0-9]{8}$').hasMatch(cleaned);
     } else if (cleaned.startsWith('256')) {
-      return cleaned.length == 12 && RegExp(r'^256[7][0-9]{8}$').hasMatch(cleaned);
+      return cleaned.length == 12 &&
+          RegExp(r'^256[7][0-9]{8}$').hasMatch(cleaned);
     } else if (cleaned.startsWith('0')) {
-      return cleaned.length == 10 && RegExp(r'^0[7][0-9]{8}$').hasMatch(cleaned);
+      return cleaned.length == 10 &&
+          RegExp(r'^0[7][0-9]{8}$').hasMatch(cleaned);
     } else if (cleaned.startsWith('7')) {
       // Handle case where user enters 9 digits starting with 7
       return cleaned.length == 9 && RegExp(r'^[7][0-9]{8}$').hasMatch(cleaned);

@@ -109,14 +109,18 @@ class PinNotifier extends StateNotifier<PinStatus> {
       final hasPinSet = pinHash != null && pinHash.isNotEmpty;
 
       // Check for lock status
-      final lockedUntilStr = await _secureStorage.read(key: _PinKeys.lockedUntil);
+      final lockedUntilStr = await _secureStorage.read(
+        key: _PinKeys.lockedUntil,
+      );
       DateTime? lockedUntil;
       if (lockedUntilStr != null) {
         lockedUntil = DateTime.tryParse(lockedUntilStr);
       }
 
       // Get failed attempts
-      final attemptsStr = await _secureStorage.read(key: _PinKeys.failedAttempts);
+      final attemptsStr = await _secureStorage.read(
+        key: _PinKeys.failedAttempts,
+      );
       final failedAttempts = int.tryParse(attemptsStr ?? '0') ?? 0;
 
       state = state.copyWith(
@@ -148,7 +152,8 @@ class PinNotifier extends StateNotifier<PinStatus> {
   Future<bool> verifyCurrentPin(String pin) async {
     if (state.isLocked) {
       state = state.copyWith(
-        errorMessage: 'Too many failed attempts. Try again in ${state.remainingLockSeconds ~/ 60} minutes.',
+        errorMessage:
+            'Too many failed attempts. Try again in ${state.remainingLockSeconds ~/ 60} minutes.',
       );
       return false;
     }
@@ -160,10 +165,7 @@ class PinNotifier extends StateNotifier<PinStatus> {
       final storedSalt = await _secureStorage.read(key: _PinKeys.pinSalt);
 
       if (storedHash == null || storedSalt == null) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: 'PIN not set',
-        );
+        state = state.copyWith(isLoading: false, errorMessage: 'PIN not set');
         return false;
       }
 
@@ -192,7 +194,9 @@ class PinNotifier extends StateNotifier<PinStatus> {
         // Lock if too many attempts
         DateTime? lockedUntil;
         if (newFailedAttempts >= _maxFailedAttempts) {
-          lockedUntil = DateTime.now().add(Duration(minutes: _lockDurationMinutes));
+          lockedUntil = DateTime.now().add(
+            Duration(minutes: _lockDurationMinutes),
+          );
           await _secureStorage.write(
             key: _PinKeys.lockedUntil,
             value: lockedUntil.toIso8601String(),
@@ -221,9 +225,7 @@ class PinNotifier extends StateNotifier<PinStatus> {
   /// Set new PIN (first entry)
   void setNewPin(String pin) {
     if (!_isValidPin(pin)) {
-      state = state.copyWith(
-        errorMessage: 'PIN must be 4-6 digits',
-      );
+      state = state.copyWith(errorMessage: 'PIN must be 4-6 digits');
       return;
     }
 

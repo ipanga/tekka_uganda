@@ -127,7 +127,8 @@ class Listing {
   final String description;
   final int price; // In UGX
   final int? originalPrice;
-  final ListingCategory category; // Legacy category (kept for backward compatibility)
+  final ListingCategory
+  category; // Legacy category (kept for backward compatibility)
   final String? size;
   final String? brand;
   final String? color;
@@ -307,7 +308,8 @@ class Listing {
     // Handle seller info - can be embedded object or separate fields
     final seller = json['seller'] as Map<String, dynamic>?;
     final sellerId = seller?['id'] ?? json['sellerId'] as String;
-    final sellerName = seller?['displayName'] ?? json['sellerName'] ?? 'Unknown';
+    final sellerName =
+        seller?['displayName'] ?? json['sellerName'] ?? 'Unknown';
     final sellerPhotoUrl = seller?['photoUrl'] ?? json['sellerPhotoUrl'];
     final sellerIsVerified = seller?['isVerified'] ?? json['sellerIsVerified'];
 
@@ -437,8 +439,7 @@ class Listing {
   String get formattedPrice => 'UGX ${_formatNumber(price)}';
 
   /// Check if price dropped
-  bool get hasPriceDrop =>
-      originalPrice != null && originalPrice! > price;
+  bool get hasPriceDrop => originalPrice != null && originalPrice! > price;
 
   /// Get price drop percentage
   int get priceDropPercent {

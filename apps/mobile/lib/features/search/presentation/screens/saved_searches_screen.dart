@@ -18,7 +18,8 @@ class SavedSearchesScreen extends ConsumerWidget {
 
     // Listen for errors
     ref.listen<SavedSearchState>(savedSearchProvider, (prev, next) {
-      if (next.errorMessage != null && prev?.errorMessage != next.errorMessage) {
+      if (next.errorMessage != null &&
+          prev?.errorMessage != next.errorMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.errorMessage!),
@@ -63,7 +64,10 @@ class SavedSearchesScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: AppSpacing.space4),
-              Text('Failed to load saved searches', style: AppTypography.bodyLarge),
+              Text(
+                'Failed to load saved searches',
+                style: AppTypography.bodyLarge,
+              ),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
                 onPressed: () => ref.invalidate(savedSearchesStreamProvider),
@@ -161,9 +165,7 @@ class SavedSearchesScreen extends ConsumerWidget {
 
     // Navigate to browse with search params
     // Using query parameters to pass search filters
-    final queryParams = <String, String>{
-      'q': search.query,
-    };
+    final queryParams = <String, String>{'q': search.query};
 
     if (search.categoryId != null) {
       queryParams['category'] = search.categoryId!;
@@ -194,7 +196,9 @@ class SavedSearchesScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Saved Search'),
-        content: const Text('Are you sure you want to delete this saved search?'),
+        content: const Text(
+          'Are you sure you want to delete this saved search?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -230,9 +234,7 @@ class SavedSearchesScreen extends ConsumerWidget {
               Navigator.pop(context);
               ref.read(savedSearchProvider.notifier).clearAll();
             },
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             child: const Text('Clear All'),
           ),
         ],
@@ -267,10 +269,7 @@ class _SavedSearchTile extends StatelessWidget {
         color: AppColors.error,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(
-          Icons.delete,
-          color: AppColors.white,
-        ),
+        child: const Icon(Icons.delete, color: AppColors.white),
       ),
       child: InkWell(
         onTap: onTap,
@@ -294,10 +293,7 @@ class _SavedSearchTile extends StatelessWidget {
                       color: AppColors.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
-                      Icons.search,
-                      color: AppColors.primary,
-                    ),
+                    child: Icon(Icons.search, color: AppColors.primary),
                   ),
                   if (search.newMatchCount > 0)
                     Positioned(
@@ -341,7 +337,9 @@ class _SavedSearchTile extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(
-                            search.query.isEmpty ? 'All items' : '"${search.query}"',
+                            search.query.isEmpty
+                                ? 'All items'
+                                : '"${search.query}"',
                             style: AppTypography.titleSmall.copyWith(
                               fontWeight: FontWeight.w600,
                             ),
@@ -391,8 +389,9 @@ class _SavedSearchTile extends StatelessWidget {
                         const Spacer(),
                         // Notification toggle
                         GestureDetector(
-                          onTap: () =>
-                              onToggleNotifications(!search.notificationsEnabled),
+                          onTap: () => onToggleNotifications(
+                            !search.notificationsEnabled,
+                          ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -425,10 +424,7 @@ class _SavedSearchTile extends StatelessWidget {
 
               // Chevron
               const SizedBox(width: AppSpacing.space2),
-              Icon(
-                Icons.chevron_right,
-                color: AppColors.onSurfaceVariant,
-              ),
+              Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
             ],
           ),
         ),

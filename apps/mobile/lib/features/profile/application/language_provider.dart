@@ -3,11 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Supported languages in Tekka
-enum AppLanguage {
-  english,
-  luganda,
-  swahili,
-}
+enum AppLanguage { english, luganda, swahili }
 
 extension AppLanguageX on AppLanguage {
   String get code {
@@ -132,10 +128,7 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
 
       if (languageCode != null) {
         final language = AppLanguageX.fromCode(languageCode);
-        state = state.copyWith(
-          selectedLanguage: language,
-          isLoading: false,
-        );
+        state = state.copyWith(selectedLanguage: language, isLoading: false);
       } else {
         state = state.copyWith(isLoading: false);
       }
@@ -157,10 +150,7 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_languageKey, language.code);
 
-      state = state.copyWith(
-        selectedLanguage: language,
-        isLoading: false,
-      );
+      state = state.copyWith(selectedLanguage: language, isLoading: false);
       return true;
     } catch (e) {
       state = state.copyWith(

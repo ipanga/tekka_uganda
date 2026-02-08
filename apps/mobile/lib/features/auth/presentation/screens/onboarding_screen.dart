@@ -59,9 +59,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
     // Validate city selection
     if (_selectedCity == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your city')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select your city')));
       return;
     }
 
@@ -88,7 +88,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         }
       }
 
-      await ref.read(authNotifierProvider.notifier).updateProfile(
+      await ref
+          .read(authNotifierProvider.notifier)
+          .updateProfile(
             displayName: _nameController.text.trim(),
             location: _getLocationString()!,
             photoUrl: photoUrl,
@@ -102,9 +104,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         _isUploadingImage = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -293,7 +295,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 Center(
                   child: TextButton(
                     onPressed: _showPhotoOptions,
-                    child: Text(_selectedImage != null ? 'Change photo' : 'Add photo (optional)'),
+                    child: Text(
+                      _selectedImage != null
+                          ? 'Change photo'
+                          : 'Add photo (optional)',
+                    ),
                   ),
                 ),
 
@@ -325,7 +331,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   TextSpan(
                     children: [
                       TextSpan(text: 'City', style: AppTypography.titleSmall),
-                      const TextSpan(text: ' *', style: TextStyle(color: AppColors.error)),
+                      const TextSpan(
+                        text: ' *',
+                        style: TextStyle(color: AppColors.error),
+                      ),
                     ],
                   ),
                 ),
@@ -363,10 +372,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 if (_selectedCity != null &&
                     _selectedCity!.activeDivisions.isNotEmpty) ...[
                   const SizedBox(height: AppSpacing.space4),
-                  Text(
-                    'Area (Optional)',
-                    style: AppTypography.titleSmall,
-                  ),
+                  Text('Area (Optional)', style: AppTypography.titleSmall),
                   const SizedBox(height: AppSpacing.space2),
                   Wrap(
                     spacing: AppSpacing.space2,

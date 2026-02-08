@@ -50,9 +50,9 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$e')));
       }
     }
   }
@@ -131,10 +131,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Text(
-                            '🇺🇬',
-                            style: TextStyle(fontSize: 24),
-                          ),
+                          const Text('🇺🇬', style: TextStyle(fontSize: 24)),
                           const SizedBox(width: 8),
                           Text(
                             AppConstants.ugandaCountryCode,

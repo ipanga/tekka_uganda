@@ -44,7 +44,9 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              pinStatus.hasPinSet ? 'PIN updated successfully' : 'PIN set successfully',
+              pinStatus.hasPinSet
+                  ? 'PIN updated successfully'
+                  : 'PIN set successfully',
             ),
             backgroundColor: AppColors.success,
           ),
@@ -172,11 +174,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
             color: AppColors.primaryContainer,
             shape: BoxShape.circle,
           ),
-          child: Icon(
-            icon,
-            size: 40,
-            color: AppColors.primary,
-          ),
+          child: Icon(icon, size: 40, color: AppColors.primary),
         ),
         const SizedBox(height: AppSpacing.space4),
         Text(
@@ -237,9 +235,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
             maxLength: 6,
             obscureText: true,
             autofocus: true,
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-            ],
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: const InputDecoration(
               counterText: '',
               border: InputBorder.none,
@@ -288,9 +284,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
           Expanded(
             child: Text(
               message,
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.error,
-              ),
+              style: AppTypography.bodySmall.copyWith(color: AppColors.error),
             ),
           ),
         ],
@@ -312,9 +306,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
           Expanded(
             child: Text(
               'Account locked. Try again in ${status.remainingLockSeconds ~/ 60} minutes.',
-              style: AppTypography.bodySmall.copyWith(
-                color: AppColors.warning,
-              ),
+              style: AppTypography.bodySmall.copyWith(color: AppColors.warning),
             ),
           ),
         ],
@@ -323,7 +315,8 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
   }
 
   Widget _buildActionButton(PinStatus status) {
-    final isEnabled = _pinController.text.length >= 4 &&
+    final isEnabled =
+        _pinController.text.length >= 4 &&
         !status.isLoading &&
         !status.isLocked;
 
@@ -415,9 +408,11 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
     String note;
 
     if (!status.hasPinSet) {
-      note = 'Your PIN will be required when making sensitive changes to your account or accessing private information.';
+      note =
+          'Your PIN will be required when making sensitive changes to your account or accessing private information.';
     } else {
-      note = 'Keep your PIN private. Never share it with anyone, including Tekka support.';
+      note =
+          'Keep your PIN private. Never share it with anyone, including Tekka support.';
     }
 
     return Container(
@@ -430,11 +425,7 @@ class _ChangePinScreenState extends ConsumerState<ChangePinScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.info_outline,
-            color: AppColors.onSurfaceVariant,
-            size: 20,
-          ),
+          Icon(Icons.info_outline, color: AppColors.onSurfaceVariant, size: 20),
           const SizedBox(width: AppSpacing.space2),
           Expanded(
             child: Text(

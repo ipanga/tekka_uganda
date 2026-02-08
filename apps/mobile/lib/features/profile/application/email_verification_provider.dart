@@ -86,7 +86,8 @@ class EmailVerificationNotifier extends StateNotifier<EmailVerificationStatus> {
         codeSentAt: DateTime.now(),
       );
     } catch (e) {
-      String errorMessage = 'Failed to send verification code. Please try again.';
+      String errorMessage =
+          'Failed to send verification code. Please try again.';
       if (e.toString().contains('already linked')) {
         errorMessage = 'This email is already linked to another account';
       }
@@ -156,8 +157,8 @@ class EmailVerificationNotifier extends StateNotifier<EmailVerificationStatus> {
 /// Email verification provider
 final emailVerificationProvider =
     StateNotifierProvider<EmailVerificationNotifier, EmailVerificationStatus>(
-  (ref) => EmailVerificationNotifier(ref),
-);
+      (ref) => EmailVerificationNotifier(ref),
+    );
 
 /// Provider to check if current user has verified email
 final hasVerifiedEmailProvider = Provider<bool>((ref) {

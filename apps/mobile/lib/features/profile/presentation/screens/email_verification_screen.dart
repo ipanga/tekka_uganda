@@ -67,7 +67,9 @@ class _EmailVerificationScreenState
       return;
     }
 
-    await ref.read(emailVerificationProvider.notifier).sendVerificationCode(email);
+    await ref
+        .read(emailVerificationProvider.notifier)
+        .sendVerificationCode(email);
     _startResendTimer();
     _codeFocusNode.requestFocus();
   }
@@ -81,7 +83,9 @@ class _EmailVerificationScreenState
       return;
     }
 
-    final success = await ref.read(emailVerificationProvider.notifier).verifyCode(code);
+    final success = await ref
+        .read(emailVerificationProvider.notifier)
+        .verifyCode(code);
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -107,13 +111,12 @@ class _EmailVerificationScreenState
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Verify Email'),
-      ),
+      appBar: AppBar(title: const Text('Verify Email')),
       body: SafeArea(
         child: Padding(
           padding: AppSpacing.screenPadding,
-          child: status.state == EmailVerificationState.codeSent ||
+          child:
+              status.state == EmailVerificationState.codeSent ||
                   status.state == EmailVerificationState.verifying
               ? _buildCodeEntry(status)
               : _buildEmailEntry(status),
@@ -151,10 +154,7 @@ class _EmailVerificationScreenState
 
         // Title
         Center(
-          child: Text(
-            'Add Email Address',
-            style: AppTypography.headlineSmall,
-          ),
+          child: Text('Add Email Address', style: AppTypography.headlineSmall),
         ),
 
         const SizedBox(height: AppSpacing.space2),
@@ -183,9 +183,7 @@ class _EmailVerificationScreenState
             labelText: 'Email Address',
             hintText: 'Enter your email',
             prefixIcon: const Icon(Icons.email_outlined),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
           onSubmitted: (_) => _sendCode(),
         ),
@@ -201,7 +199,11 @@ class _EmailVerificationScreenState
             ),
             child: Row(
               children: [
-                const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 20,
+                ),
                 const SizedBox(width: AppSpacing.space2),
                 Expanded(
                   child: Text(
@@ -299,18 +301,12 @@ class _EmailVerificationScreenState
           textAlign: TextAlign.center,
           enabled: !isLoading,
           maxLength: 6,
-          style: AppTypography.headlineMedium.copyWith(
-            letterSpacing: 8,
-          ),
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-          ],
+          style: AppTypography.headlineMedium.copyWith(letterSpacing: 8),
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           decoration: InputDecoration(
             hintText: '000000',
             counterText: '',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
           onChanged: (value) {
             if (value.length == 6) {
@@ -330,7 +326,11 @@ class _EmailVerificationScreenState
             ),
             child: Row(
               children: [
-                const Icon(Icons.error_outline, color: AppColors.error, size: 20),
+                const Icon(
+                  Icons.error_outline,
+                  color: AppColors.error,
+                  size: 20,
+                ),
                 const SizedBox(width: AppSpacing.space2),
                 Expanded(
                   child: Text(

@@ -10,7 +10,7 @@ class NotificationApiRepository implements NotificationRepository {
   final Duration _pollInterval;
 
   NotificationApiRepository(this._apiClient, {Duration? pollInterval})
-      : _pollInterval = pollInterval ?? const Duration(seconds: 15);
+    : _pollInterval = pollInterval ?? const Duration(seconds: 15);
 
   @override
   Future<List<AppNotification>> getNotifications(String userId) async {

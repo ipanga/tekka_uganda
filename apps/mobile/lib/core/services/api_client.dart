@@ -12,7 +12,7 @@ class ApiClient {
   static const String _refreshTokenKey = 'refresh_token';
 
   ApiClient({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage() {
+    : _storage = storage ?? const FlutterSecureStorage() {
     _dio = Dio(
       BaseOptions(
         baseUrl: AppConfig.apiBaseUrl,
@@ -290,10 +290,7 @@ class ApiClient {
       filePaths.map((path) => MultipartFile.fromFile(path)),
     );
 
-    final formData = FormData.fromMap({
-      fileField: files,
-      ...?additionalFields,
-    });
+    final formData = FormData.fromMap({fileField: files, ...?additionalFields});
 
     final response = await _dio.post<T>(
       path,

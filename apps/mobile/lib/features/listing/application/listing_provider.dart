@@ -12,63 +12,66 @@ import '../data/repositories/listing_api_repository.dart';
 import '../domain/entities/listing.dart';
 
 // Re-export providers from image_service_provider.dart to avoid breaking imports
-export '../../../core/services/image_service_provider.dart' show storageServiceProvider, imageServiceProvider;
+export '../../../core/services/image_service_provider.dart'
+    show storageServiceProvider, imageServiceProvider;
 
 /// Listings feed provider with pagination (filters blocked users)
-final listingsFeedProvider = FutureProvider.family<List<Listing>, ListingsFilter>(
-  (ref, filter) async {
-    final repository = ref.watch(listingApiRepositoryProvider);
-    final currentUser = ref.watch(currentUserProvider);
+final listingsFeedProvider =
+    FutureProvider.family<List<Listing>, ListingsFilter>((ref, filter) async {
+      final repository = ref.watch(listingApiRepositoryProvider);
+      final currentUser = ref.watch(currentUserProvider);
 
-    // Get listings from API
-    final result = await repository.search(
-      query: filter.searchQuery,
-      category: filter.category,
-      categoryId: filter.categoryId,
-      condition: filter.condition,
-      occasion: filter.occasion,
-      minPrice: filter.minPrice,
-      maxPrice: filter.maxPrice,
-      location: filter.location,
-      cityId: filter.cityId,
-      divisionId: filter.divisionId,
-      sortBy: filter.sortBy,
-      sortOrder: filter.sortOrder,
-      page: filter.page,
-      limit: filter.limit,
-    );
+      // Get listings from API
+      final result = await repository.search(
+        query: filter.searchQuery,
+        category: filter.category,
+        categoryId: filter.categoryId,
+        condition: filter.condition,
+        occasion: filter.occasion,
+        minPrice: filter.minPrice,
+        maxPrice: filter.maxPrice,
+        location: filter.location,
+        cityId: filter.cityId,
+        divisionId: filter.divisionId,
+        sortBy: filter.sortBy,
+        sortOrder: filter.sortOrder,
+        page: filter.page,
+        limit: filter.limit,
+      );
 
-    var listings = result.listings;
+      var listings = result.listings;
 
-    // If no user is logged in, return all listings
-    if (currentUser == null) return listings;
+      // If no user is logged in, return all listings
+      if (currentUser == null) return listings;
 
-    // Get blocked users and filter them out
-    try {
-      final blockedUsers = await ref.watch(blockedUsersProvider.future);
-      if (blockedUsers.isNotEmpty) {
-        final blockedUserIds = blockedUsers.map((u) => u.uid).toSet();
-        listings = listings.where((listing) => !blockedUserIds.contains(listing.sellerId)).toList();
+      // Get blocked users and filter them out
+      try {
+        final blockedUsers = await ref.watch(blockedUsersProvider.future);
+        if (blockedUsers.isNotEmpty) {
+          final blockedUserIds = blockedUsers.map((u) => u.uid).toSet();
+          listings = listings
+              .where((listing) => !blockedUserIds.contains(listing.sellerId))
+              .toList();
+        }
+      } catch (_) {
+        // If blocked users can't be fetched, continue without filtering
       }
-    } catch (_) {
-      // If blocked users can't be fetched, continue without filtering
-    }
 
-    return listings;
-  },
-);
+      return listings;
+    });
 
 /// Single listing provider
-final listingProvider = FutureProvider.family<Listing?, String>(
-  (ref, listingId) async {
-    final repository = ref.watch(listingApiRepositoryProvider);
-    try {
-      return await repository.getById(listingId);
-    } catch (_) {
-      return null;
-    }
-  },
-);
+final listingProvider = FutureProvider.family<Listing?, String>((
+  ref,
+  listingId,
+) async {
+  final repository = ref.watch(listingApiRepositoryProvider);
+  try {
+    return await repository.getById(listingId);
+  } catch (_) {
+    return null;
+  }
+});
 
 /// User's listings provider (my listings)
 final myListingsProvider = FutureProvider.family<List<Listing>, ListingStatus?>(
@@ -79,53 +82,55 @@ final myListingsProvider = FutureProvider.family<List<Listing>, ListingStatus?>(
 );
 
 /// Any user's listings provider
-final userListingsProvider = FutureProvider.family<List<Listing>, String>(
-  (ref, sellerId) async {
-    final repository = ref.watch(listingApiRepositoryProvider);
-    final currentUser = ref.watch(currentUserProvider);
+final userListingsProvider = FutureProvider.family<List<Listing>, String>((
+  ref,
+  sellerId,
+) async {
+  final repository = ref.watch(listingApiRepositoryProvider);
+  final currentUser = ref.watch(currentUserProvider);
 
-    // If requesting current user's listings, use the dedicated endpoint
-    if (currentUser != null && sellerId == currentUser.uid) {
-      return repository.getMyListings();
-    }
+  // If requesting current user's listings, use the dedicated endpoint
+  if (currentUser != null && sellerId == currentUser.uid) {
+    return repository.getMyListings();
+  }
 
-    // For other users, use search with seller filter
-    final result = await repository.search(sellerId: sellerId);
-    return result.listings;
-  },
-);
+  // For other users, use search with seller filter
+  final result = await repository.search(sellerId: sellerId);
+  return result.listings;
+});
 
 /// Saved/Favorite listings provider
-final savedListingsProvider = FutureProvider<List<Listing>>(
-  (ref) async {
-    final repository = ref.watch(listingApiRepositoryProvider);
-    return repository.getSavedListings();
-  },
-);
+final savedListingsProvider = FutureProvider<List<Listing>>((ref) async {
+  final repository = ref.watch(listingApiRepositoryProvider);
+  return repository.getSavedListings();
+});
 
 /// Legacy alias for backward compatibility
-final favoriteListingsProvider = FutureProvider.family<List<Listing>, String>(
-  (ref, userId) async {
-    final repository = ref.watch(listingApiRepositoryProvider);
-    return repository.getSavedListings();
-  },
-);
+final favoriteListingsProvider = FutureProvider.family<List<Listing>, String>((
+  ref,
+  userId,
+) async {
+  final repository = ref.watch(listingApiRepositoryProvider);
+  return repository.getSavedListings();
+});
 
 /// Check if listing is saved
-final isListingSavedProvider = FutureProvider.family<bool, String>(
-  (ref, listingId) async {
-    final savedListings = await ref.watch(savedListingsProvider.future);
-    return savedListings.any((l) => l.id == listingId);
-  },
-);
+final isListingSavedProvider = FutureProvider.family<bool, String>((
+  ref,
+  listingId,
+) async {
+  final savedListings = await ref.watch(savedListingsProvider.future);
+  return savedListings.any((l) => l.id == listingId);
+});
 
 /// Purchase history provider - listings bought by the user
-final purchaseHistoryProvider = FutureProvider.family<List<Listing>, String>(
-  (ref, userId) async {
-    final repository = ref.watch(listingApiRepositoryProvider);
-    return repository.getPurchaseHistory();
-  },
-);
+final purchaseHistoryProvider = FutureProvider.family<List<Listing>, String>((
+  ref,
+  userId,
+) async {
+  final repository = ref.watch(listingApiRepositoryProvider);
+  return repository.getPurchaseHistory();
+});
 
 /// Filter for listings query
 class ListingsFilter {
@@ -331,18 +336,25 @@ class CreateListingNotifier extends StateNotifier<CreateListingState> {
   final StorageService _storageService;
   final String _userId;
 
-  CreateListingNotifier(this._repository, this._imageService, this._storageService, this._userId)
-      : super(const CreateListingState());
+  CreateListingNotifier(
+    this._repository,
+    this._imageService,
+    this._storageService,
+    this._userId,
+  ) : super(const CreateListingState());
 
   /// Add images from gallery
   Future<void> pickImages() async {
-    final maxRemaining = 5 - state.selectedImages.length - state.uploadedImageUrls.length;
+    final maxRemaining =
+        5 - state.selectedImages.length - state.uploadedImageUrls.length;
     if (maxRemaining <= 0) {
       state = state.copyWith(error: 'Maximum 5 images allowed');
       return;
     }
 
-    final images = await _imageService.pickMultipleImages(maxImages: maxRemaining);
+    final images = await _imageService.pickMultipleImages(
+      maxImages: maxRemaining,
+    );
     if (images.isNotEmpty) {
       final validImages = <File>[];
       for (final image in images) {
@@ -409,16 +421,20 @@ class CreateListingNotifier extends StateNotifier<CreateListingState> {
 
   /// Update form fields
   void updateTitle(String value) => state = state.copyWith(title: value);
-  void updateDescription(String value) => state = state.copyWith(description: value);
+  void updateDescription(String value) =>
+      state = state.copyWith(description: value);
   void updatePrice(int value) => state = state.copyWith(price: value);
-  void updateCategory(ListingCategory value) => state = state.copyWith(category: value);
+  void updateCategory(ListingCategory value) =>
+      state = state.copyWith(category: value);
   void updateSize(String? value) => state = state.copyWith(size: value);
   void updateBrand(String? value) => state = state.copyWith(brand: value);
   void updateColor(String? value) => state = state.copyWith(color: value);
   void updateMaterial(String? value) => state = state.copyWith(material: value);
-  void updateCondition(ItemCondition value) => state = state.copyWith(condition: value);
+  void updateCondition(ItemCondition value) =>
+      state = state.copyWith(condition: value);
   void updateLocation(String value) => state = state.copyWith(location: value);
-  void updateOccasion(Occasion? value) => state = state.copyWith(occasion: value);
+  void updateOccasion(Occasion? value) =>
+      state = state.copyWith(occasion: value);
 
   /// Clear error
   void clearError() => state = state.copyWith(error: null);
@@ -473,17 +489,11 @@ class CreateListingNotifier extends StateNotifier<CreateListingState> {
         occasion: state.occasion,
       );
 
-      state = state.copyWith(
-        isLoading: false,
-        createdListing: listing,
-      );
+      state = state.copyWith(isLoading: false, createdListing: listing);
 
       return listing;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       return null;
     }
   }
@@ -497,16 +507,22 @@ class CreateListingNotifier extends StateNotifier<CreateListingState> {
 
 /// Create listing notifier provider
 final createListingProvider =
-    StateNotifierProvider.autoDispose<CreateListingNotifier, CreateListingState>(
-  (ref) {
-    final repository = ref.watch(listingApiRepositoryProvider);
-    final imageService = ref.watch(imageServiceProvider);
-    final storageService = ref.watch(storageServiceProvider);
-    final currentUser = ref.watch(currentUserProvider);
-    final userId = currentUser?.uid ?? '';
-    return CreateListingNotifier(repository, imageService, storageService, userId);
-  },
-);
+    StateNotifierProvider.autoDispose<
+      CreateListingNotifier,
+      CreateListingState
+    >((ref) {
+      final repository = ref.watch(listingApiRepositoryProvider);
+      final imageService = ref.watch(imageServiceProvider);
+      final storageService = ref.watch(storageServiceProvider);
+      final currentUser = ref.watch(currentUserProvider);
+      final userId = currentUser?.uid ?? '';
+      return CreateListingNotifier(
+        repository,
+        imageService,
+        storageService,
+        userId,
+      );
+    });
 
 /// Listing actions notifier (for detail screen)
 class ListingActionsNotifier extends StateNotifier<AsyncValue<void>> {
@@ -514,7 +530,7 @@ class ListingActionsNotifier extends StateNotifier<AsyncValue<void>> {
   final String listingId;
 
   ListingActionsNotifier(this._repository, this.listingId)
-      : super(const AsyncValue.data(null));
+    : super(const AsyncValue.data(null));
 
   /// Increment view count (called when listing is opened)
   Future<void> incrementView() async {
@@ -535,7 +551,7 @@ class ListingActionsNotifier extends StateNotifier<AsyncValue<void>> {
       await _repository.save(listingId);
       state = const AsyncValue.data(null);
       return true;
-    } catch (e, st) {
+    } catch (e, _) {
       // If save fails, try unsave (toggle behavior)
       try {
         await _repository.unsave(listingId);
@@ -601,20 +617,22 @@ class ListingActionsNotifier extends StateNotifier<AsyncValue<void>> {
 
 /// Listing actions provider
 final listingActionsProvider = StateNotifierProvider.family
-    .autoDispose<ListingActionsNotifier, AsyncValue<void>, String>(
-  (ref, listingId) {
-    final repository = ref.watch(listingApiRepositoryProvider);
-    return ListingActionsNotifier(repository, listingId);
-  },
-);
+    .autoDispose<ListingActionsNotifier, AsyncValue<void>, String>((
+      ref,
+      listingId,
+    ) {
+      final repository = ref.watch(listingApiRepositoryProvider);
+      return ListingActionsNotifier(repository, listingId);
+    });
 
 /// Provider to check if a listing is favorited/saved by current user
-final isFavoritedProvider = FutureProvider.family<bool, String>(
-  (ref, listingId) async {
-    final listing = await ref.watch(listingProvider(listingId).future);
-    return listing?.isSaved ?? false;
-  },
-);
+final isFavoritedProvider = FutureProvider.family<bool, String>((
+  ref,
+  listingId,
+) async {
+  final listing = await ref.watch(listingProvider(listingId).future);
+  return listing?.isSaved ?? false;
+});
 
 /// Edit listing state
 class EditListingState {
@@ -691,7 +709,7 @@ class EditListingNotifier extends StateNotifier<EditListingState> {
   final String listingId;
 
   EditListingNotifier(this._repository, this.listingId)
-      : super(const EditListingState());
+    : super(const EditListingState());
 
   void initFromListing(Listing listing) {
     state = EditListingState(
@@ -710,16 +728,20 @@ class EditListingNotifier extends StateNotifier<EditListingState> {
   }
 
   void updateTitle(String value) => state = state.copyWith(title: value);
-  void updateDescription(String value) => state = state.copyWith(description: value);
+  void updateDescription(String value) =>
+      state = state.copyWith(description: value);
   void updatePrice(int value) => state = state.copyWith(price: value);
-  void updateCategory(ListingCategory value) => state = state.copyWith(category: value);
+  void updateCategory(ListingCategory value) =>
+      state = state.copyWith(category: value);
   void updateSize(String? value) => state = state.copyWith(size: value);
   void updateBrand(String? value) => state = state.copyWith(brand: value);
   void updateColor(String? value) => state = state.copyWith(color: value);
   void updateMaterial(String? value) => state = state.copyWith(material: value);
-  void updateCondition(ItemCondition value) => state = state.copyWith(condition: value);
+  void updateCondition(ItemCondition value) =>
+      state = state.copyWith(condition: value);
   void updateLocation(String value) => state = state.copyWith(location: value);
-  void updateOccasion(Occasion? value) => state = state.copyWith(occasion: value);
+  void updateOccasion(Occasion? value) =>
+      state = state.copyWith(occasion: value);
 
   void clearError() => state = state.copyWith(error: null);
 
@@ -769,12 +791,13 @@ class EditListingNotifier extends StateNotifier<EditListingState> {
 
 /// Edit listing provider
 final editListingProvider = StateNotifierProvider.family
-    .autoDispose<EditListingNotifier, EditListingState, String>(
-  (ref, listingId) {
-    final repository = ref.watch(listingApiRepositoryProvider);
-    return EditListingNotifier(repository, listingId);
-  },
-);
+    .autoDispose<EditListingNotifier, EditListingState, String>((
+      ref,
+      listingId,
+    ) {
+      final repository = ref.watch(listingApiRepositoryProvider);
+      return EditListingNotifier(repository, listingId);
+    });
 
 // ============================================
 // NEW HIERARCHICAL CATEGORY SYSTEM
@@ -882,18 +905,25 @@ class CreateListingNotifierV2 extends StateNotifier<CreateListingStateV2> {
   final StorageService _storageService;
   final String _userId;
 
-  CreateListingNotifierV2(this._repository, this._imageService, this._storageService, this._userId)
-      : super(const CreateListingStateV2());
+  CreateListingNotifierV2(
+    this._repository,
+    this._imageService,
+    this._storageService,
+    this._userId,
+  ) : super(const CreateListingStateV2());
 
   /// Add images from gallery
   Future<void> pickImages() async {
-    final maxRemaining = 10 - state.selectedImages.length - state.uploadedImageUrls.length;
+    final maxRemaining =
+        10 - state.selectedImages.length - state.uploadedImageUrls.length;
     if (maxRemaining <= 0) {
       state = state.copyWith(error: 'Maximum 10 images allowed');
       return;
     }
 
-    final images = await _imageService.pickMultipleImages(maxImages: maxRemaining);
+    final images = await _imageService.pickMultipleImages(
+      maxImages: maxRemaining,
+    );
     if (images.isNotEmpty) {
       final validImages = <File>[];
       for (final image in images) {
@@ -951,9 +981,11 @@ class CreateListingNotifierV2 extends StateNotifier<CreateListingStateV2> {
 
   /// Update form fields
   void updateTitle(String value) => state = state.copyWith(title: value);
-  void updateDescription(String value) => state = state.copyWith(description: value);
+  void updateDescription(String value) =>
+      state = state.copyWith(description: value);
   void updatePrice(int value) => state = state.copyWith(price: value);
-  void updateCondition(ItemCondition value) => state = state.copyWith(condition: value);
+  void updateCondition(ItemCondition value) =>
+      state = state.copyWith(condition: value);
 
   /// Update category (new system)
   void updateCategory(String categoryId, String categoryName) {
@@ -967,7 +999,9 @@ class CreateListingNotifierV2 extends StateNotifier<CreateListingStateV2> {
   /// Update a single attribute value
   void updateAttribute(String slug, dynamic value) {
     final newAttributes = Map<String, dynamic>.from(state.attributes);
-    if (value == null || (value is String && value.isEmpty) || (value is List && value.isEmpty)) {
+    if (value == null ||
+        (value is String && value.isEmpty) ||
+        (value is List && value.isEmpty)) {
       newAttributes.remove(slug);
     } else {
       newAttributes[slug] = value;
@@ -1057,17 +1091,11 @@ class CreateListingNotifierV2 extends StateNotifier<CreateListingStateV2> {
         isDraft: isDraft,
       );
 
-      state = state.copyWith(
-        isLoading: false,
-        createdListing: listing,
-      );
+      state = state.copyWith(isLoading: false, createdListing: listing);
 
       return listing;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       return null;
     }
   }
@@ -1081,13 +1109,19 @@ class CreateListingNotifierV2 extends StateNotifier<CreateListingStateV2> {
 
 /// Create listing provider with new category system
 final createListingProviderV2 =
-    StateNotifierProvider.autoDispose<CreateListingNotifierV2, CreateListingStateV2>(
-  (ref) {
-    final repository = ref.watch(listingApiRepositoryProvider);
-    final imageService = ref.watch(imageServiceProvider);
-    final storageService = ref.watch(storageServiceProvider);
-    final currentUser = ref.watch(currentUserProvider);
-    final userId = currentUser?.uid ?? '';
-    return CreateListingNotifierV2(repository, imageService, storageService, userId);
-  },
-);
+    StateNotifierProvider.autoDispose<
+      CreateListingNotifierV2,
+      CreateListingStateV2
+    >((ref) {
+      final repository = ref.watch(listingApiRepositoryProvider);
+      final imageService = ref.watch(imageServiceProvider);
+      final storageService = ref.watch(storageServiceProvider);
+      final currentUser = ref.watch(currentUserProvider);
+      final userId = currentUser?.uid ?? '';
+      return CreateListingNotifierV2(
+        repository,
+        imageService,
+        storageService,
+        userId,
+      );
+    });

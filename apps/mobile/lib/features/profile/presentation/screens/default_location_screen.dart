@@ -16,9 +16,7 @@ class DefaultLocationScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Default Location'),
-      ),
+      appBar: AppBar(title: const Text('Default Location')),
       body: ListView(
         children: [
           const SizedBox(height: AppSpacing.space4),
@@ -35,11 +33,7 @@ class DefaultLocationScreen extends ConsumerWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.location_on,
-                    color: AppColors.primary,
-                    size: 24,
-                  ),
+                  Icon(Icons.location_on, color: AppColors.primary, size: 24),
                   const SizedBox(width: AppSpacing.space3),
                   Expanded(
                     child: Column(
@@ -76,7 +70,9 @@ class DefaultLocationScreen extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: AppColors.success.withValues(alpha: 0.1),
                 borderRadius: AppSpacing.cardRadius,
-                border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+                border: Border.all(
+                  color: AppColors.success.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
@@ -140,7 +136,8 @@ class DefaultLocationScreen extends ConsumerWidget {
                     children: locations.asMap().entries.map((locationEntry) {
                       final index = locationEntry.key;
                       final location = locationEntry.value;
-                      final isSelected = locationState.selectedLocation == location;
+                      final isSelected =
+                          locationState.selectedLocation == location;
                       final isLast = index == locations.length - 1;
 
                       return Column(
@@ -149,7 +146,8 @@ class DefaultLocationScreen extends ConsumerWidget {
                             location: location,
                             isSelected: isSelected,
                             isLoading: locationState.isLoading,
-                            onTap: () => _selectLocation(context, ref, location),
+                            onTap: () =>
+                                _selectLocation(context, ref, location),
                           ),
                           if (!isLast) const Divider(height: 1, indent: 56),
                         ],
@@ -205,7 +203,9 @@ class DefaultLocationScreen extends ConsumerWidget {
     WidgetRef ref,
     UgandaRegion location,
   ) async {
-    final currentLocation = ref.read(locationPreferencesProvider).selectedLocation;
+    final currentLocation = ref
+        .read(locationPreferencesProvider)
+        .selectedLocation;
 
     if (currentLocation == location) return;
 
@@ -329,11 +329,7 @@ class _LocationTile extends StatelessWidget {
                 color: AppColors.primary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.check,
-                color: AppColors.white,
-                size: 16,
-              ),
+              child: const Icon(Icons.check, color: AppColors.white, size: 16),
             )
           : null,
       onTap: isLoading ? null : onTap,

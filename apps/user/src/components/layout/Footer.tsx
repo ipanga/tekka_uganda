@@ -19,11 +19,11 @@ export function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Shop</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/?search=dresses" className="hover:text-pink-400">Dresses</Link></li>
-              <li><Link href="/?search=tops" className="hover:text-pink-400">Tops</Link></li>
-              <li><Link href="/?search=traditional" className="hover:text-pink-400">Traditional Wear</Link></li>
-              <li><Link href="/?search=shoes" className="hover:text-pink-400">Shoes</Link></li>
-              <li><Link href="/?search=accessories" className="hover:text-pink-400">Accessories</Link></li>
+              <li><Link href="/explore?search=dresses" className="hover:text-pink-400">Dresses</Link></li>
+              <li><Link href="/explore?search=tops" className="hover:text-pink-400">Tops</Link></li>
+              <li><Link href="/explore?search=traditional" className="hover:text-pink-400">Traditional Wear</Link></li>
+              <li><Link href="/explore?search=shoes" className="hover:text-pink-400">Shoes</Link></li>
+              <li><Link href="/explore?search=accessories" className="hover:text-pink-400">Accessories</Link></li>
             </ul>
           </div>
 

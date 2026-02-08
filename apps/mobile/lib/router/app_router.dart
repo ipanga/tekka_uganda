@@ -59,6 +59,7 @@ abstract class AppRoutes {
   static const String otpVerification = '/auth/otp';
   static const String onboarding = '/auth/onboarding';
   static const String home = '/home';
+  static const String saved = '/saved';
   static const String browse = '/browse';
   static const String listingDetail = '/listing/:id';
   static const String createListing = '/create-listing';
@@ -67,7 +68,7 @@ abstract class AppRoutes {
   static const String profile = '/profile';
   static const String editProfile = '/profile/edit';
   static const String myListings = '/profile/listings';
-  static const String savedItems = '/profile/saved';
+
   static const String settings = '/profile/settings';
   static const String purchaseHistory = '/profile/purchases';
   static const String help = '/profile/help';
@@ -189,23 +190,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               if (queryParams.isEmpty) {
                 return AppRoutes.home;
               }
-              return Uri(path: AppRoutes.home, queryParameters: queryParams).toString();
+              return Uri(
+                path: AppRoutes.home,
+                queryParameters: queryParams,
+              ).toString();
             },
             pageBuilder: (context, state) => const NoTransitionPage(
               child: HomeScreen(), // Fallback, redirect should catch this
             ),
           ),
           GoRoute(
+            path: AppRoutes.saved,
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: SavedItemsScreen()),
+          ),
+          GoRoute(
             path: AppRoutes.chatList,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ChatListScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ChatListScreen()),
           ),
           GoRoute(
             path: AppRoutes.profile,
-            pageBuilder: (context, state) => const NoTransitionPage(
-              child: ProfileScreen(),
-            ),
+            pageBuilder: (context, state) =>
+                const NoTransitionPage(child: ProfileScreen()),
           ),
         ],
       ),
@@ -236,10 +243,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.myListings,
         builder: (context, state) => const MyListingsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.savedItems,
-        builder: (context, state) => const SavedItemsScreen(),
       ),
       GoRoute(
         path: AppRoutes.editListing,
@@ -413,9 +416,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Text('Page not found: ${state.matchedLocation}'),
-      ),
+      body: Center(child: Text('Page not found: ${state.matchedLocation}')),
     ),
   );
 });

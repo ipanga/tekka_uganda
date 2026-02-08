@@ -22,9 +22,7 @@ class RateAppDialog extends ConsumerWidget {
     final rateAppState = ref.watch(rateAppProvider);
 
     return AlertDialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -114,8 +112,9 @@ class RateAppDialog extends ConsumerWidget {
           onPressed: rateAppState.isLoading
               ? null
               : () async {
-                  final success =
-                      await ref.read(rateAppProvider.notifier).requestInAppReview();
+                  final success = await ref
+                      .read(rateAppProvider.notifier)
+                      .requestInAppReview();
                   if (context.mounted) {
                     Navigator.of(context).pop();
                     if (success) {
@@ -202,10 +201,7 @@ class RateAppBottomSheet extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Rate Tekka',
-                        style: AppTypography.titleMedium,
-                      ),
+                      Text('Rate Tekka', style: AppTypography.titleMedium),
                       const SizedBox(height: 4),
                       Text(
                         'Your feedback helps us improve',

@@ -38,7 +38,8 @@ class AccountDeletionStatus {
     return AccountDeletionStatus(
       state: state ?? this.state,
       errorMessage: errorMessage,
-      scheduledDeletionDate: scheduledDeletionDate ?? this.scheduledDeletionDate,
+      scheduledDeletionDate:
+          scheduledDeletionDate ?? this.scheduledDeletionDate,
       requiresReauth: requiresReauth ?? this.requiresReauth,
     );
   }
@@ -67,10 +68,7 @@ class AccountDeletionApiRepository {
   }) async {
     return _apiClient.post<Map<String, dynamic>>(
       '/users/me/deletion',
-      data: {
-        'reason': reason,
-        'gracePeriodDays': gracePeriodDays,
-      },
+      data: {'reason': reason, 'gracePeriodDays': gracePeriodDays},
     );
   }
 
@@ -86,9 +84,9 @@ class AccountDeletionApiRepository {
 /// Account deletion repository provider
 final accountDeletionRepositoryProvider =
     Provider<AccountDeletionApiRepository>((ref) {
-  final apiClient = ref.watch(apiClientProvider);
-  return AccountDeletionApiRepository(apiClient);
-});
+      final apiClient = ref.watch(apiClientProvider);
+      return AccountDeletionApiRepository(apiClient);
+    });
 
 /// Account deletion notifier
 class AccountDeletionNotifier extends StateNotifier<AccountDeletionStatus> {
@@ -97,8 +95,8 @@ class AccountDeletionNotifier extends StateNotifier<AccountDeletionStatus> {
   final FirebaseAuth _auth;
 
   AccountDeletionNotifier(this._ref, this._repository)
-      : _auth = FirebaseAuth.instance,
-        super(const AccountDeletionStatus()) {
+    : _auth = FirebaseAuth.instance,
+      super(const AccountDeletionStatus()) {
     _checkScheduledDeletion();
   }
 
@@ -110,7 +108,9 @@ class AccountDeletionNotifier extends StateNotifier<AccountDeletionStatus> {
       final response = await _repository.getScheduledDeletion();
 
       if (response['isScheduled'] == true) {
-        final scheduledDate = DateTime.parse(response['scheduledDate'] as String);
+        final scheduledDate = DateTime.parse(
+          response['scheduledDate'] as String,
+        );
 
         state = state.copyWith(
           state: AccountDeletionState.scheduledForDeletion,
@@ -232,12 +232,12 @@ class AccountDeletionNotifier extends StateNotifier<AccountDeletionStatus> {
 
 /// Account deletion provider
 final accountDeletionProvider =
-    StateNotifierProvider<AccountDeletionNotifier, AccountDeletionStatus>(
-  (ref) {
-    final repository = ref.watch(accountDeletionRepositoryProvider);
-    return AccountDeletionNotifier(ref, repository);
-  },
-);
+    StateNotifierProvider<AccountDeletionNotifier, AccountDeletionStatus>((
+      ref,
+    ) {
+      final repository = ref.watch(accountDeletionRepositoryProvider);
+      return AccountDeletionNotifier(ref, repository);
+    });
 
 /// Check if account is scheduled for deletion
 final isAccountScheduledForDeletionProvider = Provider<bool>((ref) {

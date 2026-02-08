@@ -16,11 +16,7 @@ class HomeScreen extends ConsumerStatefulWidget {
   final String? initialCategoryId;
   final String? initialSearch;
 
-  const HomeScreen({
-    super.key,
-    this.initialCategoryId,
-    this.initialSearch,
-  });
+  const HomeScreen({super.key, this.initialCategoryId, this.initialSearch});
 
   @override
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
@@ -63,7 +59,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final listingsAsync = ref.watch(listingsFeedProvider(filter));
 
     // Check if any filters are active
-    final hasFilters = _selectedCategoryId != null || (_searchQuery != null && _searchQuery!.isNotEmpty);
+    final hasFilters =
+        _selectedCategoryId != null ||
+        (_searchQuery != null && _searchQuery!.isNotEmpty);
 
     // Get main categories (level 1) from state
     final mainCategories = categoryState.mainCategories;
@@ -84,9 +82,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             fontWeight: FontWeight.w700,
           ),
         ),
-        actions: const [
-          _NotificationButton(),
-        ],
+        actions: const [_NotificationButton()],
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -111,10 +107,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        Icons.search,
-                        color: AppColors.onSurfaceVariant,
-                      ),
+                      Icon(Icons.search, color: AppColors.onSurfaceVariant),
                       const SizedBox(width: 12),
                       Expanded(
                         child: TextField(
@@ -188,7 +181,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         isSelected: _selectedCategoryId == category.id,
                         onTap: () {
                           setState(() {
-                            _selectedCategoryId = _selectedCategoryId == category.id
+                            _selectedCategoryId =
+                                _selectedCategoryId == category.id
                                 ? null
                                 : category.id;
                           });
@@ -201,33 +195,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               // Subcategories - shown when a main category is selected
               if (_selectedCategoryId != null) ...[
                 const SizedBox(height: AppSpacing.space3),
-                Builder(builder: (context) {
-                  final selectedMain = mainCategories
-                      .where((c) => c.id == _selectedCategoryId)
-                      .firstOrNull;
-                  if (selectedMain == null) return const SizedBox.shrink();
-                  final subs = selectedMain.activeChildren;
-                  if (subs.isEmpty) return const SizedBox.shrink();
-                  return SizedBox(
-                    height: 40,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: AppSpacing.screenHorizontal,
-                      itemCount: subs.length,
-                      itemBuilder: (context, index) {
-                        final subcategory = subs[index];
-                        return _SubcategoryChip(
-                          label: subcategory.name,
-                          onTap: () {
-                            setState(() {
-                              _selectedCategoryId = subcategory.id;
-                            });
-                          },
-                        );
-                      },
-                    ),
-                  );
-                }),
+                Builder(
+                  builder: (context) {
+                    final selectedMain = mainCategories
+                        .where((c) => c.id == _selectedCategoryId)
+                        .firstOrNull;
+                    if (selectedMain == null) return const SizedBox.shrink();
+                    final subs = selectedMain.activeChildren;
+                    if (subs.isEmpty) return const SizedBox.shrink();
+                    return SizedBox(
+                      height: 40,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: AppSpacing.screenHorizontal,
+                        itemCount: subs.length,
+                        itemBuilder: (context, index) {
+                          final subcategory = subs[index];
+                          return _SubcategoryChip(
+                            label: subcategory.name,
+                            onTap: () {
+                              setState(() {
+                                _selectedCategoryId = subcategory.id;
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
               ],
 
               const SizedBox(height: AppSpacing.space5),
@@ -243,16 +239,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         _searchQuery != null && _searchQuery!.isNotEmpty
                             ? 'Results for "$_searchQuery"'
                             : _selectedCategoryId != null
-                                ? mainCategories
-                                        .where((c) => c.id == _selectedCategoryId)
-                                        .firstOrNull
-                                        ?.name ??
-                                    allSubcategories
-                                        .where((c) => c.id == _selectedCategoryId)
-                                        .firstOrNull
-                                        ?.name ??
-                                    'Recent Listings'
-                                : 'Recent Listings',
+                            ? mainCategories
+                                      .where((c) => c.id == _selectedCategoryId)
+                                      .firstOrNull
+                                      ?.name ??
+                                  allSubcategories
+                                      .where((c) => c.id == _selectedCategoryId)
+                                      .firstOrNull
+                                      ?.name ??
+                                  'Recent Listings'
+                            : 'Recent Listings',
                         style: AppTypography.titleSmall,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -324,10 +320,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           children: [
             const Icon(Icons.error_outline, size: 48, color: AppColors.error),
             const SizedBox(height: AppSpacing.space4),
-            Text(
-              'Failed to load listings',
-              style: AppTypography.bodyLarge,
-            ),
+            Text('Failed to load listings', style: AppTypography.bodyLarge),
             const SizedBox(height: AppSpacing.space2),
             TextButton(
               onPressed: () => ref.invalidate(listingsFeedProvider(filter)),
@@ -351,10 +344,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               color: AppColors.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.space4),
-            Text(
-              'No listings yet',
-              style: AppTypography.titleMedium,
-            ),
+            Text('No listings yet', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.space2),
             Text(
               'Be the first to list something!',
@@ -396,7 +386,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 }
-
 
 class _LoadingCard extends StatelessWidget {
   @override
@@ -528,10 +517,7 @@ class _SubcategoryChip extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _SubcategoryChip({
-    required this.label,
-    required this.onTap,
-  });
+  const _SubcategoryChip({required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {

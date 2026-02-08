@@ -20,13 +20,15 @@ final safeLocationsProvider = FutureProvider<List<MeetupLocation>>((ref) async {
 /// Locations by area provider
 final locationsByAreaProvider =
     FutureProvider.family<List<MeetupLocation>, String>((ref, area) async {
-  final repository = ref.watch(meetupRepositoryProvider);
-  return repository.getLocationsByArea(area);
-});
+      final repository = ref.watch(meetupRepositoryProvider);
+      return repository.getLocationsByArea(area);
+    });
 
 /// Single location provider
-final meetupLocationProvider =
-    FutureProvider.family<MeetupLocation?, String>((ref, locationId) async {
+final meetupLocationProvider = FutureProvider.family<MeetupLocation?, String>((
+  ref,
+  locationId,
+) async {
   final repository = ref.watch(meetupRepositoryProvider);
   return repository.getLocationById(locationId);
 });
@@ -34,23 +36,24 @@ final meetupLocationProvider =
 /// Meetups for a chat provider
 final chatMeetupsProvider =
     FutureProvider.family<List<ScheduledMeetup>, String>((ref, chatId) async {
-  final repository = ref.watch(meetupRepositoryProvider);
-  return repository.getMeetupsForChat(chatId);
-});
+      final repository = ref.watch(meetupRepositoryProvider);
+      return repository.getMeetupsForChat(chatId);
+    });
 
 /// User's upcoming meetups provider
 final upcomingMeetupsProvider =
     FutureProvider.family<List<ScheduledMeetup>, String>((ref, userId) async {
-  final repository = ref.watch(meetupRepositoryProvider);
-  return repository.getUpcomingMeetups(userId);
-});
+      final repository = ref.watch(meetupRepositoryProvider);
+      return repository.getUpcomingMeetups(userId);
+    });
 
 /// Single meetup provider
-final scheduledMeetupProvider =
-    FutureProvider.family<ScheduledMeetup?, String>((ref, meetupId) async {
-  final repository = ref.watch(meetupRepositoryProvider);
-  return repository.getMeetupById(meetupId);
-});
+final scheduledMeetupProvider = FutureProvider.family<ScheduledMeetup?, String>(
+  (ref, meetupId) async {
+    final repository = ref.watch(meetupRepositoryProvider);
+    return repository.getMeetupById(meetupId);
+  },
+);
 
 /// State for scheduling a meetup
 class ScheduleMeetupState {
@@ -142,17 +145,11 @@ class ScheduleMeetupNotifier extends StateNotifier<ScheduleMeetupState> {
         notes: state.notes,
       );
 
-      state = state.copyWith(
-        isLoading: false,
-        createdMeetup: meetup,
-      );
+      state = state.copyWith(isLoading: false, createdMeetup: meetup);
 
       return meetup;
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isLoading: false, error: e.toString());
       return null;
     }
   }
@@ -192,18 +189,20 @@ class ScheduleMeetupParams {
 
 /// Schedule meetup notifier provider
 final scheduleMeetupProvider = StateNotifierProvider.family
-    .autoDispose<ScheduleMeetupNotifier, ScheduleMeetupState, ScheduleMeetupParams>(
-  (ref, params) {
-    final repository = ref.watch(meetupRepositoryProvider);
-    return ScheduleMeetupNotifier(
-      repository,
-      chatId: params.chatId,
-      listingId: params.listingId,
-      buyerId: params.buyerId,
-      sellerId: params.sellerId,
-    );
-  },
-);
+    .autoDispose<
+      ScheduleMeetupNotifier,
+      ScheduleMeetupState,
+      ScheduleMeetupParams
+    >((ref, params) {
+      final repository = ref.watch(meetupRepositoryProvider);
+      return ScheduleMeetupNotifier(
+        repository,
+        chatId: params.chatId,
+        listingId: params.listingId,
+        buyerId: params.buyerId,
+        sellerId: params.sellerId,
+      );
+    });
 
 /// Meetup actions notifier for confirming, canceling, etc.
 class MeetupActionsNotifier extends StateNotifier<AsyncValue<void>> {
@@ -211,7 +210,7 @@ class MeetupActionsNotifier extends StateNotifier<AsyncValue<void>> {
   final String meetupId;
 
   MeetupActionsNotifier(this._repository, this.meetupId)
-      : super(const AsyncValue.data(null));
+    : super(const AsyncValue.data(null));
 
   Future<void> confirm() async {
     state = const AsyncValue.loading();
@@ -256,9 +255,10 @@ class MeetupActionsNotifier extends StateNotifier<AsyncValue<void>> {
 
 /// Meetup actions provider
 final meetupActionsProvider = StateNotifierProvider.family
-    .autoDispose<MeetupActionsNotifier, AsyncValue<void>, String>(
-  (ref, meetupId) {
-    final repository = ref.watch(meetupRepositoryProvider);
-    return MeetupActionsNotifier(repository, meetupId);
-  },
-);
+    .autoDispose<MeetupActionsNotifier, AsyncValue<void>, String>((
+      ref,
+      meetupId,
+    ) {
+      final repository = ref.watch(meetupRepositoryProvider);
+      return MeetupActionsNotifier(repository, meetupId);
+    });

@@ -15,9 +15,7 @@ class NotificationSettingsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Notification Settings'),
-      ),
+      appBar: AppBar(title: const Text('Notification Settings')),
       body: prefsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => Center(
@@ -29,7 +27,8 @@ class NotificationSettingsScreen extends ConsumerWidget {
               Text('Failed to load settings', style: AppTypography.bodyLarge),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
-                onPressed: () => ref.invalidate(notificationPreferencesStreamProvider),
+                onPressed: () =>
+                    ref.invalidate(notificationPreferencesStreamProvider),
                 child: const Text('Retry'),
               ),
             ],
@@ -150,7 +149,11 @@ class _NotificationSettingsContent extends ConsumerWidget {
                   startHour: prefs.dndStartHour ?? 22,
                   endHour: prefs.dndEndHour ?? 7,
                   onChanged: (start, end) {
-                    notifier.setDoNotDisturb(true, startHour: start, endHour: end);
+                    notifier.setDoNotDisturb(
+                      true,
+                      startHour: start,
+                      endHour: end,
+                    );
                   },
                 ),
             ],
@@ -364,10 +367,7 @@ class _TimePickerButton extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 2),
-            Text(
-              _formatHour(hour),
-              style: AppTypography.titleMedium,
-            ),
+            Text(_formatHour(hour), style: AppTypography.titleMedium),
           ],
         ),
       ),

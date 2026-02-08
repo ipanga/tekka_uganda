@@ -102,10 +102,7 @@ class SelectedLocation {
   final City city;
   final Division? division;
 
-  const SelectedLocation({
-    required this.city,
-    this.division,
-  });
+  const SelectedLocation({required this.city, this.division});
 
   /// Get display text (e.g., "Kampala, Makindye" or just "Kampala")
   String get displayText {

@@ -15,7 +15,8 @@ class DataExportScreen extends ConsumerWidget {
 
     // Listen for errors
     ref.listen<DataExportState>(dataExportProvider, (prev, next) {
-      if (next.errorMessage != null && prev?.errorMessage != next.errorMessage) {
+      if (next.errorMessage != null &&
+          prev?.errorMessage != next.errorMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.errorMessage!),
@@ -28,14 +29,12 @@ class DataExportScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Export Your Data'),
-      ),
+      appBar: AppBar(title: const Text('Export Your Data')),
       body: exportState.isExporting
           ? _buildExportingView(exportState)
           : exportState.hasExport
-              ? _buildExportReadyView(context, ref, exportState)
-              : _buildSelectionView(context, ref, exportState),
+          ? _buildExportReadyView(context, ref, exportState)
+          : _buildSelectionView(context, ref, exportState),
     );
   }
 
@@ -99,7 +98,9 @@ class DataExportScreen extends ConsumerWidget {
 
               // Select all / Deselect all
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.space4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.space4,
+                ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -124,8 +125,9 @@ class DataExportScreen extends ConsumerWidget {
                         ),
                         const SizedBox(width: 8),
                         TextButton(
-                          onPressed: () =>
-                              ref.read(dataExportProvider.notifier).deselectAll(),
+                          onPressed: () => ref
+                              .read(dataExportProvider.notifier)
+                              .deselectAll(),
                           style: TextButton.styleFrom(
                             padding: const EdgeInsets.symmetric(horizontal: 8),
                             minimumSize: Size.zero,
@@ -149,8 +151,9 @@ class DataExportScreen extends ConsumerWidget {
                     return _DataTypeOption(
                       type: type,
                       isSelected: state.selectedTypes.contains(type),
-                      onToggle: () =>
-                          ref.read(dataExportProvider.notifier).toggleDataType(type),
+                      onToggle: () => ref
+                          .read(dataExportProvider.notifier)
+                          .toggleDataType(type),
                     );
                   }).toList(),
                 ),
@@ -201,9 +204,7 @@ class DataExportScreen extends ConsumerWidget {
           padding: AppSpacing.screenPadding,
           decoration: BoxDecoration(
             color: AppColors.surface,
-            border: Border(
-              top: BorderSide(color: AppColors.outline),
-            ),
+            border: Border(top: BorderSide(color: AppColors.outline)),
           ),
           child: SafeArea(
             child: SizedBox(
@@ -213,9 +214,7 @@ class DataExportScreen extends ConsumerWidget {
                     ? () => ref.read(dataExportProvider.notifier).startExport()
                     : null,
                 icon: const Icon(Icons.download),
-                label: Text(
-                  'Export ${state.selectedTypes.length} Data Types',
-                ),
+                label: Text('Export ${state.selectedTypes.length} Data Types'),
               ),
             ),
           ),
@@ -245,7 +244,9 @@ class DataExportScreen extends ConsumerWidget {
                       value: state.progress,
                       strokeWidth: 8,
                       backgroundColor: AppColors.outline,
-                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        AppColors.primary,
+                      ),
                     ),
                   ),
                   Text(
@@ -428,8 +429,18 @@ class DataExportScreen extends ConsumerWidget {
 
   String _formatDate(DateTime date) {
     final months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year} at '
         '${date.hour.toString().padLeft(2, '0')}:'
@@ -467,10 +478,7 @@ class _DataTypeOption extends StatelessWidget {
         _getIcon(type),
         color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
       ),
-      title: Text(
-        type.displayName,
-        style: AppTypography.bodyLarge,
-      ),
+      title: Text(type.displayName, style: AppTypography.bodyLarge),
       subtitle: Text(
         type.description,
         style: AppTypography.bodySmall.copyWith(

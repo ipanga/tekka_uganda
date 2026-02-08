@@ -35,8 +35,12 @@ class Review {
     return Review(
       id: json['id'] as String,
       reviewerId: reviewer?['id'] ?? json['reviewerId'] as String,
-      reviewerName: reviewer?['displayName'] ?? json['reviewerName'] as String? ?? 'Unknown',
-      reviewerPhotoUrl: reviewer?['photoUrl'] ?? json['reviewerPhotoUrl'] as String?,
+      reviewerName:
+          reviewer?['displayName'] ??
+          json['reviewerName'] as String? ??
+          'Unknown',
+      reviewerPhotoUrl:
+          reviewer?['photoUrl'] ?? json['reviewerPhotoUrl'] as String?,
       revieweeId: json['revieweeId'] as String,
       listingId: listing?['id'] ?? json['listingId'] as String?,
       listingTitle: listing?['title'] ?? json['listingTitle'] as String?,
@@ -143,10 +147,7 @@ class Review {
 }
 
 /// Type of review
-enum ReviewType {
-  seller,
-  buyer,
-}
+enum ReviewType { seller, buyer }
 
 /// User rating summary
 class UserRating {

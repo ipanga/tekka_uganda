@@ -77,9 +77,11 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
               .toList();
           // Include both pending and rejected listings in "Under Review" tab
           final underReviewListings = listings
-              .where((l) =>
-                  l.status == ListingStatus.pending ||
-                  l.status == ListingStatus.rejected)
+              .where(
+                (l) =>
+                    l.status == ListingStatus.pending ||
+                    l.status == ListingStatus.rejected,
+              )
               .toList();
           final soldListings = listings
               .where((l) => l.status == ListingStatus.sold)
@@ -153,10 +155,7 @@ class _ListingsGrid extends StatelessWidget {
                 color: AppColors.onSurfaceVariant,
               ),
               const SizedBox(height: AppSpacing.space4),
-              Text(
-                emptyMessage,
-                style: AppTypography.titleMedium,
-              ),
+              Text(emptyMessage, style: AppTypography.titleMedium),
               if (emptyAction != null && onEmptyAction != null) ...[
                 const SizedBox(height: AppSpacing.space4),
                 ElevatedButton(
@@ -357,10 +356,7 @@ class _StatusBadge extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 8,
-        vertical: 4,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(4),

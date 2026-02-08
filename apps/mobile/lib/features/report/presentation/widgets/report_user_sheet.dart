@@ -66,9 +66,9 @@ class _ReportUserSheetState extends ConsumerState<_ReportUserSheet> {
         Navigator.pop(context, true);
       }
       if (next.error != null && prev?.error != next.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next.error!)));
       }
     });
 
@@ -160,15 +160,17 @@ class _ReportUserSheetState extends ConsumerState<_ReportUserSheet> {
                     ),
                     const SizedBox(height: AppSpacing.space3),
 
-                    ...ReportReason.values.map((reason) => _ReasonTile(
-                          reason: reason,
-                          isSelected: _selectedReason == reason,
-                          onTap: () {
-                            setState(() {
-                              _selectedReason = reason;
-                            });
-                          },
-                        )),
+                    ...ReportReason.values.map(
+                      (reason) => _ReasonTile(
+                        reason: reason,
+                        isSelected: _selectedReason == reason,
+                        onTap: () {
+                          setState(() {
+                            _selectedReason = reason;
+                          });
+                        },
+                      ),
+                    ),
 
                     const SizedBox(height: AppSpacing.space6),
 
@@ -183,9 +185,12 @@ class _ReportUserSheetState extends ConsumerState<_ReportUserSheet> {
                       maxLines: 4,
                       maxLength: 500,
                       decoration: InputDecoration(
-                        hintText: 'Provide any additional context that might help us review this report...',
+                        hintText:
+                            'Provide any additional context that might help us review this report...',
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(AppSpacing.space2),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.space2,
+                          ),
                         ),
                       ),
                     ),
@@ -312,7 +317,9 @@ class _ReasonTile extends StatelessWidget {
           children: [
             Icon(
               isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
-              color: isSelected ? AppColors.primary : AppColors.onSurfaceVariant,
+              color: isSelected
+                  ? AppColors.primary
+                  : AppColors.onSurfaceVariant,
             ),
             const SizedBox(width: AppSpacing.space3),
             Expanded(
@@ -322,7 +329,9 @@ class _ReasonTile extends StatelessWidget {
                   Text(
                     reason.displayName,
                     style: AppTypography.bodyMedium.copyWith(
-                      fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                   Text(

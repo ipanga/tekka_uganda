@@ -20,7 +20,8 @@ class PriceAlertsScreen extends ConsumerWidget {
 
     // Listen for errors
     ref.listen<PriceAlertState>(priceAlertProvider, (prev, next) {
-      if (next.errorMessage != null && prev?.errorMessage != next.errorMessage) {
+      if (next.errorMessage != null &&
+          prev?.errorMessage != next.errorMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.errorMessage!),
@@ -57,9 +58,11 @@ class PriceAlertsScreen extends ConsumerWidget {
                       size: 20,
                     ),
                     const SizedBox(width: 8),
-                    Text(state.priceAlertsEnabled
-                        ? 'Disable alerts'
-                        : 'Enable alerts'),
+                    Text(
+                      state.priceAlertsEnabled
+                          ? 'Disable alerts'
+                          : 'Enable alerts',
+                    ),
                   ],
                 ),
               ),
@@ -109,8 +112,9 @@ class PriceAlertsScreen extends ConsumerWidget {
                   return _PriceAlertTile(
                     alert: alert,
                     onTap: () => _handleAlertTap(context, ref, alert),
-                    onDelete: () =>
-                        ref.read(priceAlertProvider.notifier).deleteAlert(alert.id),
+                    onDelete: () => ref
+                        .read(priceAlertProvider.notifier)
+                        .deleteAlert(alert.id),
                   );
                 },
               ),
@@ -170,7 +174,7 @@ class PriceAlertsScreen extends ConsumerWidget {
             const SizedBox(height: AppSpacing.space6),
             if (alertsEnabled)
               FilledButton.icon(
-                onPressed: () => context.push(AppRoutes.savedItems),
+                onPressed: () => context.go(AppRoutes.saved),
                 icon: const Icon(Icons.favorite_border),
                 label: const Text('View Saved Items'),
               ),
@@ -218,9 +222,7 @@ class PriceAlertsScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear All Alerts'),
-        content: const Text(
-          'Are you sure you want to clear all price alerts?',
-        ),
+        content: const Text('Are you sure you want to clear all price alerts?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -260,10 +262,7 @@ class _PriceAlertTile extends StatelessWidget {
         color: AppColors.error,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(
-          Icons.delete,
-          color: AppColors.white,
-        ),
+        child: const Icon(Icons.delete, color: AppColors.white),
       ),
       child: InkWell(
         onTap: alert.isExpired ? null : onTap,
@@ -295,7 +294,9 @@ class _PriceAlertTile extends StatelessWidget {
                               imageUrl: alert.listingImageUrl!,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => const Center(
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
                               errorWidget: (context, url, error) => const Icon(
                                 Icons.broken_image,
@@ -303,10 +304,7 @@ class _PriceAlertTile extends StatelessWidget {
                               ),
                             ),
                           )
-                        : const Icon(
-                            Icons.image,
-                            color: AppColors.gray400,
-                          ),
+                        : const Icon(Icons.image, color: AppColors.gray400),
                   ),
                   // Price drop badge
                   Positioned(
@@ -318,7 +316,9 @@ class _PriceAlertTile extends StatelessWidget {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: alert.isExpired ? AppColors.gray400 : AppColors.success,
+                        color: alert.isExpired
+                            ? AppColors.gray400
+                            : AppColors.success,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(

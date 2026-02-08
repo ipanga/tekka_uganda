@@ -25,7 +25,8 @@ class _QuickReplyTemplatesScreenState
 
     // Listen for errors
     ref.listen<QuickReplyState>(quickReplyProvider, (prev, next) {
-      if (next.errorMessage != null && prev?.errorMessage != next.errorMessage) {
+      if (next.errorMessage != null &&
+          prev?.errorMessage != next.errorMessage) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(next.errorMessage!),
@@ -83,7 +84,8 @@ class _QuickReplyTemplatesScreenState
               Text('Failed to load templates', style: AppTypography.bodyLarge),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
-                onPressed: () => ref.invalidate(quickReplyTemplatesStreamProvider),
+                onPressed: () =>
+                    ref.invalidate(quickReplyTemplatesStreamProvider),
                 child: const Text('Retry'),
               ),
             ],
@@ -94,8 +96,8 @@ class _QuickReplyTemplatesScreenState
           final filteredTemplates = _selectedCategory == 'all'
               ? templates
               : templates
-                  .where((t) => t.category == _selectedCategory)
-                  .toList();
+                    .where((t) => t.category == _selectedCategory)
+                    .toList();
 
           return Stack(
             children: [
@@ -179,10 +181,13 @@ class _QuickReplyTemplatesScreenState
 
   String _formatCategory(String category) {
     if (category == 'all') return 'All';
-    return category.split('_').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1);
-    }).join(' ');
+    return category
+        .split('_')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1);
+        })
+        .join(' ');
   }
 
   Widget _buildEmptyState() {
@@ -266,25 +271,29 @@ class _QuickReplyTemplatesScreenState
                     label: 'Custom',
                     value: 'custom',
                     selected: selectedCategory,
-                    onSelected: (v) => setDialogState(() => selectedCategory = v),
+                    onSelected: (v) =>
+                        setDialogState(() => selectedCategory = v),
                   ),
                   _CategoryChip(
                     label: 'Availability',
                     value: 'availability',
                     selected: selectedCategory,
-                    onSelected: (v) => setDialogState(() => selectedCategory = v),
+                    onSelected: (v) =>
+                        setDialogState(() => selectedCategory = v),
                   ),
                   _CategoryChip(
                     label: 'Negotiation',
                     value: 'negotiation',
                     selected: selectedCategory,
-                    onSelected: (v) => setDialogState(() => selectedCategory = v),
+                    onSelected: (v) =>
+                        setDialogState(() => selectedCategory = v),
                   ),
                   _CategoryChip(
                     label: 'Meetup',
                     value: 'meetup',
                     selected: selectedCategory,
-                    onSelected: (v) => setDialogState(() => selectedCategory = v),
+                    onSelected: (v) =>
+                        setDialogState(() => selectedCategory = v),
                   ),
                 ],
               ),
@@ -298,7 +307,9 @@ class _QuickReplyTemplatesScreenState
             FilledButton(
               onPressed: () {
                 if (textController.text.trim().isNotEmpty) {
-                  ref.read(quickReplyProvider.notifier).addTemplate(
+                  ref
+                      .read(quickReplyProvider.notifier)
+                      .addTemplate(
                         textController.text,
                         category: selectedCategory,
                       );
@@ -345,25 +356,29 @@ class _QuickReplyTemplatesScreenState
                     label: 'Custom',
                     value: 'custom',
                     selected: selectedCategory,
-                    onSelected: (v) => setDialogState(() => selectedCategory = v),
+                    onSelected: (v) =>
+                        setDialogState(() => selectedCategory = v),
                   ),
                   _CategoryChip(
                     label: 'Availability',
                     value: 'availability',
                     selected: selectedCategory,
-                    onSelected: (v) => setDialogState(() => selectedCategory = v),
+                    onSelected: (v) =>
+                        setDialogState(() => selectedCategory = v),
                   ),
                   _CategoryChip(
                     label: 'Negotiation',
                     value: 'negotiation',
                     selected: selectedCategory,
-                    onSelected: (v) => setDialogState(() => selectedCategory = v),
+                    onSelected: (v) =>
+                        setDialogState(() => selectedCategory = v),
                   ),
                   _CategoryChip(
                     label: 'Meetup',
                     value: 'meetup',
                     selected: selectedCategory,
-                    onSelected: (v) => setDialogState(() => selectedCategory = v),
+                    onSelected: (v) =>
+                        setDialogState(() => selectedCategory = v),
                   ),
                 ],
               ),
@@ -386,7 +401,9 @@ class _QuickReplyTemplatesScreenState
             FilledButton(
               onPressed: () {
                 if (textController.text.trim().isNotEmpty) {
-                  ref.read(quickReplyProvider.notifier).updateTemplate(
+                  ref
+                      .read(quickReplyProvider.notifier)
+                      .updateTemplate(
                         template.id,
                         textController.text,
                         category: selectedCategory,
@@ -414,9 +431,7 @@ class _QuickReplyTemplatesScreenState
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.error,
-            ),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
             onPressed: () {
               Navigator.pop(context);
               ref.read(quickReplyProvider.notifier).deleteTemplate(template.id);
@@ -478,10 +493,7 @@ class _TemplateTile extends StatelessWidget {
         color: AppColors.error,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(
-          Icons.delete,
-          color: AppColors.white,
-        ),
+        child: const Icon(Icons.delete, color: AppColors.white),
       ),
       child: ListTile(
         onTap: onEdit,
@@ -494,10 +506,7 @@ class _TemplateTile extends StatelessWidget {
         subtitle: Row(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 2,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
                 color: AppColors.primaryContainer,
                 borderRadius: BorderRadius.circular(4),
@@ -511,11 +520,7 @@ class _TemplateTile extends StatelessWidget {
             ),
             if (template.usageCount > 0) ...[
               const SizedBox(width: 8),
-              Icon(
-                Icons.history,
-                size: 14,
-                color: AppColors.onSurfaceVariant,
-              ),
+              Icon(Icons.history, size: 14, color: AppColors.onSurfaceVariant),
               const SizedBox(width: 4),
               Text(
                 '${template.usageCount}',
@@ -527,10 +532,7 @@ class _TemplateTile extends StatelessWidget {
             if (template.isDefault) ...[
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.gray100,
                   borderRadius: BorderRadius.circular(4),
@@ -551,10 +553,13 @@ class _TemplateTile extends StatelessWidget {
   }
 
   String _formatCategory(String category) {
-    return category.split('_').map((word) {
-      if (word.isEmpty) return word;
-      return word[0].toUpperCase() + word.substring(1);
-    }).join(' ');
+    return category
+        .split('_')
+        .map((word) {
+          if (word.isEmpty) return word;
+          return word[0].toUpperCase() + word.substring(1);
+        })
+        .join(' ');
   }
 }
 

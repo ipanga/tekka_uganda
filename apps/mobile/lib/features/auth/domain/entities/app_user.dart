@@ -164,7 +164,8 @@ class AppUser {
       firebaseUid: map['firebaseUid'] as String?,
       phoneNumber: map['phoneNumber'] as String,
       email: map['email'] as String?,
-      emailVerified: map['emailVerified'] ?? map['isEmailVerified'] as bool? ?? false,
+      emailVerified:
+          map['emailVerified'] ?? map['isEmailVerified'] as bool? ?? false,
       displayName: map['displayName'] as String?,
       photoUrl: map['photoUrl'] as String?,
       bio: map['bio'] as String?,

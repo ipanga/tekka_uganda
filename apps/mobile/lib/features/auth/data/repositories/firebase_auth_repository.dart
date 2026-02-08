@@ -17,8 +17,6 @@ class FirebaseAuthRepository implements AuthRepository {
   final UserApiRepository _userApiRepository;
   final ApiClient _apiClient;
 
-  // Store verification ID for OTP verification
-  String? _verificationId;
   int? _resendToken;
 
   // Cached user from API
@@ -28,9 +26,9 @@ class FirebaseAuthRepository implements AuthRepository {
     FirebaseAuth? auth,
     required UserApiRepository userApiRepository,
     required ApiClient apiClient,
-  })  : _auth = auth ?? FirebaseAuth.instance,
-        _userApiRepository = userApiRepository,
-        _apiClient = apiClient;
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _userApiRepository = userApiRepository,
+       _apiClient = apiClient;
 
   @override
   Stream<AppUser?> get authStateChanges {
@@ -111,13 +109,10 @@ class FirebaseAuthRepository implements AuthRepository {
         completer.completeError(AuthException(message: message, code: e.code));
       },
       codeSent: (String verificationId, int? resendToken) {
-        _verificationId = verificationId;
         _resendToken = resendToken;
         completer.complete(verificationId);
       },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        _verificationId = verificationId;
-      },
+      codeAutoRetrievalTimeout: (String verificationId) {},
       forceResendingToken: _resendToken,
     );
 

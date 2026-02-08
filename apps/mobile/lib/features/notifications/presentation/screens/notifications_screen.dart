@@ -35,10 +35,7 @@ class NotificationsScreen extends ConsumerWidget {
                 value: 'settings',
                 child: Text('Notification settings'),
               ),
-              const PopupMenuItem(
-                value: 'clear',
-                child: Text('Clear all'),
-              ),
+              const PopupMenuItem(value: 'clear', child: Text('Clear all')),
             ],
           ),
         ],
@@ -51,7 +48,10 @@ class NotificationsScreen extends ConsumerWidget {
             children: [
               const Icon(Icons.error_outline, size: 48, color: AppColors.error),
               const SizedBox(height: AppSpacing.space4),
-              Text('Failed to load notifications', style: AppTypography.bodyLarge),
+              Text(
+                'Failed to load notifications',
+                style: AppTypography.bodyLarge,
+              ),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
                 onPressed: () => ref.invalidate(notificationsStreamProvider),
@@ -72,7 +72,8 @@ class NotificationsScreen extends ConsumerWidget {
               return _NotificationTile(
                 notification: notification,
                 onTap: () => _handleNotificationTap(context, ref, notification),
-                onDismiss: () => _deleteNotification(context, ref, notification.id),
+                onDismiss: () =>
+                    _deleteNotification(context, ref, notification.id),
               );
             },
           );
@@ -94,10 +95,7 @@ class NotificationsScreen extends ConsumerWidget {
               color: AppColors.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.space4),
-            Text(
-              'No notifications',
-              style: AppTypography.titleMedium,
-            ),
+            Text('No notifications', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.space2),
             Text(
               "You're all caught up! We'll notify you when something happens.",
@@ -119,7 +117,9 @@ class NotificationsScreen extends ConsumerWidget {
   ) {
     // Mark as read
     if (!notification.isRead) {
-      ref.read(notificationActionsProvider.notifier).markAsRead(notification.id);
+      ref
+          .read(notificationActionsProvider.notifier)
+          .markAsRead(notification.id);
     }
 
     // Navigate to notification detail screen
@@ -137,9 +137,9 @@ class NotificationsScreen extends ConsumerWidget {
 
   void _deleteNotification(BuildContext context, WidgetRef ref, String id) {
     ref.read(notificationActionsProvider.notifier).deleteNotification(id);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Notification deleted')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Notification deleted')));
   }
 
   void _handleMenuAction(BuildContext context, WidgetRef ref, String action) {
@@ -158,7 +158,9 @@ class NotificationsScreen extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear all notifications'),
-        content: const Text('Are you sure you want to clear all notifications?'),
+        content: const Text(
+          'Are you sure you want to clear all notifications?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -201,15 +203,14 @@ class _NotificationTile extends StatelessWidget {
         color: AppColors.error,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
-        child: const Icon(
-          Icons.delete,
-          color: AppColors.white,
-        ),
+        child: const Icon(Icons.delete, color: AppColors.white),
       ),
       child: InkWell(
         onTap: onTap,
         child: Container(
-          color: notification.isRead ? AppColors.surface : AppColors.primaryContainer.withAlpha(30),
+          color: notification.isRead
+              ? AppColors.surface
+              : AppColors.primaryContainer.withAlpha(30),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.space4,
             vertical: AppSpacing.space3,
@@ -232,8 +233,9 @@ class _NotificationTile extends StatelessWidget {
                           child: Text(
                             notification.title,
                             style: AppTypography.labelLarge.copyWith(
-                              fontWeight:
-                                  notification.isRead ? FontWeight.normal : FontWeight.w600,
+                              fontWeight: notification.isRead
+                                  ? FontWeight.normal
+                                  : FontWeight.w600,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -301,11 +303,7 @@ class _NotificationTile extends StatelessWidget {
         color: _getIconBackgroundColor(),
         borderRadius: BorderRadius.circular(8),
       ),
-      child: Icon(
-        _getNotificationIcon(),
-        color: _getIconColor(),
-        size: 24,
-      ),
+      child: Icon(_getNotificationIcon(), color: _getIconColor(), size: 24),
     );
   }
 

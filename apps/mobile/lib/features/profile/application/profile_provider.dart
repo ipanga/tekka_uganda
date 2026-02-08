@@ -29,7 +29,9 @@ final profileStatsProvider = FutureProvider<UserProfileStats>((ref) async {
   final listings = await ref.watch(userListingsProvider(user.uid).future);
 
   final totalListings = listings.length;
-  final soldCount = listings.where((l) => l.status == ListingStatus.sold).length;
+  final soldCount = listings
+      .where((l) => l.status == ListingStatus.sold)
+      .length;
 
   // Get actual rating from reviews
   final userRating = await ref.watch(userRatingProvider(user.uid).future);
@@ -50,7 +52,8 @@ final myListingsPreviewProvider = FutureProvider<List<Listing>>((ref) async {
   final listings = await ref.watch(userListingsProvider(user.uid).future);
 
   // Sort by created date, newest first, limit to 5
-  final sorted = [...listings]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  final sorted = [...listings]
+    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   return sorted.take(5).toList();
 });
 
@@ -158,12 +161,13 @@ class ProfileUpdateState {
 
 /// Profile update provider
 final profileUpdateProvider =
-    StateNotifierProvider.autoDispose<ProfileUpdateNotifier, ProfileUpdateState>(
-  (ref) {
-    final authNotifier = ref.watch(authNotifierProvider.notifier);
-    return ProfileUpdateNotifier(authNotifier);
-  },
-);
+    StateNotifierProvider.autoDispose<
+      ProfileUpdateNotifier,
+      ProfileUpdateState
+    >((ref) {
+      final authNotifier = ref.watch(authNotifierProvider.notifier);
+      return ProfileUpdateNotifier(authNotifier);
+    });
 
 /// Seller analytics data
 class SellerAnalytics {
@@ -237,16 +241,28 @@ final sellerAnalyticsProvider = FutureProvider<SellerAnalytics>((ref) async {
   if (listings.isEmpty) return const SellerAnalytics();
 
   // Calculate basic stats
-  final activeListings = listings.where((l) => l.status == ListingStatus.active).length;
+  final activeListings = listings
+      .where((l) => l.status == ListingStatus.active)
+      .length;
   // Include both pending and rejected listings in the "under review" count
-  final pendingListings = listings.where((l) =>
-      l.status == ListingStatus.pending || l.status == ListingStatus.rejected).length;
-  final soldListings = listings.where((l) => l.status == ListingStatus.sold).toList();
+  final pendingListings = listings
+      .where(
+        (l) =>
+            l.status == ListingStatus.pending ||
+            l.status == ListingStatus.rejected,
+      )
+      .length;
+  final soldListings = listings
+      .where((l) => l.status == ListingStatus.sold)
+      .toList();
   final soldCount = soldListings.length;
 
   // Calculate totals
   final totalViews = listings.fold<int>(0, (sum, l) => sum + l.viewCount);
-  final totalFavorites = listings.fold<int>(0, (sum, l) => sum + l.favoriteCount);
+  final totalFavorites = listings.fold<int>(
+    0,
+    (sum, l) => sum + l.favoriteCount,
+  );
   final totalRevenue = soldListings.fold<int>(0, (sum, l) => sum + l.price);
 
   // Calculate averages
@@ -279,7 +295,8 @@ final sellerAnalyticsProvider = FutureProvider<SellerAnalytics>((ref) async {
   for (final listing in listings) {
     final monthKey = _getMonthKey(listing.createdAt);
     if (monthlyViews.containsKey(monthKey)) {
-      monthlyViews[monthKey] = (monthlyViews[monthKey] ?? 0) + listing.viewCount;
+      monthlyViews[monthKey] =
+          (monthlyViews[monthKey] ?? 0) + listing.viewCount;
     }
   }
 
@@ -329,6 +346,19 @@ final sellerAnalyticsProvider = FutureProvider<SellerAnalytics>((ref) async {
 });
 
 String _getMonthKey(DateTime date) {
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   return months[date.month - 1];
 }

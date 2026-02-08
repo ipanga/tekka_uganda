@@ -10,9 +10,7 @@ class TermsOfServiceScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Terms of Service'),
-      ),
+      appBar: AppBar(title: const Text('Terms of Service')),
       body: ListView(
         padding: AppSpacing.screenPadding,
         children: [
@@ -226,11 +224,7 @@ class TermsOfServiceScreen extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 20,
-                  color: AppColors.primary,
-                ),
+                Icon(Icons.info_outline, size: 20, color: AppColors.primary),
                 const SizedBox(width: AppSpacing.space3),
                 Expanded(
                   child: Text(
@@ -262,9 +256,7 @@ class _SectionTitle extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.space2),
       child: Text(
         title,
-        style: AppTypography.titleMedium.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
+        style: AppTypography.titleMedium.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

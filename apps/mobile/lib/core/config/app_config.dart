@@ -15,7 +15,8 @@ class AppConfig {
     switch (_environment) {
       case Environment.dev:
         // Use 127.0.0.1 for iOS simulator compatibility (localhost doesn't work on iOS sim)
-        return 'http://127.0.0.1:3000/api/v1';
+        // API runs on port 4000 (port 3000 is the User Dashboard)
+        return 'http://127.0.0.1:4000/api/v1';
       case Environment.staging:
         return 'https://staging-api.tekka.ug/api/v1';
       case Environment.prod:

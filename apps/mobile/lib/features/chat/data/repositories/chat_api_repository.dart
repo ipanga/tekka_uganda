@@ -10,7 +10,9 @@ class ChatApiRepository {
   /// Get all chats for current user
   Future<List<Chat>> getChats() async {
     final response = await _apiClient.get<List<dynamic>>('/chats');
-    return response.map((e) => Chat.fromJson(e as Map<String, dynamic>)).toList();
+    return response
+        .map((e) => Chat.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// Create or get existing chat
@@ -20,17 +22,16 @@ class ChatApiRepository {
   }) async {
     final response = await _apiClient.post<Map<String, dynamic>>(
       '/chats',
-      data: {
-        'sellerId': sellerId,
-        'listingId': listingId,
-      },
+      data: {'sellerId': sellerId, 'listingId': listingId},
     );
     return Chat.fromJson(response);
   }
 
   /// Get total unread message count
   Future<int> getUnreadCount() async {
-    final response = await _apiClient.get<Map<String, dynamic>>('/chats/unread-count');
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/chats/unread-count',
+    );
     // Backend returns { unreadCount: number }
     return response['unreadCount'] as int? ?? response['count'] as int? ?? 0;
   }
@@ -44,7 +45,9 @@ class ChatApiRepository {
       '/chats/search',
       queryParameters: queryParams,
     );
-    return response.map((e) => Message.fromJson(e as Map<String, dynamic>)).toList();
+    return response
+        .map((e) => Message.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// Get a specific chat by ID

@@ -72,9 +72,9 @@ class _ListingCardState extends ConsumerState<ListingCard> {
       ref.invalidate(savedListingsProvider);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to save: $e')));
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
@@ -84,7 +84,9 @@ class _ListingCardState extends ConsumerState<ListingCard> {
   @override
   Widget build(BuildContext context) {
     final listing = widget.listing;
-    final imageUrl = listing.imageUrls.isNotEmpty ? listing.imageUrls.first : null;
+    final imageUrl = listing.imageUrls.isNotEmpty
+        ? listing.imageUrls.first
+        : null;
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -130,12 +132,18 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                             ? const SizedBox(
                                 width: 18,
                                 height: 18,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : Icon(
-                                _isSaved ? Icons.favorite : Icons.favorite_border,
+                                _isSaved
+                                    ? Icons.favorite
+                                    : Icons.favorite_border,
                                 size: 18,
-                                color: _isSaved ? AppColors.primary : AppColors.gray500,
+                                color: _isSaved
+                                    ? AppColors.primary
+                                    : AppColors.gray500,
                               ),
                       ),
                     ),
@@ -155,10 +163,15 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                       bottom: 8,
                       left: 8,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.gold,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusXs),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusXs,
+                          ),
                         ),
                         child: Text(
                           'Featured',
@@ -186,10 +199,7 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    listing.formattedPrice,
-                    style: AppTypography.price,
-                  ),
+                  Text(listing.formattedPrice, style: AppTypography.price),
                   const SizedBox(height: 4),
                   Text(
                     '${listing.location} · ${listing.timeAgo}',

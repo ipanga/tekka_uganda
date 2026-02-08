@@ -26,8 +26,8 @@ class JwtAuthRepository implements AuthRepository {
   JwtAuthRepository({
     required ApiClient apiClient,
     required UserApiRepository userApiRepository,
-  })  : _apiClient = apiClient,
-        _userApiRepository = userApiRepository {
+  }) : _apiClient = apiClient,
+       _userApiRepository = userApiRepository {
     // Check initial auth state
     _checkInitialAuthState();
   }
@@ -124,10 +124,7 @@ class JwtAuthRepository implements AuthRepository {
 
       final response = await _apiClient.postWithoutAuth<Map<String, dynamic>>(
         '/auth/verify-otp',
-        data: {
-          'phone': phoneNumber,
-          'code': otp,
-        },
+        data: {'phone': phoneNumber, 'code': otp},
       );
 
       final accessToken = response['accessToken'] as String;

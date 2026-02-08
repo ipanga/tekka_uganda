@@ -56,12 +56,7 @@ extension ReportReasonExtension on ReportReason {
 }
 
 /// Report status
-enum ReportStatus {
-  pending,
-  reviewed,
-  actionTaken,
-  dismissed,
-}
+enum ReportStatus { pending, reviewed, actionTaken, dismissed }
 
 /// Report entity
 class Report {

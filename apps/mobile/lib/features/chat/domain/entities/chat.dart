@@ -80,7 +80,9 @@ class Chat {
 
   /// Get the other participant's info based on current user
   String getOtherUserName(String currentUserId) {
-    return currentUserId == buyerId ? (sellerName ?? 'Seller') : (buyerName ?? 'Buyer');
+    return currentUserId == buyerId
+        ? (sellerName ?? 'Seller')
+        : (buyerName ?? 'Buyer');
   }
 
   String? getOtherUserPhotoUrl(String currentUserId) {
@@ -186,14 +188,21 @@ class Chat {
       id: json['id'] as String,
       listingId: listing?['id'] ?? json['listingId'] as String,
       listingTitle: listing?['title'] ?? json['listingTitle'] as String?,
-      listingImageUrl: listing?['imageUrls']?[0] ?? json['listingImageUrl'] as String?,
+      listingImageUrl:
+          listing?['imageUrls']?[0] ?? json['listingImageUrl'] as String?,
       listingPrice: listing?['price'] ?? json['listingPrice'] as int?,
       buyerId: buyer?['id'] ?? json['buyerId'] as String,
       buyerName: buyer?['displayName'] ?? json['buyerName'] as String?,
       buyerPhotoUrl: buyer?['photoUrl'] ?? json['buyerPhotoUrl'] as String?,
       sellerId: seller?['id'] ?? json['sellerId'] as String,
-      sellerName: seller?['displayName'] ?? otherUser?['displayName'] ?? json['sellerName'] as String?,
-      sellerPhotoUrl: seller?['photoUrl'] ?? otherUser?['photoUrl'] ?? json['sellerPhotoUrl'] as String?,
+      sellerName:
+          seller?['displayName'] ??
+          otherUser?['displayName'] ??
+          json['sellerName'] as String?,
+      sellerPhotoUrl:
+          seller?['photoUrl'] ??
+          otherUser?['photoUrl'] ??
+          json['sellerPhotoUrl'] as String?,
       lastMessageText: lastMessageText,
       lastMessageAt: json['lastMessageAt'] != null
           ? DateTime.parse(json['lastMessageAt'] as String)
@@ -357,7 +366,11 @@ class Message {
   String get dateGroup {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final messageDate = DateTime(createdAt.year, createdAt.month, createdAt.day);
+    final messageDate = DateTime(
+      createdAt.year,
+      createdAt.month,
+      createdAt.day,
+    );
 
     if (messageDate == today) {
       return 'Today';
@@ -385,9 +398,14 @@ class MessagePage {
   });
 
   factory MessagePage.fromJson(Map<String, dynamic> json) {
-    final data = json['data'] as List<dynamic>? ?? json['messages'] as List<dynamic>? ?? [];
+    final data =
+        json['data'] as List<dynamic>? ??
+        json['messages'] as List<dynamic>? ??
+        [];
     return MessagePage(
-      messages: data.map((e) => Message.fromJson(e as Map<String, dynamic>)).toList(),
+      messages: data
+          .map((e) => Message.fromJson(e as Map<String, dynamic>))
+          .toList(),
       nextCursor: json['nextCursor'] as String?,
       hasMore: json['hasMore'] as bool? ?? false,
     );

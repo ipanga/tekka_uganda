@@ -35,13 +35,14 @@ class QuickReplyApiRepository {
     return QuickReplyTemplate.fromJson(response);
   }
 
-  Future<void> updateTemplate(String id, String text, {String? category}) async {
+  Future<void> updateTemplate(
+    String id,
+    String text, {
+    String? category,
+  }) async {
     await _apiClient.put(
       '/quick-replies/$id',
-      data: {
-        'text': text,
-        if (category != null) 'category': category,
-      },
+      data: {'text': text, if (category != null) 'category': category},
     );
   }
 
@@ -114,15 +115,15 @@ final quickReplyRepositoryProvider = Provider<QuickReplyApiRepository>((ref) {
 /// Stream of quick reply templates for current user
 final quickReplyTemplatesStreamProvider =
     StreamProvider<List<QuickReplyTemplate>>((ref) {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) {
-    // Return default templates for unauthenticated users
-    return Stream.value(getDefaultTemplates());
-  }
+      final user = ref.watch(currentUserProvider);
+      if (user == null) {
+        // Return default templates for unauthenticated users
+        return Stream.value(getDefaultTemplates());
+      }
 
-  final repository = ref.watch(quickReplyRepositoryProvider);
-  return repository.watchTemplates();
-});
+      final repository = ref.watch(quickReplyRepositoryProvider);
+      return repository.watchTemplates();
+    });
 
 /// State for quick reply operations
 class QuickReplyState {
@@ -156,7 +157,7 @@ class QuickReplyNotifier extends StateNotifier<QuickReplyState> {
   final String _userId;
 
   QuickReplyNotifier(this._repository, this._userId)
-      : super(const QuickReplyState());
+    : super(const QuickReplyState());
 
   /// Initialize templates with defaults if user has none
   Future<void> initializeDefaults() async {
@@ -195,10 +196,7 @@ class QuickReplyNotifier extends StateNotifier<QuickReplyState> {
         category: category ?? 'custom',
       );
 
-      state = state.copyWith(
-        isLoading: false,
-        lastOperationSuccess: true,
-      );
+      state = state.copyWith(isLoading: false, lastOperationSuccess: true);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -211,7 +209,11 @@ class QuickReplyNotifier extends StateNotifier<QuickReplyState> {
   }
 
   /// Update a template
-  Future<bool> updateTemplate(String id, String text, {String? category}) async {
+  Future<bool> updateTemplate(
+    String id,
+    String text, {
+    String? category,
+  }) async {
     if (_userId.isEmpty) return false;
 
     state = state.copyWith(isLoading: true, clearError: true);
@@ -219,10 +221,7 @@ class QuickReplyNotifier extends StateNotifier<QuickReplyState> {
     try {
       await _repository.updateTemplate(id, text.trim(), category: category);
 
-      state = state.copyWith(
-        isLoading: false,
-        lastOperationSuccess: true,
-      );
+      state = state.copyWith(isLoading: false, lastOperationSuccess: true);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -243,10 +242,7 @@ class QuickReplyNotifier extends StateNotifier<QuickReplyState> {
     try {
       await _repository.deleteTemplate(id);
 
-      state = state.copyWith(
-        isLoading: false,
-        lastOperationSuccess: true,
-      );
+      state = state.copyWith(isLoading: false, lastOperationSuccess: true);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -278,10 +274,7 @@ class QuickReplyNotifier extends StateNotifier<QuickReplyState> {
     try {
       await _repository.resetToDefaults();
 
-      state = state.copyWith(
-        isLoading: false,
-        lastOperationSuccess: true,
-      );
+      state = state.copyWith(isLoading: false, lastOperationSuccess: true);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -302,7 +295,7 @@ class QuickReplyNotifier extends StateNotifier<QuickReplyState> {
 /// Provider for quick reply operations
 final quickReplyProvider =
     StateNotifierProvider<QuickReplyNotifier, QuickReplyState>((ref) {
-  final user = ref.watch(currentUserProvider);
-  final repository = ref.watch(quickReplyRepositoryProvider);
-  return QuickReplyNotifier(repository, user?.uid ?? '');
-});
+      final user = ref.watch(currentUserProvider);
+      final repository = ref.watch(quickReplyRepositoryProvider);
+      return QuickReplyNotifier(repository, user?.uid ?? '');
+    });

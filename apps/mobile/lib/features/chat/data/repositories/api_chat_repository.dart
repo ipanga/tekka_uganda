@@ -13,8 +13,8 @@ class ApiChatRepository implements ChatRepository {
   final Duration _pollInterval;
 
   ApiChatRepository(ApiClient apiClient, {Duration? pollInterval})
-      : _apiRepository = ChatApiRepository(apiClient),
-        _pollInterval = pollInterval ?? const Duration(seconds: 5);
+    : _apiRepository = ChatApiRepository(apiClient),
+      _pollInterval = pollInterval ?? const Duration(seconds: 5);
 
   @override
   Stream<List<Chat>> getChatsStream(String userId) {
@@ -34,7 +34,10 @@ class ApiChatRepository implements ChatRepository {
   }
 
   @override
-  Future<Chat?> getChatByListingAndUser(String listingId, String buyerId) async {
+  Future<Chat?> getChatByListingAndUser(
+    String listingId,
+    String buyerId,
+  ) async {
     // Get all chats and find one matching the listing and buyer
     try {
       final chats = await _apiRepository.getChats();
@@ -85,7 +88,11 @@ class ApiChatRepository implements ChatRepository {
   }
 
   @override
-  Future<List<Message>> getMessages(String chatId, {int limit = 50, String? lastMessageId}) async {
+  Future<List<Message>> getMessages(
+    String chatId, {
+    int limit = 50,
+    String? lastMessageId,
+  }) async {
     final page = await _apiRepository.getMessages(
       chatId,
       cursor: lastMessageId,
@@ -129,7 +136,11 @@ class ApiChatRepository implements ChatRepository {
   }
 
   @override
-  Future<void> setTypingStatus(String chatId, String userId, bool isTyping) async {
+  Future<void> setTypingStatus(
+    String chatId,
+    String userId,
+    bool isTyping,
+  ) async {
     // Typing status is not supported by REST API
     // Would require WebSocket implementation
     // For now, this is a no-op
@@ -143,7 +154,11 @@ class ApiChatRepository implements ChatRepository {
   }
 
   @override
-  Future<void> blockUser(String chatId, String userId, String blockedUserId) async {
+  Future<void> blockUser(
+    String chatId,
+    String userId,
+    String blockedUserId,
+  ) async {
     // Blocking is handled through the user API, not chat API
     // This will need to call the user blocking endpoint
     // For now, archive the chat
@@ -151,7 +166,11 @@ class ApiChatRepository implements ChatRepository {
   }
 
   @override
-  Future<void> reportChat(String chatId, String reporterId, String reason) async {
+  Future<void> reportChat(
+    String chatId,
+    String reporterId,
+    String reason,
+  ) async {
     // Reporting is handled through a separate reports API
     // For now, this is a no-op - should be implemented in reports feature
   }

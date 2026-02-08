@@ -19,10 +19,7 @@ import '../../domain/entities/privacy_preferences.dart';
 class UserProfileScreen extends ConsumerWidget {
   final String userId;
 
-  const UserProfileScreen({
-    super.key,
-    required this.userId,
-  });
+  const UserProfileScreen({super.key, required this.userId});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -57,13 +54,11 @@ class UserProfileScreen extends ConsumerWidget {
 
           // Check if user can view this profile
           final canView = canViewAsync.valueOrNull ?? true;
-          final privacy = privacyAsync.valueOrNull ?? const PrivacyPreferences();
+          final privacy =
+              privacyAsync.valueOrNull ?? const PrivacyPreferences();
 
           if (!canView) {
-            return _PrivateProfileView(
-              user: user,
-              userId: userId,
-            );
+            return _PrivateProfileView(user: user, userId: userId);
           }
 
           return CustomScrollView(
@@ -109,9 +104,8 @@ class UserProfileScreen extends ConsumerWidget {
                                       user.displayName?.isNotEmpty == true
                                           ? user.displayName![0].toUpperCase()
                                           : '?',
-                                      style: AppTypography.displaySmall.copyWith(
-                                        color: AppColors.primary,
-                                      ),
+                                      style: AppTypography.displaySmall
+                                          .copyWith(color: AppColors.primary),
                                     )
                                   : null,
                             ),
@@ -123,7 +117,8 @@ class UserProfileScreen extends ConsumerWidget {
                               color: AppColors.white,
                             ),
                           ),
-                          if (user.location != null && privacy.showLocation) ...[
+                          if (user.location != null &&
+                              privacy.showLocation) ...[
                             const SizedBox(height: 4),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -137,7 +132,9 @@ class UserProfileScreen extends ConsumerWidget {
                                 Text(
                                   user.location!,
                                   style: AppTypography.bodySmall.copyWith(
-                                    color: AppColors.white.withValues(alpha: 0.8),
+                                    color: AppColors.white.withValues(
+                                      alpha: 0.8,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -154,7 +151,9 @@ class UserProfileScreen extends ConsumerWidget {
               SliverToBoxAdapter(
                 child: Container(
                   color: AppColors.surface,
-                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.space4),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.space4,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
@@ -169,10 +168,16 @@ class UserProfileScreen extends ConsumerWidget {
                               label: 'Listings',
                             );
                           },
-                          loading: () => const _StatItem(value: '-', label: 'Listings'),
-                          error: (_, _) => const _StatItem(value: '-', label: 'Listings'),
+                          loading: () =>
+                              const _StatItem(value: '-', label: 'Listings'),
+                          error: (_, _) =>
+                              const _StatItem(value: '-', label: 'Listings'),
                         ),
-                        Container(width: 1, height: 40, color: AppColors.outline),
+                        Container(
+                          width: 1,
+                          height: 40,
+                          color: AppColors.outline,
+                        ),
                         listingsAsync.when(
                           data: (listings) {
                             final soldCount = listings
@@ -183,10 +188,16 @@ class UserProfileScreen extends ConsumerWidget {
                               label: 'Sold',
                             );
                           },
-                          loading: () => const _StatItem(value: '-', label: 'Sold'),
-                          error: (_, _) => const _StatItem(value: '-', label: 'Sold'),
+                          loading: () =>
+                              const _StatItem(value: '-', label: 'Sold'),
+                          error: (_, _) =>
+                              const _StatItem(value: '-', label: 'Sold'),
                         ),
-                        Container(width: 1, height: 40, color: AppColors.outline),
+                        Container(
+                          width: 1,
+                          height: 40,
+                          color: AppColors.outline,
+                        ),
                       ],
                       ratingAsync.when(
                         data: (rating) => _StatItem(
@@ -197,8 +208,10 @@ class UserProfileScreen extends ConsumerWidget {
                           icon: rating.totalReviews > 0 ? Icons.star : null,
                           iconColor: AppColors.warning,
                         ),
-                        loading: () => const _StatItem(value: '-', label: 'Reviews'),
-                        error: (_, _) => const _StatItem(value: '-', label: 'Reviews'),
+                        loading: () =>
+                            const _StatItem(value: '-', label: 'Reviews'),
+                        error: (_, _) =>
+                            const _StatItem(value: '-', label: 'Reviews'),
                       ),
                     ],
                   ),
@@ -270,7 +283,10 @@ class UserProfileScreen extends ConsumerWidget {
                             TextButton(
                               onPressed: () {
                                 context.push(
-                                  AppRoutes.reviews.replaceFirst(':userId', userId),
+                                  AppRoutes.reviews.replaceFirst(
+                                    ':userId',
+                                    userId,
+                                  ),
                                   extra: user.displayName ?? 'User',
                                 );
                               },
@@ -380,26 +396,27 @@ class UserProfileScreen extends ConsumerWidget {
                   return SliverPadding(
                     padding: AppSpacing.screenPadding,
                     sliver: SliverGrid(
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: AppSpacing.space3,
-                        crossAxisSpacing: AppSpacing.space3,
-                        childAspectRatio: 0.7,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final listing = activeListings[index];
-                          return _ListingCard(
-                            listing: listing,
-                            onTap: () {
-                              context.push(
-                                AppRoutes.listingDetail.replaceFirst(':id', listing.id),
-                              );
-                            },
-                          );
-                        },
-                        childCount: activeListings.length,
-                      ),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: AppSpacing.space3,
+                            crossAxisSpacing: AppSpacing.space3,
+                            childAspectRatio: 0.7,
+                          ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final listing = activeListings[index];
+                        return _ListingCard(
+                          listing: listing,
+                          onTap: () {
+                            context.push(
+                              AppRoutes.listingDetail.replaceFirst(
+                                ':id',
+                                listing.id,
+                              ),
+                            );
+                          },
+                        );
+                      }, childCount: activeListings.length),
                     ),
                   );
                 },
@@ -423,8 +440,18 @@ class UserProfileScreen extends ConsumerWidget {
 
   String _formatMemberSince(DateTime date) {
     final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${months[date.month - 1]} ${date.year}';
   }
@@ -510,14 +537,13 @@ class _ReviewPreviewCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      review.reviewerName,
-                      style: AppTypography.labelMedium,
-                    ),
+                    Text(review.reviewerName, style: AppTypography.labelMedium),
                     Row(
                       children: List.generate(5, (index) {
                         return Icon(
-                          index < review.rating ? Icons.star : Icons.star_border,
+                          index < review.rating
+                              ? Icons.star
+                              : Icons.star_border,
                           size: 14,
                           color: AppColors.warning,
                         );
@@ -566,10 +592,7 @@ class _ListingCard extends StatelessWidget {
   final Listing listing;
   final VoidCallback onTap;
 
-  const _ListingCard({
-    required this.listing,
-    required this.onTap,
-  });
+  const _ListingCard({required this.listing, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -595,7 +618,9 @@ class _ListingCard extends StatelessWidget {
                   ),
                   image: listing.imageUrls.isNotEmpty
                       ? DecorationImage(
-                          image: CachedNetworkImageProvider(listing.imageUrls.first),
+                          image: CachedNetworkImageProvider(
+                            listing.imageUrls.first,
+                          ),
                           fit: BoxFit.cover,
                         )
                       : null,
@@ -643,10 +668,7 @@ class _ProfileActionsMenu extends ConsumerWidget {
   final String userId;
   final String userName;
 
-  const _ProfileActionsMenu({
-    required this.userId,
-    required this.userName,
-  });
+  const _ProfileActionsMenu({required this.userId, required this.userName});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -724,7 +746,9 @@ class _ProfileActionsMenu extends ConsumerWidget {
     if (result == true && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Report submitted successfully. Thank you for keeping Tekka safe.'),
+          content: Text(
+            'Report submitted successfully. Thank you for keeping Tekka safe.',
+          ),
         ),
       );
     }
@@ -738,9 +762,9 @@ class _ProfileActionsMenu extends ConsumerWidget {
       // Unblock
       await notifier.unblockUser(userId);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$userName has been unblocked')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('$userName has been unblocked')));
       }
     } else {
       // Show confirmation dialog before blocking
@@ -759,9 +783,7 @@ class _ProfileActionsMenu extends ConsumerWidget {
             ),
             FilledButton(
               onPressed: () => Navigator.pop(context, true),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppColors.error,
-              ),
+              style: FilledButton.styleFrom(backgroundColor: AppColors.error),
               child: const Text('Block'),
             ),
           ],
@@ -771,9 +793,9 @@ class _ProfileActionsMenu extends ConsumerWidget {
       if (confirmed == true) {
         await notifier.blockUser(userId);
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('$userName has been blocked')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('$userName has been blocked')));
         }
       }
     }
@@ -868,7 +890,9 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
     // Show a message that they should tap on a listing to start a chat
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Tap on a listing below to start a chat with this seller'),
+        content: Text(
+          'Tap on a listing below to start a chat with this seller',
+        ),
         duration: Duration(seconds: 3),
       ),
     );
@@ -903,10 +927,7 @@ class _PrivateProfileView extends StatelessWidget {
   final dynamic user;
   final String userId;
 
-  const _PrivateProfileView({
-    required this.user,
-    required this.userId,
-  });
+  const _PrivateProfileView({required this.user, required this.userId});
 
   @override
   Widget build(BuildContext context) {

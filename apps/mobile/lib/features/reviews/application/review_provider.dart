@@ -13,31 +13,46 @@ final reviewRepositoryProvider = Provider<ReviewRepository>((ref) {
 });
 
 /// Reviews for a specific user (reviews they received)
-final userReviewsProvider = FutureProvider.family<List<Review>, String>((ref, userId) async {
+final userReviewsProvider = FutureProvider.family<List<Review>, String>((
+  ref,
+  userId,
+) async {
   final repository = ref.watch(reviewRepositoryProvider);
   return repository.getReviewsForUser(userId);
 });
 
 /// Reviews written by a specific user
-final reviewsByUserProvider = FutureProvider.family<List<Review>, String>((ref, userId) async {
+final reviewsByUserProvider = FutureProvider.family<List<Review>, String>((
+  ref,
+  userId,
+) async {
   final repository = ref.watch(reviewRepositoryProvider);
   return repository.getReviewsByUser(userId);
 });
 
 /// User rating summary
-final userRatingProvider = FutureProvider.family<UserRating, String>((ref, userId) async {
+final userRatingProvider = FutureProvider.family<UserRating, String>((
+  ref,
+  userId,
+) async {
   final repository = ref.watch(reviewRepositoryProvider);
   return repository.getUserRating(userId);
 });
 
 /// User rating stream (real-time updates)
-final userRatingStreamProvider = StreamProvider.family<UserRating, String>((ref, userId) {
+final userRatingStreamProvider = StreamProvider.family<UserRating, String>((
+  ref,
+  userId,
+) {
   final repository = ref.watch(reviewRepositoryProvider);
   return repository.getUserRatingStream(userId);
 });
 
 /// Check if current user can review another user for a listing
-final canReviewProvider = FutureProvider.family<bool, CanReviewParams>((ref, params) async {
+final canReviewProvider = FutureProvider.family<bool, CanReviewParams>((
+  ref,
+  params,
+) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return false;
 
@@ -54,10 +69,7 @@ class CanReviewParams {
   final String revieweeId;
   final String? listingId;
 
-  const CanReviewParams({
-    required this.revieweeId,
-    this.listingId,
-  });
+  const CanReviewParams({required this.revieweeId, this.listingId});
 
   @override
   bool operator ==(Object other) =>
@@ -167,14 +179,16 @@ class CreateReviewState {
 
 /// Create review provider
 final createReviewProvider =
-    StateNotifierProvider.autoDispose<CreateReviewNotifier, CreateReviewState>((ref) {
-  final user = ref.watch(currentUserProvider);
-  final repository = ref.watch(reviewRepositoryProvider);
+    StateNotifierProvider.autoDispose<CreateReviewNotifier, CreateReviewState>((
+      ref,
+    ) {
+      final user = ref.watch(currentUserProvider);
+      final repository = ref.watch(reviewRepositoryProvider);
 
-  return CreateReviewNotifier(
-    repository,
-    user?.uid ?? '',
-    user?.displayName ?? 'User',
-    user?.photoUrl,
-  );
-});
+      return CreateReviewNotifier(
+        repository,
+        user?.uid ?? '',
+        user?.displayName ?? 'User',
+        user?.photoUrl,
+      );
+    });

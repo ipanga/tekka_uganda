@@ -8,8 +8,9 @@ import '../../auth/data/repositories/user_api_repository.dart';
 import '../domain/entities/privacy_preferences.dart';
 
 /// Stream of privacy preferences for current user (using polling)
-final privacyPreferencesStreamProvider =
-    StreamProvider<PrivacyPreferences>((ref) {
+final privacyPreferencesStreamProvider = StreamProvider<PrivacyPreferences>((
+  ref,
+) {
   final user = ref.watch(currentUserProvider);
   if (user == null) return Stream.value(const PrivacyPreferences());
 
@@ -48,8 +49,9 @@ final privacyPreferencesStreamProvider =
 });
 
 /// One-time fetch of privacy preferences
-final privacyPreferencesProvider =
-    FutureProvider<PrivacyPreferences>((ref) async {
+final privacyPreferencesProvider = FutureProvider<PrivacyPreferences>((
+  ref,
+) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return const PrivacyPreferences();
 
@@ -61,10 +63,10 @@ final privacyPreferencesProvider =
 /// Fetch privacy preferences for a specific user (for checking if we can view their profile)
 final userPrivacyPreferencesProvider =
     FutureProvider.family<PrivacyPreferences, String>((ref, userId) async {
-  final repository = ref.watch(userApiRepositoryProvider);
-  final data = await repository.getUserPrivacySettings(userId);
-  return PrivacyPreferences.fromMap(data);
-});
+      final repository = ref.watch(userApiRepositoryProvider);
+      final data = await repository.getUserPrivacySettings(userId);
+      return PrivacyPreferences.fromMap(data);
+    });
 
 /// Privacy preferences notifier for updating settings
 class PrivacyPreferencesNotifier
@@ -72,7 +74,7 @@ class PrivacyPreferencesNotifier
   final UserApiRepository _repository;
 
   PrivacyPreferencesNotifier(this._repository, PrivacyPreferences initial)
-      : super(AsyncValue.data(initial));
+    : super(AsyncValue.data(initial));
 
   Future<void> updatePreferences(PrivacyPreferences preferences) async {
     state = const AsyncValue.loading();
@@ -140,25 +142,27 @@ class PrivacyPreferencesNotifier
   }
 }
 
-final privacyPreferencesNotifierProvider = StateNotifierProvider<
-    PrivacyPreferencesNotifier, AsyncValue<PrivacyPreferences>>((ref) {
-  final repository = ref.watch(userApiRepositoryProvider);
-  final prefsAsync = ref.watch(privacyPreferencesProvider);
+final privacyPreferencesNotifierProvider =
+    StateNotifierProvider<
+      PrivacyPreferencesNotifier,
+      AsyncValue<PrivacyPreferences>
+    >((ref) {
+      final repository = ref.watch(userApiRepositoryProvider);
+      final prefsAsync = ref.watch(privacyPreferencesProvider);
 
-  final initialPrefs = prefsAsync.maybeWhen(
-    data: (prefs) => prefs,
-    orElse: () => const PrivacyPreferences(),
-  );
+      final initialPrefs = prefsAsync.maybeWhen(
+        data: (prefs) => prefs,
+        orElse: () => const PrivacyPreferences(),
+      );
 
-  return PrivacyPreferencesNotifier(
-    repository,
-    initialPrefs,
-  );
-});
+      return PrivacyPreferencesNotifier(repository, initialPrefs);
+    });
 
 /// Check if current user can view another user's profile
-final canViewProfileProvider =
-    FutureProvider.family<bool, String>((ref, targetUserId) async {
+final canViewProfileProvider = FutureProvider.family<bool, String>((
+  ref,
+  targetUserId,
+) async {
   final currentUser = ref.watch(currentUserProvider);
 
   // Can always view own profile
@@ -170,8 +174,10 @@ final canViewProfileProvider =
 });
 
 /// Check if current user can message another user
-final canMessageUserProvider =
-    FutureProvider.family<bool, String>((ref, targetUserId) async {
+final canMessageUserProvider = FutureProvider.family<bool, String>((
+  ref,
+  targetUserId,
+) async {
   final currentUser = ref.watch(currentUserProvider);
   if (currentUser == null) return false;
 

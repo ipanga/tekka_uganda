@@ -118,9 +118,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         context.pop();
       }
       if (next.error != null && prev?.error != next.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next.error!)));
       }
     });
 
@@ -158,8 +158,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                     backgroundImage: _selectedImage != null
                         ? FileImage(_selectedImage!)
                         : (user?.photoUrl != null
-                            ? CachedNetworkImageProvider(user!.photoUrl!)
-                            : null),
+                              ? CachedNetworkImageProvider(user!.photoUrl!)
+                              : null),
                     child: (_selectedImage == null && user?.photoUrl == null)
                         ? const Icon(
                             Icons.person,
@@ -257,7 +257,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   _selectedCity = city;
                   _selectedDivision = null; // Reset division when city changes
                 });
-                ref.read(profileUpdateProvider.notifier).setLocation(_buildLocationString());
+                ref
+                    .read(profileUpdateProvider.notifier)
+                    .setLocation(_buildLocationString());
               },
               validator: (value) {
                 if (value == null) {
@@ -270,7 +272,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             const SizedBox(height: AppSpacing.space4),
 
             // Division dropdown (only show if city has divisions)
-            if (_selectedCity != null && _selectedCity!.activeDivisions.isNotEmpty)
+            if (_selectedCity != null &&
+                _selectedCity!.activeDivisions.isNotEmpty)
               DropdownButtonFormField<Division>(
                 value: _selectedDivision,
                 decoration: const InputDecoration(
@@ -295,7 +298,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   setState(() {
                     _selectedDivision = division;
                   });
-                  ref.read(profileUpdateProvider.notifier).setLocation(_buildLocationString());
+                  ref
+                      .read(profileUpdateProvider.notifier)
+                      .setLocation(_buildLocationString());
                 },
               ),
 
@@ -463,9 +468,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           ),
                         ),
                         Text(
-                          user != null
-                              ? _formatDate(user.createdAt)
-                              : '',
+                          user != null ? _formatDate(user.createdAt) : '',
                           style: AppTypography.bodyLarge,
                         ),
                       ],
@@ -482,8 +485,18 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   String _formatDate(DateTime date) {
     final months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
@@ -511,7 +524,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 _pickFromGallery();
               },
             ),
-            if (_selectedImage != null || ref.read(currentUserProvider)?.photoUrl != null)
+            if (_selectedImage != null ||
+                ref.read(currentUserProvider)?.photoUrl != null)
               ListTile(
                 leading: const Icon(Icons.delete, color: AppColors.error),
                 title: const Text(

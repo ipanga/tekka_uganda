@@ -19,16 +19,22 @@ class PaginatedListings {
 
   factory PaginatedListings.fromJson(Map<String, dynamic> json) {
     // Handle backend response format: { listings: [...], pagination: {...} }
-    final listingsData = json['listings'] as List<dynamic>? ?? json['data'] as List<dynamic>? ?? [];
+    final listingsData =
+        json['listings'] as List<dynamic>? ??
+        json['data'] as List<dynamic>? ??
+        [];
     final pagination = json['pagination'] as Map<String, dynamic>?;
 
     final page = pagination?['page'] as int? ?? json['page'] as int? ?? 1;
     final limit = pagination?['limit'] as int? ?? json['limit'] as int? ?? 20;
     final total = pagination?['total'] as int? ?? json['total'] as int? ?? 0;
-    final totalPages = pagination?['totalPages'] as int? ?? json['totalPages'] as int? ?? 1;
+    final totalPages =
+        pagination?['totalPages'] as int? ?? json['totalPages'] as int? ?? 1;
 
     return PaginatedListings(
-      listings: listingsData.map((e) => Listing.fromJson(e as Map<String, dynamic>)).toList(),
+      listings: listingsData
+          .map((e) => Listing.fromJson(e as Map<String, dynamic>))
+          .toList(),
       total: total,
       page: page,
       limit: limit,
@@ -68,7 +74,8 @@ class ListingApiRepository {
 
     if (query != null && query.isNotEmpty) queryParams['search'] = query;
     if (categoryId != null) queryParams['categoryId'] = categoryId;
-    if (category != null && categoryId == null) queryParams['category'] = category.apiValue;
+    if (category != null && categoryId == null)
+      queryParams['category'] = category.apiValue;
     if (condition != null) queryParams['condition'] = condition.apiValue;
     if (occasion != null) queryParams['occasion'] = occasion.apiValue;
     if (minPrice != null) queryParams['minPrice'] = minPrice.toString();
@@ -98,18 +105,24 @@ class ListingApiRepository {
     );
     // Backend returns { data: [...], total, ... }
     final data = response['data'] as List<dynamic>? ?? [];
-    return data.map((e) => Listing.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => Listing.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// Get saved/favorited listings
   Future<List<Listing>> getSavedListings() async {
     final response = await _apiClient.get<List<dynamic>>('/listings/saved');
-    return response.map((e) => Listing.fromJson(e as Map<String, dynamic>)).toList();
+    return response
+        .map((e) => Listing.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// Get a specific listing by ID
   Future<Listing> getById(String id) async {
-    final response = await _apiClient.get<Map<String, dynamic>>('/listings/$id');
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/listings/$id',
+    );
     return Listing.fromJson(response);
   }
 
@@ -297,13 +310,17 @@ class ListingApiRepository {
       '/listings/seller/$sellerId',
     );
     final data = response['data'] as List<dynamic>? ?? [];
-    return data.map((e) => Listing.fromJson(e as Map<String, dynamic>)).toList();
+    return data
+        .map((e) => Listing.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// Get purchase history (items bought by current user)
   Future<List<Listing>> getPurchaseHistory() async {
     final response = await _apiClient.get<List<dynamic>>('/listings/purchases');
-    return response.map((e) => Listing.fromJson(e as Map<String, dynamic>)).toList();
+    return response
+        .map((e) => Listing.fromJson(e as Map<String, dynamic>))
+        .toList();
   }
 
   /// Toggle favorite (returns new state)

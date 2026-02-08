@@ -5,12 +5,7 @@ import 'biometric_auth_provider.dart';
 import 'pin_provider.dart';
 
 /// App lock modes
-enum AppLockMode {
-  off,
-  pinOnly,
-  biometricOnly,
-  biometricOrPin,
-}
+enum AppLockMode { off, pinOnly, biometricOnly, biometricOrPin }
 
 extension AppLockModeX on AppLockMode {
   String get displayName {
@@ -123,8 +118,9 @@ class AppLockNotifier extends StateNotifier<AppLockStatus> {
       final timeout = int.tryParse(timeoutStr ?? '1') ?? 1;
 
       // Load last unlocked time
-      final lastUnlockedStr =
-          await _secureStorage.read(key: _AppLockKeys.lastUnlocked);
+      final lastUnlockedStr = await _secureStorage.read(
+        key: _AppLockKeys.lastUnlocked,
+      );
       DateTime? lastUnlocked;
       if (lastUnlockedStr != null) {
         lastUnlocked = DateTime.tryParse(lastUnlockedStr);
@@ -176,14 +172,13 @@ class AppLockNotifier extends StateNotifier<AppLockStatus> {
     if (mode == AppLockMode.pinOnly || mode == AppLockMode.biometricOrPin) {
       final pinStatus = _ref.read(pinProvider);
       if (!pinStatus.hasPinSet) {
-        state = state.copyWith(
-          errorMessage: 'Please set up a PIN first',
-        );
+        state = state.copyWith(errorMessage: 'Please set up a PIN first');
         return false;
       }
     }
 
-    if (mode == AppLockMode.biometricOnly || mode == AppLockMode.biometricOrPin) {
+    if (mode == AppLockMode.biometricOnly ||
+        mode == AppLockMode.biometricOrPin) {
       final biometricStatus = _ref.read(biometricAuthProvider);
       if (!biometricStatus.isAvailable || !biometricStatus.isEnrolled) {
         state = state.copyWith(
@@ -212,11 +207,7 @@ class AppLockNotifier extends StateNotifier<AppLockStatus> {
           isLoading: false,
         );
       } else {
-        state = state.copyWith(
-          mode: mode,
-          isLocked: false,
-          isLoading: false,
-        );
+        state = state.copyWith(mode: mode, isLocked: false, isLoading: false);
       }
 
       return true;

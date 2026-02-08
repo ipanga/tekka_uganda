@@ -11,10 +11,7 @@ import '../../domain/entities/listing.dart';
 
 /// Edit listing screen
 class EditListingScreen extends ConsumerStatefulWidget {
-  const EditListingScreen({
-    super.key,
-    required this.listingId,
-  });
+  const EditListingScreen({super.key, required this.listingId});
 
   final String listingId;
 
@@ -43,7 +40,9 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
     _titleController.text = listing.title;
     _priceController.text = listing.price.toString();
     _descriptionController.text = listing.description;
-    ref.read(editListingProvider(widget.listingId).notifier).initFromListing(listing);
+    ref
+        .read(editListingProvider(widget.listingId).notifier)
+        .initFromListing(listing);
     _isInitialized = true;
   }
 
@@ -54,11 +53,14 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
     final notifier = ref.read(editListingProvider(widget.listingId).notifier);
 
     // Listen for errors and success
-    ref.listen<EditListingState>(editListingProvider(widget.listingId), (prev, next) {
+    ref.listen<EditListingState>(editListingProvider(widget.listingId), (
+      prev,
+      next,
+    ) {
       if (next.error != null && prev?.error != next.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next.error!)));
         notifier.clearError();
       }
 
@@ -75,9 +77,8 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
     });
 
     return listingAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
         appBar: AppBar(),
         body: Center(
@@ -88,7 +89,8 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
               const SizedBox(height: AppSpacing.space4),
               Text('Failed to load listing', style: AppTypography.bodyLarge),
               TextButton(
-                onPressed: () => ref.invalidate(listingProvider(widget.listingId)),
+                onPressed: () =>
+                    ref.invalidate(listingProvider(widget.listingId)),
                 child: const Text('Retry'),
               ),
             ],
@@ -107,19 +109,14 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
 
         return Scaffold(
           backgroundColor: AppColors.background,
-          appBar: AppBar(
-            title: const Text('Edit Listing'),
-          ),
+          appBar: AppBar(title: const Text('Edit Listing')),
           body: Form(
             key: _formKey,
             child: ListView(
               padding: AppSpacing.screenPadding,
               children: [
                 // Current photos (read-only)
-                Text(
-                  'Photos',
-                  style: AppTypography.titleMedium,
-                ),
+                Text('Photos', style: AppTypography.titleMedium),
                 const SizedBox(height: AppSpacing.space3),
                 _PhotosPreview(imageUrls: listing.imageUrls),
                 const SizedBox(height: AppSpacing.space2),
@@ -188,9 +185,7 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
                 // Category dropdown
                 DropdownButtonFormField<ListingCategory>(
                   initialValue: editState.category,
-                  decoration: const InputDecoration(
-                    labelText: 'Category *',
-                  ),
+                  decoration: const InputDecoration(labelText: 'Category *'),
                   items: ListingCategory.values.map((category) {
                     return DropdownMenuItem(
                       value: category,
@@ -216,9 +211,7 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
                     Expanded(
                       child: DropdownButtonFormField<String>(
                         initialValue: editState.size,
-                        decoration: const InputDecoration(
-                          labelText: 'Size',
-                        ),
+                        decoration: const InputDecoration(labelText: 'Size'),
                         items: const [
                           DropdownMenuItem(value: 'XS', child: Text('XS')),
                           DropdownMenuItem(value: 'S', child: Text('S')),
@@ -226,7 +219,10 @@ class _EditListingScreenState extends ConsumerState<EditListingScreen> {
                           DropdownMenuItem(value: 'L', child: Text('L')),
                           DropdownMenuItem(value: 'XL', child: Text('XL')),
                           DropdownMenuItem(value: 'XXL', child: Text('XXL')),
-                          DropdownMenuItem(value: 'One Size', child: Text('One Size')),
+                          DropdownMenuItem(
+                            value: 'One Size',
+                            child: Text('One Size'),
+                          ),
                         ],
                         onChanged: (value) => notifier.updateSize(value),
                       ),
@@ -380,10 +376,7 @@ class _PhotosPreview extends StatelessWidget {
                       ),
                       child: const Text(
                         'Cover',
-                        style: TextStyle(
-                          color: AppColors.white,
-                          fontSize: 10,
-                        ),
+                        style: TextStyle(color: AppColors.white, fontSize: 10),
                       ),
                     ),
                   ),
@@ -422,10 +415,7 @@ class _LocationSelector extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Meetup Location *',
-          style: AppTypography.titleMedium,
-        ),
+        Text('Meetup Location *', style: AppTypography.titleMedium),
         const SizedBox(height: AppSpacing.space3),
         Wrap(
           spacing: AppSpacing.space2,

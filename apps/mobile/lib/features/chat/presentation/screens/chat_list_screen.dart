@@ -20,9 +20,7 @@ class ChatListScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Messages'),
-      ),
+      appBar: AppBar(title: const Text('Messages')),
       body: chatsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, _) => _buildErrorState(context, ref, error),
@@ -44,7 +42,9 @@ class ChatListScreen extends ConsumerWidget {
                   currentUserId: user?.uid ?? '',
                   onTap: () {
                     // Mark as read when opening
-                    ref.read(chatActionsProvider(chat.id).notifier).markAsRead();
+                    ref
+                        .read(chatActionsProvider(chat.id).notifier)
+                        .markAsRead();
                     context.push(AppRoutes.chat.replaceFirst(':id', chat.id));
                   },
                 );
@@ -65,10 +65,7 @@ class ChatListScreen extends ConsumerWidget {
           children: [
             const Icon(Icons.error_outline, size: 48, color: AppColors.error),
             const SizedBox(height: AppSpacing.space4),
-            Text(
-              'Failed to load messages',
-              style: AppTypography.bodyLarge,
-            ),
+            Text('Failed to load messages', style: AppTypography.bodyLarge),
             const SizedBox(height: AppSpacing.space2),
             TextButton(
               onPressed: () => ref.invalidate(chatsStreamProvider),
@@ -93,10 +90,7 @@ class ChatListScreen extends ConsumerWidget {
               color: AppColors.onSurfaceVariant,
             ),
             const SizedBox(height: AppSpacing.space4),
-            Text(
-              'No messages yet',
-              style: AppTypography.titleMedium,
-            ),
+            Text('No messages yet', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.space2),
             Text(
               'Start a conversation by messaging a seller about an item you like!',
@@ -226,8 +220,9 @@ class _ChatListItem extends StatelessWidget {
                           ),
                           decoration: BoxDecoration(
                             color: AppColors.primary,
-                            borderRadius:
-                                BorderRadius.circular(AppSpacing.radiusFull),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusFull,
+                            ),
                           ),
                           child: Text(
                             unreadCount > 99 ? '99+' : unreadCount.toString(),
@@ -253,7 +248,9 @@ class _ChatListItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                 image: chat.listingImageUrl != null
                     ? DecorationImage(
-                        image: CachedNetworkImageProvider(chat.listingImageUrl!),
+                        image: CachedNetworkImageProvider(
+                          chat.listingImageUrl!,
+                        ),
                         fit: BoxFit.cover,
                       )
                     : null,

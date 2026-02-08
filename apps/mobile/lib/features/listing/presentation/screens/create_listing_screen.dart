@@ -19,7 +19,8 @@ class CreateListingScreen extends ConsumerStatefulWidget {
   const CreateListingScreen({super.key});
 
   @override
-  ConsumerState<CreateListingScreen> createState() => _CreateListingScreenState();
+  ConsumerState<CreateListingScreen> createState() =>
+      _CreateListingScreenState();
 }
 
 class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
@@ -82,7 +83,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     final state = ref.read(createListingProviderV2);
     switch (_currentStep) {
       case 0: // Photos
-        return state.selectedImages.isNotEmpty || state.uploadedImageUrls.isNotEmpty;
+        return state.selectedImages.isNotEmpty ||
+            state.uploadedImageUrls.isNotEmpty;
       case 1: // Category
         return state.categoryId != null;
       case 2: // Details
@@ -107,9 +109,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     // Listen for errors and success
     ref.listen<CreateListingStateV2>(createListingProviderV2, (prev, next) {
       if (next.error != null && prev?.error != next.error) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next.error!)));
         notifier.clearError();
       }
 
@@ -135,7 +137,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         actions: [
           if (_currentStep < _totalSteps - 1)
             TextButton(
-              onPressed: createState.isLoading ? null : () => _saveDraft(notifier),
+              onPressed: createState.isLoading
+                  ? null
+                  : () => _saveDraft(notifier),
               child: const Text('Save Draft'),
             ),
         ],
@@ -270,7 +274,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     return parts.join(' > ');
   }
 
-  Widget _buildBottomBar(CreateListingStateV2 state, CreateListingNotifierV2 notifier) {
+  Widget _buildBottomBar(
+    CreateListingStateV2 state,
+    CreateListingNotifierV2 notifier,
+  ) {
     return Container(
       padding: AppSpacing.screenPadding,
       decoration: BoxDecoration(
@@ -309,7 +316,11 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : Text(_currentStep == _totalSteps - 1 ? 'Publish' : 'Continue'),
+                    : Text(
+                        _currentStep == _totalSteps - 1
+                            ? 'Publish'
+                            : 'Continue',
+                      ),
               ),
             ),
           ],
@@ -344,9 +355,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   Future<void> _saveDraft(CreateListingNotifierV2 notifier) async {
     await notifier.submitListing(isDraft: true);
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Draft saved')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Draft saved')));
     }
   }
 
@@ -421,10 +432,7 @@ class _PhotoStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Add up to 10 photos',
-            style: AppTypography.titleMedium,
-          ),
+          Text('Add up to 10 photos', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.space2),
           Text(
             'First photo will be the cover image. Tap and hold to reorder.',
@@ -508,10 +516,7 @@ class _PhotoGrid extends StatelessWidget {
 }
 
 class _PhotoAddButton extends StatelessWidget {
-  const _PhotoAddButton({
-    required this.onGallery,
-    required this.onCamera,
-  });
+  const _PhotoAddButton({required this.onGallery, required this.onCamera});
 
   final VoidCallback onGallery;
   final VoidCallback onCamera;
@@ -524,10 +529,7 @@ class _PhotoAddButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppColors.primaryContainer,
           borderRadius: AppSpacing.cardRadius,
-          border: Border.all(
-            color: AppColors.primary,
-            width: 2,
-          ),
+          border: Border.all(color: AppColors.primary, width: 2),
         ),
         child: const Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -540,10 +542,7 @@ class _PhotoAddButton extends StatelessWidget {
             SizedBox(height: AppSpacing.space1),
             Text(
               'Add Photo',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: AppColors.primary, fontSize: 12),
             ),
           ],
         ),
@@ -599,10 +598,7 @@ class _PhotoPreview extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             borderRadius: AppSpacing.cardRadius,
-            image: DecorationImage(
-              image: FileImage(file),
-              fit: BoxFit.cover,
-            ),
+            image: DecorationImage(image: FileImage(file), fit: BoxFit.cover),
           ),
         ),
         if (index == 0)
@@ -620,10 +616,7 @@ class _PhotoPreview extends StatelessWidget {
               ),
               child: const Text(
                 'Cover',
-                style: TextStyle(
-                  color: AppColors.white,
-                  fontSize: 10,
-                ),
+                style: TextStyle(color: AppColors.white, fontSize: 10),
               ),
             ),
           ),
@@ -638,11 +631,7 @@ class _PhotoPreview extends StatelessWidget {
                 color: AppColors.error,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.close,
-                size: 14,
-                color: AppColors.white,
-              ),
+              child: const Icon(Icons.close, size: 14, color: AppColors.white),
             ),
           ),
         ),
@@ -689,8 +678,14 @@ class _CategoryStep extends StatelessWidget {
           Text.rich(
             TextSpan(
               children: [
-                TextSpan(text: 'Main Category', style: AppTypography.titleMedium),
-                const TextSpan(text: ' *', style: TextStyle(color: AppColors.error)),
+                TextSpan(
+                  text: 'Main Category',
+                  style: AppTypography.titleMedium,
+                ),
+                const TextSpan(
+                  text: ' *',
+                  style: TextStyle(color: AppColors.error),
+                ),
               ],
             ),
           ),
@@ -708,8 +703,14 @@ class _CategoryStep extends StatelessWidget {
             Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(text: 'Sub-Category', style: AppTypography.titleMedium),
-                  const TextSpan(text: ' *', style: TextStyle(color: AppColors.error)),
+                  TextSpan(
+                    text: 'Sub-Category',
+                    style: AppTypography.titleMedium,
+                  ),
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: AppColors.error),
+                  ),
                 ],
               ),
             ),
@@ -728,8 +729,14 @@ class _CategoryStep extends StatelessWidget {
             Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(text: 'Product Type', style: AppTypography.titleMedium),
-                  const TextSpan(text: ' *', style: TextStyle(color: AppColors.error)),
+                  TextSpan(
+                    text: 'Product Type',
+                    style: AppTypography.titleMedium,
+                  ),
+                  const TextSpan(
+                    text: ' *',
+                    style: TextStyle(color: AppColors.error),
+                  ),
                 ],
               ),
             ),
@@ -854,10 +861,7 @@ class _DetailsStep extends ConsumerWidget {
           const SizedBox(height: AppSpacing.space4),
 
           // Condition
-          Text(
-            'Condition *',
-            style: AppTypography.titleSmall,
-          ),
+          Text('Condition *', style: AppTypography.titleSmall),
           const SizedBox(height: AppSpacing.space2),
           Wrap(
             spacing: AppSpacing.space2,
@@ -892,10 +896,7 @@ class _DetailsStep extends ConsumerWidget {
 
           // Dynamic Attributes
           if (categoryId != null) ...[
-            Text(
-              'Additional Details',
-              style: AppTypography.titleMedium,
-            ),
+            Text('Additional Details', style: AppTypography.titleMedium),
             const SizedBox(height: AppSpacing.space3),
             _DynamicAttributeFields(
               categoryId: categoryId!,
@@ -929,7 +930,9 @@ class _DynamicAttributeFields extends ConsumerWidget {
       error: (err, _) => Text('Error loading attributes: $err'),
       data: (attributes) {
         // Filter out 'condition' as it's already handled by the dedicated Condition field
-        final filteredAttributes = attributes.where((attr) => attr.slug != 'condition').toList();
+        final filteredAttributes = attributes
+            .where((attr) => attr.slug != 'condition')
+            .toList();
 
         if (filteredAttributes.isEmpty) {
           return const SizedBox.shrink();
@@ -995,10 +998,7 @@ class _AttributeField extends StatelessWidget {
     return SearchablePicker(
       label: attribute.name,
       options: attribute.values.map((v) {
-        return PickerOption(
-          value: v.value,
-          label: v.display,
-        );
+        return PickerOption(value: v.value, label: v.display);
       }).toList(),
       selectedValue: currentValue as String?,
       onChanged: (value) {
@@ -1028,10 +1028,7 @@ class _AttributeField extends StatelessWidget {
 
     if (selectedBrand == null || selectedBrand.isEmpty) {
       return InputDecorator(
-        decoration: InputDecoration(
-          labelText: label,
-          enabled: false,
-        ),
+        decoration: InputDecoration(labelText: label, enabled: false),
         child: const Text(
           'Select console brand first',
           style: TextStyle(color: Colors.grey),
@@ -1043,10 +1040,7 @@ class _AttributeField extends StatelessWidget {
       value: currentValue as String?,
       decoration: InputDecoration(labelText: label),
       items: filteredValues.map((v) {
-        return DropdownMenuItem(
-          value: v.value,
-          child: Text(v.display),
-        );
+        return DropdownMenuItem(value: v.value, child: Text(v.display));
       }).toList(),
       onChanged: onChanged,
     );
@@ -1058,10 +1052,7 @@ class _AttributeField extends StatelessWidget {
       value: currentValue as String?,
       decoration: InputDecoration(labelText: label),
       items: attribute.values.map((v) {
-        return DropdownMenuItem(
-          value: v.value,
-          child: Text(v.display),
-        );
+        return DropdownMenuItem(value: v.value, child: Text(v.display));
       }).toList(),
       onChanged: onChanged,
     );
@@ -1156,10 +1147,7 @@ class _PricingLocationStep extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Price
-          Text(
-            'Price',
-            style: AppTypography.titleMedium,
-          ),
+          Text('Price', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.space3),
           TextFormField(
             controller: priceController,
@@ -1176,10 +1164,7 @@ class _PricingLocationStep extends StatelessWidget {
           const SizedBox(height: AppSpacing.space6),
 
           // Location
-          Text(
-            'Meetup Location',
-            style: AppTypography.titleMedium,
-          ),
+          Text('Meetup Location', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.space2),
           Text(
             'Select where buyers can meet you',
@@ -1194,7 +1179,10 @@ class _PricingLocationStep extends StatelessWidget {
             TextSpan(
               children: [
                 TextSpan(text: 'City', style: AppTypography.titleSmall),
-                const TextSpan(text: ' *', style: TextStyle(color: AppColors.error)),
+                const TextSpan(
+                  text: ' *',
+                  style: TextStyle(color: AppColors.error),
+                ),
               ],
             ),
           ),
@@ -1220,10 +1208,7 @@ class _PricingLocationStep extends StatelessWidget {
           if (selectedCity != null &&
               selectedCity!.activeDivisions.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.space4),
-            Text(
-              'Area (Optional)',
-              style: AppTypography.titleSmall,
-            ),
+            Text('Area (Optional)', style: AppTypography.titleSmall),
             const SizedBox(height: AppSpacing.space2),
             Wrap(
               spacing: AppSpacing.space2,
@@ -1252,10 +1237,7 @@ class _PricingLocationStep extends StatelessWidget {
 // =============================================================================
 
 class _ReviewStep extends StatelessWidget {
-  const _ReviewStep({
-    required this.state,
-    required this.categoryPath,
-  });
+  const _ReviewStep({required this.state, required this.categoryPath});
 
   final CreateListingStateV2 state;
   final String categoryPath;
@@ -1267,10 +1249,7 @@ class _ReviewStep extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Review your listing',
-            style: AppTypography.titleMedium,
-          ),
+          Text('Review your listing', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.space2),
           Text(
             'Make sure everything looks good before publishing.',
@@ -1315,7 +1294,10 @@ class _ReviewStep extends StatelessWidget {
                 children: [
                   _ReviewRow(label: 'Title', value: state.title ?? '-'),
                   _ReviewRow(label: 'Price', value: 'UGX ${state.price ?? 0}'),
-                  _ReviewRow(label: 'Category', value: categoryPath.isNotEmpty ? categoryPath : '-'),
+                  _ReviewRow(
+                    label: 'Category',
+                    value: categoryPath.isNotEmpty ? categoryPath : '-',
+                  ),
                   _ReviewRow(
                     label: 'Condition',
                     value: state.condition?.displayName ?? '-',
@@ -1334,19 +1316,13 @@ class _ReviewStep extends StatelessWidget {
                     ),
                   if (state.attributes.isNotEmpty) ...[
                     const Divider(),
-                    Text(
-                      'Attributes',
-                      style: AppTypography.titleSmall,
-                    ),
+                    Text('Attributes', style: AppTypography.titleSmall),
                     const SizedBox(height: AppSpacing.space2),
                     ...state.attributes.entries.map((entry) {
                       final value = entry.value is List
                           ? (entry.value as List).join(', ')
                           : entry.value.toString();
-                      return _ReviewRow(
-                        label: entry.key,
-                        value: value,
-                      );
+                      return _ReviewRow(label: entry.key, value: value);
                     }),
                   ],
                 ],
@@ -1425,9 +1401,7 @@ class _ReviewRow extends StatelessWidget {
                     ),
                   ),
                 ),
-                Expanded(
-                  child: Text(value, style: AppTypography.bodyMedium),
-                ),
+                Expanded(child: Text(value, style: AppTypography.bodyMedium)),
               ],
             ),
     );
