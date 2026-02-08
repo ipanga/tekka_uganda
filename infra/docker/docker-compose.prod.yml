@@ -23,9 +23,7 @@ services:
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      AT_API_KEY: ${AT_API_KEY}
-      AT_USERNAME: ${AT_USERNAME}
-      AT_SENDER_ID: ${AT_SENDER_ID}
+      THINKXCLOUD_API_KEY: ${THINKXCLOUD_API_KEY}
       CORS_ORIGINS: ${CORS_ORIGINS:-https://tekka.ug,https://admin.tekka.ug}
     networks:
       - tekka-network
