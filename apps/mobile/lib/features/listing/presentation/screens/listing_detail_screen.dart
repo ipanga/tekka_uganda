@@ -643,7 +643,7 @@ class _ImageGallery extends StatelessWidget {
               onTap: () => _openFullScreenGallery(context, index),
               child: CachedNetworkImage(
                 imageUrl: imageUrls[index],
-                fit: BoxFit.cover,
+                fit: BoxFit.contain,
                 width: double.infinity,
                 height: double.infinity,
                 placeholder: (context, url) => Container(

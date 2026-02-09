@@ -9,7 +9,7 @@ import '../features/auth/presentation/screens/onboarding_screen.dart';
 import '../features/home/presentation/screens/home_screen.dart';
 import '../features/listing/presentation/screens/listing_detail_screen.dart';
 import '../features/listing/presentation/screens/create_listing_screen.dart';
-import '../features/listing/presentation/screens/edit_listing_screen.dart';
+// edit_listing_screen.dart is deprecated - CreateListingScreen handles both create and edit modes
 import '../features/chat/presentation/screens/chat_list_screen.dart';
 import '../features/chat/presentation/screens/chat_screen.dart';
 import '../features/profile/presentation/screens/profile_screen.dart';
@@ -248,7 +248,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.editListing,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return EditListingScreen(listingId: id);
+          return CreateListingScreen(listingId: id);
         },
       ),
       GoRoute(

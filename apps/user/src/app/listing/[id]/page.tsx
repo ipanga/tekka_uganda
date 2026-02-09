@@ -251,7 +251,7 @@ export default function ListingDetailPage() {
                       src={listing.imageUrls[currentImageIndex]}
                       alt={listing.title}
                       fill
-                      className="object-cover"
+                      className="object-contain"
                       priority
                     />
                     {listing.imageUrls.length > 1 && (

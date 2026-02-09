@@ -12,6 +12,7 @@ import {
 import { api } from '@/lib/api';
 import { authManager } from '@/lib/auth';
 import {
+  Listing,
   ItemCondition,
   CONDITION_LABELS,
   Category,
@@ -39,9 +40,20 @@ const CONDITION_OPTIONS = Object.entries(CONDITION_LABELS).map(([value, label]) 
   label,
 }));
 
+export interface ListingFormProps {
+  mode: 'create' | 'edit';
+  existingListing?: Listing;
+  listingId?: string;
+}
+
 export default function CreateListingPage() {
+  return <ListingForm mode="create" />;
+}
+
+export function ListingForm({ mode, existingListing, listingId }: ListingFormProps) {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuthStore();
+  const isEditMode = mode === 'edit';
 
   const [currentStep, setCurrentStep] = useState<Step>('photos');
   const [loading, setLoading] = useState(false);
@@ -75,6 +87,27 @@ export default function CreateListingPage() {
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [selectedDivision, setSelectedDivision] = useState<Division | null>(null);
 
+  // Track whether edit mode initialization has completed (to avoid resetting pre-filled attributes)
+  const editInitRef = useRef(false);
+
+  // Helper to resolve categoryId to main/sub/productType from the category tree
+  const resolveCategoryPath = useCallback((categoryId: string, allCategories: Category[]) => {
+    for (const main of allCategories) {
+      if (main.id === categoryId) return { main, sub: null, product: null };
+      if (main.children) {
+        for (const sub of main.children) {
+          if (sub.id === categoryId) return { main, sub, product: null };
+          if (sub.children) {
+            for (const product of sub.children) {
+              if (product.id === categoryId) return { main, sub, product };
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }, []);
+
   // Load categories and cities on mount
   useEffect(() => {
     const loadInitialData = async () => {
@@ -85,6 +118,45 @@ export default function CreateListingPage() {
         ]);
         setCategories(categoriesData);
         setCities(citiesData);
+
+        // Pre-fill edit mode data once categories and cities are loaded
+        if (isEditMode && existingListing) {
+          setImageUrls(existingListing.imageUrls || []);
+          setTitle(existingListing.title);
+          setDescription(existingListing.description);
+          setCondition(existingListing.condition);
+          setPrice(existingListing.price.toString());
+          setOriginalPrice(existingListing.originalPrice?.toString() || '');
+
+          // Resolve hierarchical category
+          if (existingListing.categoryId) {
+            const path = resolveCategoryPath(existingListing.categoryId, categoriesData);
+            if (path) {
+              setSelectedMainCategory(path.main);
+              setSelectedSubCategory(path.sub);
+              setSelectedProductType(path.product);
+            }
+          }
+
+          // Resolve attributes
+          if (existingListing.attributes) {
+            setAttributeValues(existingListing.attributes);
+          }
+
+          // Resolve city/division
+          if (existingListing.cityId) {
+            const city = citiesData.find((c: City) => c.id === existingListing.cityId);
+            if (city) {
+              setSelectedCity(city);
+              if (existingListing.divisionId && city.divisions) {
+                const division = city.divisions.find((d: Division) => d.id === existingListing.divisionId);
+                if (division) setSelectedDivision(division);
+              }
+            }
+          }
+
+          editInitRef.current = true;
+        }
       } catch (err) {
         console.error('Failed to load initial data:', err);
       } finally {
@@ -102,7 +174,9 @@ export default function CreateListingPage() {
       const categoryId = selectedProductType?.id || selectedSubCategory?.id || selectedMainCategory?.id;
       if (!categoryId) {
         setCategoryAttributes([]);
-        setAttributeValues({});
+        if (!isEditMode || !editInitRef.current) {
+          setAttributeValues({});
+        }
         return;
       }
 
@@ -110,8 +184,12 @@ export default function CreateListingPage() {
       try {
         const attributes = await api.getCategoryAttributes(categoryId);
         setCategoryAttributes(attributes);
-        // Reset attribute values when category changes
-        setAttributeValues({});
+        // In edit mode, preserve pre-filled attribute values on initial load
+        if (isEditMode && editInitRef.current) {
+          editInitRef.current = false; // Only skip reset once
+        } else {
+          setAttributeValues({});
+        }
       } catch (err) {
         console.error('Failed to load attributes:', err);
         setCategoryAttributes([]);
@@ -303,30 +381,50 @@ export default function CreateListingPage() {
     setLoading(true);
 
     try {
-      const listing = await api.createListing({
-        title: title.trim(),
-        description: description.trim(),
-        price: parseInt(price.replace(/,/g, ''), 10),
-        originalPrice: originalPrice
-          ? parseInt(originalPrice.replace(/,/g, ''), 10)
-          : undefined,
-        condition: condition as ItemCondition,
-        imageUrls,
-        isDraft,
-        // New hierarchical category system
-        categoryId: finalCategory.id,
-        attributes: attributeValues,
-        cityId: selectedCity?.id,
-        divisionId: selectedDivision?.id,
-      });
+      if (isEditMode && listingId) {
+        // Edit mode: update existing listing
+        await api.updateListing(listingId, {
+          title: title.trim(),
+          description: description.trim(),
+          price: parseInt(price.replace(/,/g, ''), 10),
+          originalPrice: originalPrice
+            ? parseInt(originalPrice.replace(/,/g, ''), 10)
+            : undefined,
+          condition: condition as ItemCondition,
+          imageUrls,
+          categoryId: finalCategory.id,
+          attributes: attributeValues,
+          cityId: selectedCity?.id,
+          divisionId: selectedDivision?.id,
+        });
 
-      if (!listing || !listing.id) {
-        throw new Error('Failed to create listing - invalid response');
+        router.push(`/listing/${listingId}`);
+      } else {
+        // Create mode: create new listing
+        const listing = await api.createListing({
+          title: title.trim(),
+          description: description.trim(),
+          price: parseInt(price.replace(/,/g, ''), 10),
+          originalPrice: originalPrice
+            ? parseInt(originalPrice.replace(/,/g, ''), 10)
+            : undefined,
+          condition: condition as ItemCondition,
+          imageUrls,
+          isDraft,
+          categoryId: finalCategory.id,
+          attributes: attributeValues,
+          cityId: selectedCity?.id,
+          divisionId: selectedDivision?.id,
+        });
+
+        if (!listing || !listing.id) {
+          throw new Error('Failed to create listing - invalid response');
+        }
+
+        router.push(`/listing/${listing.id}`);
       }
-
-      router.push(`/listing/${listing.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create listing');
+      setError(err instanceof Error ? err.message : isEditMode ? 'Failed to update listing' : 'Failed to create listing');
     } finally {
       setLoading(false);
     }
@@ -495,6 +593,10 @@ export default function CreateListingPage() {
             {currentStepIndex > 0 ? 'Previous step' : 'Cancel'}
           </button>
 
+          {isEditMode && (
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">Edit Listing</h1>
+          )}
+
           {/* Progress Bar */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-2">
@@ -540,7 +642,7 @@ export default function CreateListingPage() {
           {currentStep === 'photos' && (
             <Card>
               <CardHeader>
-                <CardTitle>Add Photos</CardTitle>
+                <CardTitle>{isEditMode ? 'Edit Photos' : 'Add Photos'}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-gray-500 mb-4">
@@ -864,7 +966,7 @@ export default function CreateListingPage() {
           {currentStep === 'review' && (
             <Card>
               <CardHeader>
-                <CardTitle>Review Your Listing</CardTitle>
+                <CardTitle>{isEditMode ? 'Review Your Changes' : 'Review Your Listing'}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 {/* Preview Image */}
@@ -932,10 +1034,11 @@ export default function CreateListingPage() {
                   </div>
                 </div>
 
-                <div className="p-4 bg-yellow-50 rounded-lg">
-                  <p className="text-sm text-yellow-800">
-                    Your listing will be reviewed before going live. This usually takes less than 24
-                    hours.
+                <div className={`p-4 rounded-lg ${isEditMode ? 'bg-blue-50' : 'bg-yellow-50'}`}>
+                  <p className={`text-sm ${isEditMode ? 'text-blue-800' : 'text-yellow-800'}`}>
+                    {isEditMode
+                      ? 'Your changes will be saved. If you made significant changes, your listing may be reviewed again.'
+                      : 'Your listing will be reviewed before going live. This usually takes less than 24 hours.'}
                   </p>
                 </div>
               </CardContent>
@@ -945,23 +1048,42 @@ export default function CreateListingPage() {
           {/* Navigation Buttons */}
           <div className="flex gap-3 mt-6">
             {currentStep === 'review' ? (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={() => handleSubmit(true)}
-                  loading={loading}
-                  className="flex-1"
-                >
-                  Save as Draft
-                </Button>
-                <Button
-                  onClick={() => handleSubmit(false)}
-                  loading={loading}
-                  className="flex-1"
-                >
-                  Publish Listing
-                </Button>
-              </>
+              isEditMode ? (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push(`/listing/${listingId}`)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={() => handleSubmit(false)}
+                    loading={loading}
+                    className="flex-1"
+                  >
+                    Save Changes
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleSubmit(true)}
+                    loading={loading}
+                    className="flex-1"
+                  >
+                    Save as Draft
+                  </Button>
+                  <Button
+                    onClick={() => handleSubmit(false)}
+                    loading={loading}
+                    className="flex-1"
+                  >
+                    Publish Listing
+                  </Button>
+                </>
+              )
             ) : (
               <Button
                 onClick={handleNext}
