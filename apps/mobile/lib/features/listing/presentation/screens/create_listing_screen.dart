@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,7 +17,10 @@ import '../widgets/searchable_picker.dart';
 
 /// Create/Edit listing screen with multi-step wizard
 class CreateListingScreen extends ConsumerStatefulWidget {
-  const CreateListingScreen({super.key});
+  const CreateListingScreen({super.key, this.listingId});
+
+  /// If provided, the screen operates in edit mode for this listing.
+  final String? listingId;
 
   @override
   ConsumerState<CreateListingScreen> createState() =>
@@ -41,13 +45,110 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   City? _selectedCity;
   Division? _selectedDivision;
 
+  // Edit mode
+  bool get isEditMode => widget.listingId != null;
+  bool _editInitialized = false;
+
+  /// Returns the appropriate provider based on mode
+  AutoDisposeStateNotifierProvider<CreateListingNotifierV2,
+      CreateListingStateV2> get _provider {
+    if (isEditMode) {
+      return editListingProviderV2(widget.listingId!);
+    }
+    return createListingProviderV2;
+  }
+
   @override
   void initState() {
     super.initState();
     // Load categories and cities
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(categoryProvider.notifier).loadData();
+      if (isEditMode) {
+        _initEditMode();
+      }
     });
+  }
+
+  Future<void> _initEditMode() async {
+    if (_editInitialized) return;
+    _editInitialized = true;
+
+    try {
+      final listing =
+          await ref.read(listingProvider(widget.listingId!).future);
+      if (listing == null || !mounted) return;
+
+      final notifier = ref.read(_provider.notifier);
+      notifier.initFromListing(listing);
+
+      // Pre-fill text controllers
+      _titleController.text = listing.title;
+      _priceController.text = listing.price.toString();
+      _descriptionController.text = listing.description;
+
+      // Resolve category hierarchy from categories tree
+      final categoryState = ref.read(categoryProvider);
+      if (listing.categoryId != null) {
+        _resolveCategoryPath(listing.categoryId!, categoryState.mainCategories);
+      }
+
+      // Resolve location from cities
+      if (listing.cityId != null) {
+        _resolveLocation(listing.cityId!, listing.divisionId,
+            categoryState.activeCities);
+      }
+    } catch (e) {
+      // Listing load failed - error will be shown via provider
+    }
+  }
+
+  /// Walk the category tree to find and pre-select the category hierarchy
+  void _resolveCategoryPath(String categoryId, List<Category> mainCategories) {
+    for (final main in mainCategories) {
+      if (main.id == categoryId) {
+        setState(() => _selectedMainCategory = main);
+        return;
+      }
+      for (final sub in main.activeChildren) {
+        if (sub.id == categoryId) {
+          setState(() {
+            _selectedMainCategory = main;
+            _selectedSubCategory = sub;
+          });
+          return;
+        }
+        for (final product in sub.activeChildren) {
+          if (product.id == categoryId) {
+            setState(() {
+              _selectedMainCategory = main;
+              _selectedSubCategory = sub;
+              _selectedProductType = product;
+            });
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  /// Resolve city and division from the loaded cities list
+  void _resolveLocation(
+      String cityId, String? divisionId, List<City> cities) {
+    for (final city in cities) {
+      if (city.id == cityId) {
+        setState(() => _selectedCity = city);
+        if (divisionId != null) {
+          for (final div in city.activeDivisions) {
+            if (div.id == divisionId) {
+              setState(() => _selectedDivision = div);
+              break;
+            }
+          }
+        }
+        return;
+      }
+    }
   }
 
   @override
@@ -80,7 +181,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   bool _canProceed() {
-    final state = ref.read(createListingProviderV2);
+    final state = ref.read(_provider);
     switch (_currentStep) {
       case 0: // Photos
         return state.selectedImages.isNotEmpty ||
@@ -102,12 +203,26 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final createState = ref.watch(createListingProviderV2);
-    final notifier = ref.read(createListingProviderV2.notifier);
+    final createState = ref.watch(_provider);
+    final notifier = ref.read(_provider.notifier);
     final categoryState = ref.watch(categoryProvider);
 
+    // Resolve category/location when data becomes available in edit mode
+    if (isEditMode && createState.categoryId != null &&
+        _selectedMainCategory == null &&
+        categoryState.mainCategories.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _resolveCategoryPath(
+            createState.categoryId!, categoryState.mainCategories);
+        if (createState.cityId != null) {
+          _resolveLocation(createState.cityId!, createState.divisionId,
+              categoryState.activeCities);
+        }
+      });
+    }
+
     // Listen for errors and success
-    ref.listen<CreateListingStateV2>(createListingProviderV2, (prev, next) {
+    ref.listen<CreateListingStateV2>(_provider, (prev, next) {
       if (next.error != null && prev?.error != next.error) {
         ScaffoldMessenger.of(
           context,
@@ -117,8 +232,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
       if (next.createdListing != null && prev?.createdListing == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Listing submitted for review!'),
+          SnackBar(
+            content: Text(isEditMode
+                ? 'Listing updated successfully!'
+                : 'Listing submitted for review!'),
             backgroundColor: AppColors.success,
           ),
         );
@@ -135,7 +252,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
           onPressed: () => _showExitConfirmation(context),
         ),
         actions: [
-          if (_currentStep < _totalSteps - 1)
+          if (!isEditMode && _currentStep < _totalSteps - 1)
             TextButton(
               onPressed: createState.isLoading
                   ? null
@@ -159,10 +276,12 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 _PhotoStep(
-                  images: createState.selectedImages,
+                  localImages: createState.selectedImages,
+                  existingImageUrls: createState.uploadedImageUrls,
                   onAddFromGallery: notifier.pickImages,
                   onTakePhoto: notifier.takePhoto,
-                  onRemove: notifier.removeImage,
+                  onRemoveLocal: notifier.removeImage,
+                  onRemoveExisting: notifier.removeUploadedImage,
                 ),
                 _CategoryStep(
                   categories: categoryState.mainCategories,
@@ -239,6 +358,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                 _ReviewStep(
                   state: createState,
                   categoryPath: _getCategoryPath(),
+                  isEditMode: isEditMode,
                 ),
               ],
             ),
@@ -252,7 +372,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   String _getStepTitle() {
     switch (_currentStep) {
       case 0:
-        return 'Add Photos';
+        return isEditMode ? 'Edit Photos' : 'Add Photos';
       case 1:
         return 'Select Category';
       case 2:
@@ -262,7 +382,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       case 4:
         return 'Review';
       default:
-        return 'Create Listing';
+        return isEditMode ? 'Edit Listing' : 'Create Listing';
     }
   }
 
@@ -318,7 +438,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                       )
                     : Text(
                         _currentStep == _totalSteps - 1
-                            ? 'Publish'
+                            ? (isEditMode ? 'Save Changes' : 'Publish')
                             : 'Continue',
                       ),
               ),
@@ -333,7 +453,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Discard listing?'),
+        title: Text(isEditMode ? 'Discard changes?' : 'Discard listing?'),
         content: const Text('Your changes will be lost if you exit.'),
         actions: [
           TextButton(
@@ -414,16 +534,22 @@ class _StepProgressIndicator extends StatelessWidget {
 
 class _PhotoStep extends StatelessWidget {
   const _PhotoStep({
-    required this.images,
+    required this.localImages,
+    required this.existingImageUrls,
     required this.onAddFromGallery,
     required this.onTakePhoto,
-    required this.onRemove,
+    required this.onRemoveLocal,
+    required this.onRemoveExisting,
   });
 
-  final List<File> images;
+  final List<File> localImages;
+  final List<String> existingImageUrls;
   final VoidCallback onAddFromGallery;
   final VoidCallback onTakePhoto;
-  final void Function(int) onRemove;
+  final void Function(int) onRemoveLocal;
+  final void Function(int) onRemoveExisting;
+
+  int get _totalImages => existingImageUrls.length + localImages.length;
 
   @override
   Widget build(BuildContext context) {
@@ -442,12 +568,14 @@ class _PhotoStep extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.space4),
           _PhotoGrid(
-            images: images,
+            localImages: localImages,
+            existingImageUrls: existingImageUrls,
             onAddFromGallery: onAddFromGallery,
             onTakePhoto: onTakePhoto,
-            onRemove: onRemove,
+            onRemoveLocal: onRemoveLocal,
+            onRemoveExisting: onRemoveExisting,
           ),
-          if (images.isEmpty) ...[
+          if (_totalImages == 0) ...[
             const SizedBox(height: AppSpacing.space6),
             Center(
               child: Column(
@@ -476,19 +604,28 @@ class _PhotoStep extends StatelessWidget {
 
 class _PhotoGrid extends StatelessWidget {
   const _PhotoGrid({
-    required this.images,
+    required this.localImages,
+    required this.existingImageUrls,
     required this.onAddFromGallery,
     required this.onTakePhoto,
-    required this.onRemove,
+    required this.onRemoveLocal,
+    required this.onRemoveExisting,
   });
 
-  final List<File> images;
+  final List<File> localImages;
+  final List<String> existingImageUrls;
   final VoidCallback onAddFromGallery;
   final VoidCallback onTakePhoto;
-  final void Function(int) onRemove;
+  final void Function(int) onRemoveLocal;
+  final void Function(int) onRemoveExisting;
+
+  int get _totalImages => existingImageUrls.length + localImages.length;
 
   @override
   Widget build(BuildContext context) {
+    final showAddButton = _totalImages < 10;
+    final itemCount = _totalImages + (showAddButton ? 1 : 0);
+
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -497,18 +634,31 @@ class _PhotoGrid extends StatelessWidget {
         mainAxisSpacing: AppSpacing.space3,
         crossAxisSpacing: AppSpacing.space3,
       ),
-      itemCount: images.length < 10 ? images.length + 1 : images.length,
+      itemCount: itemCount,
       itemBuilder: (context, index) {
-        if (index == images.length && images.length < 10) {
-          return _PhotoAddButton(
-            onGallery: onAddFromGallery,
-            onCamera: onTakePhoto,
+        // Existing network images come first
+        if (index < existingImageUrls.length) {
+          return _NetworkPhotoPreview(
+            url: existingImageUrls[index],
+            index: index,
+            onRemove: () => onRemoveExisting(index),
           );
         }
-        return _PhotoPreview(
-          file: images[index],
-          index: index,
-          onRemove: () => onRemove(index),
+
+        // Then local images
+        final localIndex = index - existingImageUrls.length;
+        if (localIndex < localImages.length) {
+          return _PhotoPreview(
+            file: localImages[localIndex],
+            index: index,
+            onRemove: () => onRemoveLocal(localIndex),
+          );
+        }
+
+        // Add button at the end
+        return _PhotoAddButton(
+          onGallery: onAddFromGallery,
+          onCamera: onTakePhoto,
         );
       },
     );
@@ -599,6 +749,69 @@ class _PhotoPreview extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: AppSpacing.cardRadius,
             image: DecorationImage(image: FileImage(file), fit: BoxFit.cover),
+          ),
+        ),
+        if (index == 0)
+          Positioned(
+            bottom: AppSpacing.space2,
+            left: AppSpacing.space2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.space2,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.secondary,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                'Cover',
+                style: TextStyle(color: AppColors.white, fontSize: 10),
+              ),
+            ),
+          ),
+        Positioned(
+          top: 4,
+          right: 4,
+          child: GestureDetector(
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: AppColors.error,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.close, size: 14, color: AppColors.white),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NetworkPhotoPreview extends StatelessWidget {
+  const _NetworkPhotoPreview({
+    required this.url,
+    required this.index,
+    required this.onRemove,
+  });
+
+  final String url;
+  final int index;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: AppSpacing.cardRadius,
+            image: DecorationImage(
+              image: CachedNetworkImageProvider(url),
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         if (index == 0)
@@ -1237,13 +1450,21 @@ class _PricingLocationStep extends StatelessWidget {
 // =============================================================================
 
 class _ReviewStep extends StatelessWidget {
-  const _ReviewStep({required this.state, required this.categoryPath});
+  const _ReviewStep({
+    required this.state,
+    required this.categoryPath,
+    this.isEditMode = false,
+  });
 
   final CreateListingStateV2 state;
   final String categoryPath;
+  final bool isEditMode;
 
   @override
   Widget build(BuildContext context) {
+    final allImageCount =
+        state.uploadedImageUrls.length + state.selectedImages.length;
+
     return SingleChildScrollView(
       padding: AppSpacing.screenPadding,
       child: Column(
@@ -1252,29 +1473,45 @@ class _ReviewStep extends StatelessWidget {
           Text('Review your listing', style: AppTypography.titleMedium),
           const SizedBox(height: AppSpacing.space2),
           Text(
-            'Make sure everything looks good before publishing.',
+            isEditMode
+                ? 'Review your changes before saving.'
+                : 'Make sure everything looks good before publishing.',
             style: AppTypography.bodySmall.copyWith(
               color: AppColors.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: AppSpacing.space4),
 
-          // Photos preview
-          if (state.selectedImages.isNotEmpty) ...[
+          // Photos preview (existing URLs + local files)
+          if (allImageCount > 0) ...[
             SizedBox(
               height: 100,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
-                itemCount: state.selectedImages.length,
-                separatorBuilder: (_, _) =>
+                itemCount: allImageCount,
+                separatorBuilder: (_, __) =>
                     const SizedBox(width: AppSpacing.space2),
                 itemBuilder: (context, index) {
+                  if (index < state.uploadedImageUrls.length) {
+                    return Container(
+                      width: 100,
+                      decoration: BoxDecoration(
+                        borderRadius: AppSpacing.cardRadius,
+                        image: DecorationImage(
+                          image: CachedNetworkImageProvider(
+                              state.uploadedImageUrls[index]),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    );
+                  }
+                  final localIndex = index - state.uploadedImageUrls.length;
                   return Container(
                     width: 100,
                     decoration: BoxDecoration(
                       borderRadius: AppSpacing.cardRadius,
                       image: DecorationImage(
-                        image: FileImage(state.selectedImages[index]),
+                        image: FileImage(state.selectedImages[localIndex]),
                         fit: BoxFit.cover,
                       ),
                     ),
@@ -1345,7 +1582,9 @@ class _ReviewStep extends StatelessWidget {
                 const SizedBox(width: AppSpacing.space2),
                 Expanded(
                   child: Text(
-                    'Your listing will be reviewed before it goes live.',
+                    isEditMode
+                        ? 'If you changed the title or description, your listing may be reviewed again.'
+                        : 'Your listing will be reviewed before it goes live.',
                     style: AppTypography.bodySmall.copyWith(
                       color: AppColors.primary,
                     ),

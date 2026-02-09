@@ -823,6 +823,8 @@ class CreateListingStateV2 {
   final String? divisionId;
   final String? divisionName;
   final Listing? createdListing;
+  // Edit mode
+  final String? editingListingId;
 
   const CreateListingStateV2({
     this.isLoading = false,
@@ -841,7 +843,10 @@ class CreateListingStateV2 {
     this.divisionId,
     this.divisionName,
     this.createdListing,
+    this.editingListingId,
   });
+
+  bool get isEditMode => editingListingId != null;
 
   CreateListingStateV2 copyWith({
     bool? isLoading,
@@ -860,6 +865,7 @@ class CreateListingStateV2 {
     String? divisionId,
     String? divisionName,
     Listing? createdListing,
+    String? editingListingId,
   }) {
     return CreateListingStateV2(
       isLoading: isLoading ?? this.isLoading,
@@ -878,6 +884,7 @@ class CreateListingStateV2 {
       divisionId: divisionId ?? this.divisionId,
       divisionName: divisionName ?? this.divisionName,
       createdListing: createdListing ?? this.createdListing,
+      editingListingId: editingListingId ?? this.editingListingId,
     );
   }
 
@@ -970,13 +977,39 @@ class CreateListingNotifierV2 extends StateNotifier<CreateListingStateV2> {
     }
   }
 
-  /// Remove image at index
+  /// Remove a newly selected local image at index
   void removeImage(int index) {
     final images = [...state.selectedImages];
     if (index >= 0 && index < images.length) {
       images.removeAt(index);
       state = state.copyWith(selectedImages: images);
     }
+  }
+
+  /// Remove an existing uploaded image URL at index (edit mode)
+  void removeUploadedImage(int index) {
+    final urls = [...state.uploadedImageUrls];
+    if (index >= 0 && index < urls.length) {
+      urls.removeAt(index);
+      state = state.copyWith(uploadedImageUrls: urls);
+    }
+  }
+
+  /// Initialize state from an existing listing (edit mode)
+  void initFromListing(Listing listing) {
+    state = CreateListingStateV2(
+      editingListingId: listing.id,
+      uploadedImageUrls: listing.imageUrls,
+      title: listing.title,
+      description: listing.description,
+      price: listing.price,
+      condition: listing.condition,
+      categoryId: listing.categoryId,
+      categoryName: listing.categoryName,
+      attributes: listing.attributes ?? {},
+      cityId: listing.cityId,
+      divisionId: listing.divisionId,
+    );
   }
 
   /// Update form fields
@@ -1078,18 +1111,36 @@ class CreateListingNotifierV2 extends StateNotifier<CreateListingStateV2> {
         return null;
       }
 
-      final listing = await _repository.createWithCategory(
-        title: state.title ?? '',
-        description: state.description ?? '',
-        price: state.price ?? 0,
-        condition: state.condition ?? ItemCondition.good,
-        imageUrls: imageUrls,
-        categoryId: state.categoryId!,
-        attributes: state.attributes.isNotEmpty ? state.attributes : null,
-        cityId: state.cityId,
-        divisionId: state.divisionId,
-        isDraft: isDraft,
-      );
+      final Listing listing;
+      if (state.isEditMode) {
+        // Edit mode: update existing listing
+        listing = await _repository.updateWithCategory(
+          state.editingListingId!,
+          title: state.title,
+          description: state.description,
+          price: state.price,
+          condition: state.condition,
+          imageUrls: imageUrls,
+          categoryId: state.categoryId,
+          attributes: state.attributes.isNotEmpty ? state.attributes : null,
+          cityId: state.cityId,
+          divisionId: state.divisionId,
+        );
+      } else {
+        // Create mode: create new listing
+        listing = await _repository.createWithCategory(
+          title: state.title ?? '',
+          description: state.description ?? '',
+          price: state.price ?? 0,
+          condition: state.condition ?? ItemCondition.good,
+          imageUrls: imageUrls,
+          categoryId: state.categoryId!,
+          attributes: state.attributes.isNotEmpty ? state.attributes : null,
+          cityId: state.cityId,
+          divisionId: state.divisionId,
+          isDraft: isDraft,
+        );
+      }
 
       state = state.copyWith(isLoading: false, createdListing: listing);
 
@@ -1113,6 +1164,26 @@ final createListingProviderV2 =
       CreateListingNotifierV2,
       CreateListingStateV2
     >((ref) {
+      final repository = ref.watch(listingApiRepositoryProvider);
+      final imageService = ref.watch(imageServiceProvider);
+      final storageService = ref.watch(storageServiceProvider);
+      final currentUser = ref.watch(currentUserProvider);
+      final userId = currentUser?.uid ?? '';
+      return CreateListingNotifierV2(
+        repository,
+        imageService,
+        storageService,
+        userId,
+      );
+    });
+
+/// Edit listing provider with new category system (reuses CreateListingNotifierV2)
+final editListingProviderV2 =
+    StateNotifierProvider.family.autoDispose<
+      CreateListingNotifierV2,
+      CreateListingStateV2,
+      String
+    >((ref, listingId) {
       final repository = ref.watch(listingApiRepositoryProvider);
       final imageService = ref.watch(imageServiceProvider);
       final storageService = ref.watch(storageServiceProvider);

@@ -265,6 +265,37 @@ class ListingApiRepository {
     return Listing.fromJson(response);
   }
 
+  /// Update an existing listing with new hierarchical category system
+  Future<Listing> updateWithCategory(
+    String id, {
+    String? title,
+    String? description,
+    int? price,
+    ItemCondition? condition,
+    List<String>? imageUrls,
+    String? categoryId,
+    Map<String, dynamic>? attributes,
+    String? cityId,
+    String? divisionId,
+  }) async {
+    final data = <String, dynamic>{};
+    if (title != null) data['title'] = title;
+    if (description != null) data['description'] = description;
+    if (price != null) data['price'] = price;
+    if (condition != null) data['condition'] = condition.apiValue;
+    if (imageUrls != null) data['imageUrls'] = imageUrls;
+    if (categoryId != null) data['categoryId'] = categoryId;
+    if (attributes != null) data['attributes'] = attributes;
+    if (cityId != null) data['cityId'] = cityId;
+    if (divisionId != null) data['divisionId'] = divisionId;
+
+    final response = await _apiClient.put<Map<String, dynamic>>(
+      '/listings/$id',
+      data: data,
+    );
+    return Listing.fromJson(response);
+  }
+
   /// Delete a listing
   Future<void> delete(String id) async {
     await _apiClient.delete('/listings/$id');
