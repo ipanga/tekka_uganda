@@ -387,9 +387,6 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
           title: title.trim(),
           description: description.trim(),
           price: parseInt(price.replace(/,/g, ''), 10),
-          originalPrice: originalPrice
-            ? parseInt(originalPrice.replace(/,/g, ''), 10)
-            : undefined,
           condition: condition as ItemCondition,
           imageUrls,
           categoryId: finalCategory.id,
