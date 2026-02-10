@@ -594,6 +594,63 @@ export class AdminService {
     return { success: true };
   }
 
+  // ===== CATEGORY-ATTRIBUTE LINKS =====
+  async getCategoryAttributes(categoryId: string) {
+    return this.prisma.categoryAttribute.findMany({
+      where: { categoryId },
+      orderBy: { sortOrder: 'asc' },
+      include: {
+        attribute: {
+          include: {
+            values: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } },
+          },
+        },
+      },
+    });
+  }
+
+  async linkAttributeToCategory(data: {
+    categoryId: string;
+    attributeId: string;
+    isRequired?: boolean;
+    sortOrder?: number;
+  }) {
+    return this.prisma.categoryAttribute.upsert({
+      where: {
+        categoryId_attributeId: {
+          categoryId: data.categoryId,
+          attributeId: data.attributeId,
+        },
+      },
+      update: {
+        isRequired: data.isRequired ?? false,
+        sortOrder: data.sortOrder ?? 0,
+      },
+      create: {
+        categoryId: data.categoryId,
+        attributeId: data.attributeId,
+        isRequired: data.isRequired ?? false,
+        sortOrder: data.sortOrder ?? 0,
+      },
+      include: {
+        attribute: true,
+        category: true,
+      },
+    });
+  }
+
+  async unlinkAttributeFromCategory(categoryId: string, attributeId: string) {
+    await this.prisma.categoryAttribute.delete({
+      where: {
+        categoryId_attributeId: {
+          categoryId,
+          attributeId,
+        },
+      },
+    });
+    return { success: true };
+  }
+
   // ===== LOCATIONS =====
   async getLocations() {
     return this.prisma.city.findMany({
