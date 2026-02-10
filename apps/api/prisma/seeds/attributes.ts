@@ -779,7 +779,7 @@ const categoryAttributeMappings: CategoryAttributeMapping[] = [
 
   { categorySlug: 'home-bedding', attributeSlug: 'brand-home', isRequired: false, sortOrder: 1 },
   { categorySlug: 'home-bedding', attributeSlug: 'color', isRequired: false, sortOrder: 2 },
-  { categorySlug: 'home-bedding', attributeSlug: 'material-fashion', isRequired: false, sortOrder: 3 },
+  { categorySlug: 'home-bedding', attributeSlug: 'material-home', isRequired: false, sortOrder: 3 },
 
   { categorySlug: 'home-lighting', attributeSlug: 'brand-home', isRequired: false, sortOrder: 1 },
   { categorySlug: 'home-lighting', attributeSlug: 'color', isRequired: false, sortOrder: 2 },
@@ -842,6 +842,17 @@ const categoryAttributeMappings: CategoryAttributeMapping[] = [
 
 export async function seedAttributes() {
   console.log('Seeding attributes...');
+
+  // Clean up legacy attributes that have been replaced by domain-specific versions
+  // e.g., old 'material' replaced by 'material-fashion' and 'material-home'
+  const legacySlugs = ['material', 'pattern', 'style'];
+  for (const slug of legacySlugs) {
+    const existing = await prisma.attributeDefinition.findUnique({ where: { slug } });
+    if (existing) {
+      await prisma.attributeDefinition.delete({ where: { slug } });
+      console.log(`  Deleted legacy attribute: ${slug}`);
+    }
+  }
 
   // Create a map to store created attributes by slug
   const attributeMap = new Map<string, string>();
@@ -952,6 +963,32 @@ export async function seedCategoryAttributeMappings(
     });
 
     created++;
+  }
+
+  // Clean up stale category-attribute mappings that are no longer in the mapping list
+  const validPairs = new Set<string>();
+  for (const mapping of categoryAttributeMappings) {
+    const categoryId = categoryMap.get(mapping.categorySlug);
+    const attributeId = attributeMap.get(mapping.attributeSlug);
+    if (categoryId && attributeId) {
+      validPairs.add(`${categoryId}:${attributeId}`);
+    }
+  }
+
+  const allMappings = await prisma.categoryAttribute.findMany({
+    select: { id: true, categoryId: true, attributeId: true },
+  });
+
+  let deleted = 0;
+  for (const existing of allMappings) {
+    if (!validPairs.has(`${existing.categoryId}:${existing.attributeId}`)) {
+      await prisma.categoryAttribute.delete({ where: { id: existing.id } });
+      deleted++;
+    }
+  }
+
+  if (deleted > 0) {
+    console.log(`  Deleted ${deleted} stale category-attribute mappings.`);
   }
 
   console.log(`Seeded ${created} category-attribute mappings (${skipped} skipped).`);

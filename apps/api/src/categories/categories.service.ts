@@ -159,14 +159,16 @@ export class CategoriesService {
       },
     });
 
-    // Deduplicate by attribute ID (closest category wins)
+    // Deduplicate by attribute ID and name (closest category wins)
     const attributeMap = new Map<string, (typeof categoryAttributes)[0]>();
+    const seenNames = new Set<string>();
 
     // Process in order: L3 -> L2 -> L1 (closest takes precedence)
     for (const catAttr of categoryAttributes) {
-      const existingAttr = attributeMap.get(catAttr.attributeId);
-      if (!existingAttr) {
+      const name = catAttr.attribute.name.toLowerCase();
+      if (!attributeMap.has(catAttr.attributeId) && !seenNames.has(name)) {
         attributeMap.set(catAttr.attributeId, catAttr);
+        seenNames.add(name);
       }
     }
 
