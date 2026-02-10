@@ -193,8 +193,8 @@ export default function UsersPage() {
                       <TableHead>Contact</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Verified</TableHead>
-                      <TableHead>Joined</TableHead>
+                      <TableHead className="hidden lg:table-cell">Verified</TableHead>
+                      <TableHead className="hidden lg:table-cell">Joined</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -257,7 +257,7 @@ export default function UsersPage() {
                               <Badge variant="success">Active</Badge>
                             )}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="hidden lg:table-cell">
                             <div className="flex gap-1">
                               {user.isVerified && (
                                 <ShieldCheckIcon
@@ -273,7 +273,7 @@ export default function UsersPage() {
                               )}
                             </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="hidden lg:table-cell">
                             {format(new Date(user.createdAt), 'MMM d, yyyy')}
                           </TableCell>
                           <TableCell>

@@ -22,6 +22,7 @@ import {
   ChevronRightIcon,
 } from '@heroicons/react/24/outline';
 import { Modal, ModalFooter } from '@/components/ui/Modal';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { api } from '@/lib/api';
 import type { AttributeDefinition, AttributeType } from '@/types';
 
@@ -143,6 +144,8 @@ export default function AttributesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedAttribute, setSelectedAttribute] = useState<EditableAttribute | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     loadAttributes();
@@ -192,14 +195,17 @@ export default function AttributesPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (attribute: AttributeDefinition) => {
-    if (confirm(`Are you sure you want to delete "${attribute.name}"? This will remove it from all linked categories.`)) {
-      try {
-        await api.deleteAttribute(attribute.id);
-        await loadAttributes();
-      } catch (error: any) {
-        alert(error.message || 'Failed to delete attribute');
-      }
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      await api.deleteAttribute(deleteTarget.id);
+      setDeleteTarget(null);
+      await loadAttributes();
+    } catch (error: any) {
+      alert(error.message || 'Failed to delete attribute');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -398,7 +404,7 @@ export default function AttributesPage() {
                               size="sm"
                               variant="ghost"
                               title="Delete"
-                              onClick={() => handleDelete(attribute)}
+                              onClick={() => setDeleteTarget({ id: attribute.id, name: attribute.name })}
                             >
                               <TrashIcon className="h-4 w-4 text-red-600" />
                             </Button>
@@ -429,6 +435,16 @@ export default function AttributesPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Attribute?"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"? This will remove it from all linked categories. This action cannot be undone.`}
+        loading={deleteLoading}
+      />
 
       {/* Create/Edit Modal */}
       <Modal

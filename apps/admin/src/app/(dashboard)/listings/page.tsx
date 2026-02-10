@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge, getStatusVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import {
   Table,
   TableHeader,
@@ -50,6 +51,8 @@ export default function ListingsPage() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [viewLoading, setViewLoading] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     loadListings();
@@ -134,14 +137,17 @@ export default function ListingsPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this listing?')) {
-      try {
-        await api.deleteListing(id);
-        loadListings();
-      } catch (error) {
-        console.error('Failed to delete listing:', error);
-      }
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      await api.deleteListing(deleteTarget.id);
+      setDeleteTarget(null);
+      loadListings();
+    } catch (error) {
+      console.error('Failed to delete listing:', error);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -247,8 +253,8 @@ export default function ListingsPage() {
                       <TableHead>Category</TableHead>
                       <TableHead>Price</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Views</TableHead>
-                      <TableHead>Saves</TableHead>
+                      <TableHead className="hidden lg:table-cell">Views</TableHead>
+                      <TableHead className="hidden lg:table-cell">Saves</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -284,8 +290,8 @@ export default function ListingsPage() {
                               {listing.status}
                             </Badge>
                           </TableCell>
-                          <TableCell>{listing.viewCount}</TableCell>
-                          <TableCell>{listing.saveCount}</TableCell>
+                          <TableCell className="hidden lg:table-cell">{listing.viewCount}</TableCell>
+                          <TableCell className="hidden lg:table-cell">{listing.saveCount}</TableCell>
                           <TableCell>
                             <div className="flex gap-1">
                               <Button
@@ -330,7 +336,7 @@ export default function ListingsPage() {
                                 size="sm"
                                 variant="ghost"
                                 title="Delete"
-                                onClick={() => handleDelete(listing.id)}
+                                onClick={() => setDeleteTarget({ id: listing.id, title: listing.title })}
                               >
                                 <TrashIcon className="h-4 w-4 text-red-600" />
                               </Button>
@@ -377,6 +383,16 @@ export default function ListingsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Listing?"
+        message={`Are you sure you want to delete "${deleteTarget?.title}"? This action cannot be undone.`}
+        loading={deleteLoading}
+      />
 
       {/* View Listing Modal */}
       <Modal isOpen={viewModalOpen} onClose={closeViewModal} title="Listing Details">
