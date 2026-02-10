@@ -158,7 +158,7 @@ export interface CreateListingDto {
   divisionId?: string;
 }
 
-export type UpdateListingDto = Partial<CreateListingDto>;
+export type UpdateListingDto = Omit<Partial<CreateListingDto>, 'originalPrice' | 'isDraft'>;
 
 export interface ListingQueryParams {
   search?: string;
