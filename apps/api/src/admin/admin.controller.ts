@@ -222,6 +222,39 @@ export class AdminController {
     return this.adminService.deleteAttribute(id);
   }
 
+  // ===== CATEGORY-ATTRIBUTE LINKS =====
+  @Get('categories/:id/attributes')
+  async getCategoryAttributes(@Param('id') id: string) {
+    return this.adminService.getCategoryAttributes(id);
+  }
+
+  @Post('categories/:id/attributes')
+  async linkAttributeToCategory(
+    @Param('id') categoryId: string,
+    @Body()
+    data: {
+      attributeId: string;
+      isRequired?: boolean;
+      sortOrder?: number;
+    },
+  ) {
+    return this.adminService.linkAttributeToCategory({
+      categoryId,
+      ...data,
+    });
+  }
+
+  @Delete('categories/:categoryId/attributes/:attributeId')
+  async unlinkAttributeFromCategory(
+    @Param('categoryId') categoryId: string,
+    @Param('attributeId') attributeId: string,
+  ) {
+    return this.adminService.unlinkAttributeFromCategory(
+      categoryId,
+      attributeId,
+    );
+  }
+
   // ===== LOCATIONS =====
   @Get('locations')
   async getLocations() {

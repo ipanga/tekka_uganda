@@ -136,9 +136,10 @@ interface CategoryTreeItemProps {
   onEdit: (category: Category) => void;
   onDelete: (category: Category) => void;
   onAddChild: (parent: Category) => void;
+  onManageAttributes: (category: Category) => void;
 }
 
-function CategoryTreeItem({ category, level = 0, onEdit, onDelete, onAddChild }: CategoryTreeItemProps) {
+function CategoryTreeItem({ category, level = 0, onEdit, onDelete, onAddChild, onManageAttributes }: CategoryTreeItemProps) {
   const [expanded, setExpanded] = useState(level < 2);
   const hasChildren = category.children && category.children.length > 0;
   const canHaveChildren = category.level < 3;
@@ -183,6 +184,9 @@ function CategoryTreeItem({ category, level = 0, onEdit, onDelete, onAddChild }:
 
         {/* Actions */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button size="sm" variant="ghost" title="Manage attributes" onClick={() => onManageAttributes(category)}>
+            <TagIcon className="h-4 w-4 text-purple-600" />
+          </Button>
           {canHaveChildren && (
             <Button size="sm" variant="ghost" title="Add child" onClick={() => onAddChild(category)}>
               <PlusIcon className="h-4 w-4 text-green-600" />
@@ -208,6 +212,7 @@ function CategoryTreeItem({ category, level = 0, onEdit, onDelete, onAddChild }:
               onEdit={onEdit}
               onDelete={onDelete}
               onAddChild={onAddChild}
+              onManageAttributes={onManageAttributes}
             />
           ))}
         </div>
@@ -221,6 +226,16 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Attribute management state
+  const [attrCategory, setAttrCategory] = useState<Category | null>(null);
+  const [isAttrModalOpen, setIsAttrModalOpen] = useState(false);
+  const [linkedAttributes, setLinkedAttributes] = useState<any[]>([]);
+  const [allAttributes, setAllAttributes] = useState<any[]>([]);
+  const [attrLoading, setAttrLoading] = useState(false);
+  const [selectedAttrId, setSelectedAttrId] = useState('');
+  const [attrRequired, setAttrRequired] = useState(false);
+  const [attrSortOrder, setAttrSortOrder] = useState(0);
 
   useEffect(() => {
     loadCategories();
@@ -345,6 +360,56 @@ export default function CategoriesPage() {
     setIsEditModalOpen(true);
   };
 
+  const handleManageAttributes = async (category: Category) => {
+    setAttrCategory(category);
+    setIsAttrModalOpen(true);
+    setAttrLoading(true);
+    setSelectedAttrId('');
+    setAttrRequired(false);
+    setAttrSortOrder(0);
+    try {
+      const [linked, all] = await Promise.all([
+        api.getCategoryAttributes(category.id),
+        api.getAttributes(),
+      ]);
+      setLinkedAttributes(linked);
+      setAllAttributes(all.filter((a: any) => a.isActive));
+    } catch (error: any) {
+      console.error('Failed to load attributes:', error);
+    } finally {
+      setAttrLoading(false);
+    }
+  };
+
+  const handleLinkAttribute = async () => {
+    if (!attrCategory || !selectedAttrId) return;
+    try {
+      await api.linkAttributeToCategory(attrCategory.id, {
+        attributeId: selectedAttrId,
+        isRequired: attrRequired,
+        sortOrder: attrSortOrder,
+      });
+      const linked = await api.getCategoryAttributes(attrCategory.id);
+      setLinkedAttributes(linked);
+      setSelectedAttrId('');
+      setAttrRequired(false);
+      setAttrSortOrder(0);
+    } catch (error: any) {
+      alert(error.message || 'Failed to link attribute');
+    }
+  };
+
+  const handleUnlinkAttribute = async (attributeId: string) => {
+    if (!attrCategory) return;
+    if (!confirm('Remove this attribute from this category?')) return;
+    try {
+      await api.unlinkAttributeFromCategory(attrCategory.id, attributeId);
+      setLinkedAttributes(linkedAttributes.filter((la: any) => la.attributeId !== attributeId));
+    } catch (error: any) {
+      alert(error.message || 'Failed to unlink attribute');
+    }
+  };
+
   const countAllCategories = (cats: Category[]): number => {
     return cats.reduce((count, cat) => {
       return count + 1 + (cat.children ? countAllCategories(cat.children) : 0);
@@ -437,6 +502,7 @@ export default function CategoriesPage() {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onAddChild={handleAddChild}
+                    onManageAttributes={handleManageAttributes}
                   />
                 ))}
               </div>
@@ -465,6 +531,100 @@ export default function CategoriesPage() {
           </span>
         </div>
       </div>
+
+      {/* Attribute Management Modal */}
+      <Modal
+        isOpen={isAttrModalOpen}
+        onClose={() => { setIsAttrModalOpen(false); setAttrCategory(null); }}
+        title={`Attributes: ${attrCategory?.name || ''}`}
+        size="lg"
+      >
+        {attrLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Currently linked attributes */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Linked Attributes</h4>
+              {linkedAttributes.length > 0 ? (
+                <div className="space-y-2">
+                  {linkedAttributes.map((la: any) => (
+                    <div key={la.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <TagIcon className="h-4 w-4 text-purple-500" />
+                        <div>
+                          <span className="font-medium text-sm">{la.attribute.name}</span>
+                          <span className="text-xs text-gray-400 ml-2">({la.attribute.slug})</span>
+                        </div>
+                        {la.isRequired && <Badge variant="danger">Required</Badge>}
+                        <Badge variant="default">Order: {la.sortOrder}</Badge>
+                      </div>
+                      <Button size="sm" variant="ghost" onClick={() => handleUnlinkAttribute(la.attributeId)}>
+                        <TrashIcon className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 py-4 text-center">No attributes linked to this category</p>
+              )}
+            </div>
+
+            {/* Add attribute form */}
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">Link an Attribute</h4>
+              <div className="flex items-end gap-3">
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-500 mb-1">Attribute</label>
+                  <select
+                    value={selectedAttrId}
+                    onChange={(e) => setSelectedAttrId(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                  >
+                    <option value="">Select attribute...</option>
+                    {allAttributes
+                      .filter((a: any) => !linkedAttributes.some((la: any) => la.attributeId === a.id))
+                      .map((a: any) => (
+                        <option key={a.id} value={a.id}>{a.name} ({a.slug})</option>
+                      ))}
+                  </select>
+                </div>
+                <div className="w-20">
+                  <label className="block text-xs text-gray-500 mb-1">Order</label>
+                  <input
+                    type="number"
+                    value={attrSortOrder}
+                    onChange={(e) => setAttrSortOrder(parseInt(e.target.value) || 0)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                    min={0}
+                  />
+                </div>
+                <label className="flex items-center gap-1 text-sm whitespace-nowrap pb-2">
+                  <input
+                    type="checkbox"
+                    checked={attrRequired}
+                    onChange={(e) => setAttrRequired(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300"
+                  />
+                  Required
+                </label>
+                <Button onClick={handleLinkAttribute} disabled={!selectedAttrId}>
+                  <PlusIcon className="h-4 w-4 mr-1" />
+                  Link
+                </Button>
+              </div>
+            </div>
+
+            <ModalFooter>
+              <Button variant="secondary" onClick={() => { setIsAttrModalOpen(false); setAttrCategory(null); }}>
+                Close
+              </Button>
+            </ModalFooter>
+          </div>
+        )}
+      </Modal>
 
       {/* Create/Edit Modal */}
       <Modal

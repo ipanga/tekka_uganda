@@ -546,6 +546,27 @@ class ApiClient {
     });
   }
 
+  // Category-Attribute Links
+  async getCategoryAttributes(categoryId: string): Promise<any[]> {
+    return this.request(`/admin/categories/${categoryId}/attributes`);
+  }
+
+  async linkAttributeToCategory(
+    categoryId: string,
+    data: { attributeId: string; isRequired?: boolean; sortOrder?: number },
+  ) {
+    return this.request(`/admin/categories/${categoryId}/attributes`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async unlinkAttributeFromCategory(categoryId: string, attributeId: string) {
+    return this.request(`/admin/categories/${categoryId}/attributes/${attributeId}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Locations
   async getLocations(): Promise<any[]> {
     return this.request('/admin/locations');
