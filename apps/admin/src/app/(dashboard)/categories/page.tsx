@@ -15,6 +15,7 @@ import {
   TagIcon,
 } from '@heroicons/react/24/outline';
 import { Modal, ModalFooter } from '@/components/ui/Modal';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { api } from '@/lib/api';
 import type { Category } from '@/types';
 
@@ -236,6 +237,9 @@ export default function CategoriesPage() {
   const [selectedAttrId, setSelectedAttrId] = useState('');
   const [attrRequired, setAttrRequired] = useState(false);
   const [attrSortOrder, setAttrSortOrder] = useState(0);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [unlinkTarget, setUnlinkTarget] = useState<{ attributeId: string; name: string } | null>(null);
 
   useEffect(() => {
     loadCategories();
@@ -284,14 +288,21 @@ export default function CategoriesPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleDelete = async (category: Category) => {
-    if (confirm(`Are you sure you want to delete "${category.name}"? This will also delete all child categories.`)) {
-      try {
-        await api.deleteCategory(category.id);
-        await loadCategories();
-      } catch (error: any) {
-        alert(error.message || 'Failed to delete category');
-      }
+  const handleDelete = (category: Category) => {
+    setDeleteTarget({ id: category.id, name: category.name });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      await api.deleteCategory(deleteTarget.id);
+      setDeleteTarget(null);
+      await loadCategories();
+    } catch (error: any) {
+      alert(error.message || 'Failed to delete category');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -399,12 +410,16 @@ export default function CategoriesPage() {
     }
   };
 
-  const handleUnlinkAttribute = async (attributeId: string) => {
-    if (!attrCategory) return;
-    if (!confirm('Remove this attribute from this category?')) return;
+  const handleUnlinkAttribute = (attributeId: string, name: string) => {
+    setUnlinkTarget({ attributeId, name });
+  };
+
+  const handleConfirmUnlink = async () => {
+    if (!attrCategory || !unlinkTarget) return;
     try {
-      await api.unlinkAttributeFromCategory(attrCategory.id, attributeId);
-      setLinkedAttributes(linkedAttributes.filter((la: any) => la.attributeId !== attributeId));
+      await api.unlinkAttributeFromCategory(attrCategory.id, unlinkTarget.attributeId);
+      setLinkedAttributes(linkedAttributes.filter((la: any) => la.attributeId !== unlinkTarget.attributeId));
+      setUnlinkTarget(null);
     } catch (error: any) {
       alert(error.message || 'Failed to unlink attribute');
     }
@@ -532,6 +547,26 @@ export default function CategoriesPage() {
         </div>
       </div>
 
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Category?"
+        message={`Are you sure you want to delete "${deleteTarget?.name}"? This will also delete all child categories. This action cannot be undone.`}
+        loading={deleteLoading}
+      />
+
+      {/* Unlink Attribute Confirmation */}
+      <ConfirmDialog
+        isOpen={!!unlinkTarget}
+        onClose={() => setUnlinkTarget(null)}
+        onConfirm={handleConfirmUnlink}
+        title="Remove Attribute?"
+        message={`Are you sure you want to remove "${unlinkTarget?.name}" from this category?`}
+        confirmLabel="Remove"
+      />
+
       {/* Attribute Management Modal */}
       <Modal
         isOpen={isAttrModalOpen}
@@ -561,7 +596,7 @@ export default function CategoriesPage() {
                         {la.isRequired && <Badge variant="danger">Required</Badge>}
                         <Badge variant="default">Order: {la.sortOrder}</Badge>
                       </div>
-                      <Button size="sm" variant="ghost" onClick={() => handleUnlinkAttribute(la.attributeId)}>
+                      <Button size="sm" variant="ghost" onClick={() => handleUnlinkAttribute(la.attributeId, la.attribute.name)}>
                         <TrashIcon className="h-4 w-4 text-red-500" />
                       </Button>
                     </div>

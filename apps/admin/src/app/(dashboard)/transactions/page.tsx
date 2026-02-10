@@ -275,8 +275,8 @@ export default function TransactionsPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Transaction</TableHead>
-                    <TableHead>Buyer</TableHead>
-                    <TableHead>Seller</TableHead>
+                    <TableHead className="hidden lg:table-cell">Buyer</TableHead>
+                    <TableHead className="hidden lg:table-cell">Seller</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Date</TableHead>
@@ -296,13 +296,13 @@ export default function TransactionsPage() {
                           </p>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <div>
                           <p className="font-medium">{transaction.buyer?.displayName || 'Unknown'}</p>
                           <p className="text-sm text-gray-500">{transaction.buyer?.email}</p>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden lg:table-cell">
                         <div>
                           <p className="font-medium">{transaction.seller?.displayName || 'Unknown'}</p>
                           <p className="text-sm text-gray-500">{transaction.seller?.email}</p>

@@ -23,6 +23,7 @@ import {
   BuildingOfficeIcon,
 } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import type { City } from '@/types';
 
 const mockCities: City[] = [
@@ -62,6 +63,7 @@ export default function LocationsPage() {
   const [cities, setCities] = useState<City[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedCities, setExpandedCities] = useState<Set<string>>(new Set(['1']));
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     loadLocations();
@@ -104,10 +106,14 @@ export default function LocationsPage() {
   };
 
   const handleDeleteCity = (city: City) => {
-    if (confirm(`Are you sure you want to delete "${city.name}"? This will also delete all divisions.`)) {
-      console.log('Delete city:', city.id);
-      // TODO: Call API
-    }
+    setDeleteTarget({ id: city.id, name: city.name });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    console.log('Delete city:', deleteTarget.id);
+    // TODO: Call API when available
+    setDeleteTarget(null);
   };
 
   const handleAddCity = () => {
@@ -292,6 +298,15 @@ export default function LocationsPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Delete Confirmation */}
+        <ConfirmDialog
+          isOpen={!!deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={handleConfirmDelete}
+          title="Delete City?"
+          message={`Are you sure you want to delete "${deleteTarget?.name}"? This will also delete all divisions. This action cannot be undone.`}
+        />
 
         {/* Info */}
         <div className="mt-4 p-4 bg-blue-50 rounded-lg text-sm text-blue-700">

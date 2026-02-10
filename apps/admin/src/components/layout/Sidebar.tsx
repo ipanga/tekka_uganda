@@ -38,7 +38,11 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Cog6ToothIcon },
 ];
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
   const { signOut, user } = useAuth();
 
@@ -57,6 +61,7 @@ export function Sidebar() {
             <Link
               key={item.name}
               href={item.href}
+              onClick={onClose}
               className={`group flex items-center rounded-md px-3 py-2 text-sm font-medium ${
                 isActive
                   ? 'bg-gray-800 text-white'

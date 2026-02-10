@@ -22,6 +22,7 @@ import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { api } from '@/lib/api';
 import { format } from 'date-fns';
 import { Modal, ModalFooter } from '@/components/ui/Modal';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 interface Review {
   id: string;
@@ -52,6 +53,8 @@ export default function ReviewsPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   useEffect(() => {
     loadReviews();
@@ -87,14 +90,18 @@ export default function ReviewsPage() {
     loadReviews();
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
-      try {
-        await api.deleteReview(id);
-        loadReviews();
-      } catch (error) {
-        console.error('Failed to delete review:', error);
-      }
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleteLoading(true);
+    try {
+      await api.deleteReview(deleteTarget.id);
+      setDeleteTarget(null);
+      setSelectedReview(null);
+      loadReviews();
+    } catch (error) {
+      console.error('Failed to delete review:', error);
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -244,7 +251,7 @@ export default function ReviewsPage() {
                                 size="sm"
                                 variant="ghost"
                                 title="Delete Review"
-                                onClick={() => handleDelete(review.id)}
+                                onClick={() => setDeleteTarget({ id: review.id, label: `${review.reviewer.displayName || 'Unknown'}'s review` })}
                               >
                                 <TrashIcon className="h-4 w-4 text-red-600" />
                               </Button>
@@ -388,8 +395,7 @@ export default function ReviewsPage() {
             <Button
               variant="danger"
               onClick={() => {
-                handleDelete(selectedReview.id);
-                setSelectedReview(null);
+                setDeleteTarget({ id: selectedReview.id, label: `${selectedReview.reviewer.displayName || 'Unknown'}'s review` });
               }}
             >
               Delete Review
@@ -397,6 +403,15 @@ export default function ReviewsPage() {
           </ModalFooter>
         </Modal>
       )}
+      {/* Delete Confirmation */}
+      <ConfirmDialog
+        isOpen={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Review?"
+        message={`Are you sure you want to delete ${deleteTarget?.label}? This action cannot be undone.`}
+        loading={deleteLoading}
+      />
     </div>
   );
 }
