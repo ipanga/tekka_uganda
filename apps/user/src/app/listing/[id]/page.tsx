@@ -475,6 +475,7 @@ export default function ListingDetailPage() {
                       'size': 'Size',
                       'size-clothing': 'Size',
                       'size-shoes': 'Shoe Size',
+                      'size-bags': 'Bag Size',
                       'brand': 'Brand',
                       'brand-fashion': 'Brand',
                       'brand-consoles': 'Brand',

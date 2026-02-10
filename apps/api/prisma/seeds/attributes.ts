@@ -105,6 +105,13 @@ const attributes: AttributeSeed[] = [
       '38',
     ],
   },
+  {
+    name: 'Bag Size',
+    slug: 'size-bags',
+    type: 'MULTI_SELECT',
+    isRequired: false,
+    values: ['Mini', 'Small', 'Medium', 'Large', 'Extra Large', 'Travel'],
+  },
 
   // ============================================
   // FASHION BRAND (sorted A-Z, "Other" always last)
@@ -116,31 +123,76 @@ const attributes: AttributeSeed[] = [
     isRequired: false,
     values: [
       // Sorted alphabetically A-Z
+      // Covers clothing, footwear, and bags/accessories brands
+      'Abercrombie & Fitch',
       'Adidas',
-      'ASOS',
+      'Air Jordan',
+      'ALDO',
+      'AllSaints',
       'Balenciaga',
+      'Bershka',
+      'Birkenstock',
+      'Bottega Veneta',
       'Burberry',
       'Calvin Klein',
+      'Celine',
       'Chanel',
+      'Clarks',
       'Coach',
+      'Columbia',
+      'Converse',
+      'Crocs',
       'Custom-made',
+      'Diesel',
       'Dolce & Gabbana',
-      'Fashion Nova',
+      'Dr. Martens',
+      'ECCO',
       'Fendi',
+      'Fila',
+      'Fossil',
+      'Gap',
+      'Givenchy',
       'Gucci',
+      'Guess',
       'H&M',
+      'Hermès',
+      'Hoka',
+      'J.Crew',
+      'Kate Spade',
+      'Kipling',
+      'Lacoste',
       "Levi's",
       'Local Tailor',
+      'Longchamp',
       'Louis Vuitton',
       'Mango',
+      'Marc Jacobs',
+      'Massimo Dutti',
+      'MCM',
       'Michael Kors',
+      'New Balance',
+      'New Look',
       'Nike',
+      'Old Navy',
       'Prada',
+      'Primark',
+      'Pull & Bear',
       'Puma',
       'Ralph Lauren',
-      'Shein',
+      'Reebok',
+      'Reserved',
+      'River Island',
+      'Samsonite',
+      'Skechers',
+      'Steve Madden',
+      'Stradivarius',
+      'Superdry',
+      'Timberland',
       'Tommy Hilfiger',
+      'Tory Burch',
+      'Under Armour',
       'Uniqlo',
+      'Vans',
       'Versace',
       'Zara',
       'Other', // Always last (sortOrder=999)
@@ -638,9 +690,10 @@ const categoryAttributeMappings: CategoryAttributeMapping[] = [
   // ============================================
   // WOMEN BAGS - Level 2
   // ============================================
-  { categorySlug: 'women-bags', attributeSlug: 'brand-fashion', isRequired: false, sortOrder: 1 },
-  { categorySlug: 'women-bags', attributeSlug: 'color', isRequired: false, sortOrder: 2 },
-  { categorySlug: 'women-bags', attributeSlug: 'material-fashion', isRequired: false, sortOrder: 3 },
+  { categorySlug: 'women-bags', attributeSlug: 'size-bags', isRequired: false, sortOrder: 1 },
+  { categorySlug: 'women-bags', attributeSlug: 'brand-fashion', isRequired: false, sortOrder: 2 },
+  { categorySlug: 'women-bags', attributeSlug: 'color', isRequired: false, sortOrder: 3 },
+  { categorySlug: 'women-bags', attributeSlug: 'material-fashion', isRequired: false, sortOrder: 4 },
 
   // ============================================
   // WOMEN ACCESSORIES - Level 2
@@ -669,9 +722,10 @@ const categoryAttributeMappings: CategoryAttributeMapping[] = [
   // ============================================
   // MEN BAGS - Level 2
   // ============================================
-  { categorySlug: 'men-bags', attributeSlug: 'brand-fashion', isRequired: false, sortOrder: 1 },
-  { categorySlug: 'men-bags', attributeSlug: 'color', isRequired: false, sortOrder: 2 },
-  { categorySlug: 'men-bags', attributeSlug: 'material-fashion', isRequired: false, sortOrder: 3 },
+  { categorySlug: 'men-bags', attributeSlug: 'size-bags', isRequired: false, sortOrder: 1 },
+  { categorySlug: 'men-bags', attributeSlug: 'brand-fashion', isRequired: false, sortOrder: 2 },
+  { categorySlug: 'men-bags', attributeSlug: 'color', isRequired: false, sortOrder: 3 },
+  { categorySlug: 'men-bags', attributeSlug: 'material-fashion', isRequired: false, sortOrder: 4 },
 
   // ============================================
   // MEN ACCESSORIES - Level 2
