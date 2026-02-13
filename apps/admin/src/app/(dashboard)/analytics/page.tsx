@@ -127,13 +127,13 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
-          <p className="text-gray-500">Platform performance and insights</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Analytics</h1>
+          <p className="text-gray-500 dark:text-gray-400">Platform performance and insights</p>
         </div>
         <select
           value={period}
           onChange={(e) => setPeriod(e.target.value as any)}
-          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+          className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
         >
           <option value="day">Last 24 Hours</option>
           <option value="week">Last 7 Days</option>
@@ -144,7 +144,7 @@ export default function AnalyticsPage() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
         </div>
       ) : (
         <>
@@ -188,11 +188,11 @@ export default function AnalyticsPage() {
                 <CardTitle>User Growth</CardTitle>
               </CardHeader>
               <CardContent>
-                <SimpleBarChart data={MOCK_USER_GROWTH} color="bg-pink-500" />
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <SimpleBarChart data={MOCK_USER_GROWTH} color="bg-primary-500" />
+                <div className="flex items-center justify-between mt-4 pt-4 border-t dark:border-gray-700">
                   <div>
-                    <p className="text-sm text-gray-500">New Users</p>
-                    <p className="text-xl font-bold text-gray-900">+{stats.newUsers}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">New Users</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">+{stats.newUsers}</p>
                   </div>
                   <div className="flex items-center gap-1 text-green-600">
                     <ArrowTrendingUpIcon className="w-4 h-4" />
@@ -208,11 +208,11 @@ export default function AnalyticsPage() {
                 <CardTitle>Listing Growth</CardTitle>
               </CardHeader>
               <CardContent>
-                <SimpleBarChart data={MOCK_LISTING_GROWTH} color="bg-blue-500" />
-                <div className="flex items-center justify-between mt-4 pt-4 border-t">
+                <SimpleBarChart data={MOCK_LISTING_GROWTH} color="bg-primary-400" />
+                <div className="flex items-center justify-between mt-4 pt-4 border-t dark:border-gray-700">
                   <div>
-                    <p className="text-sm text-gray-500">New Listings</p>
-                    <p className="text-xl font-bold text-gray-900">+{stats.newListings}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">New Listings</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-gray-100">+{stats.newListings}</p>
                   </div>
                   <div className="flex items-center gap-1 text-green-600">
                     <ArrowTrendingUpIcon className="w-4 h-4" />
@@ -235,12 +235,12 @@ export default function AnalyticsPage() {
                   {MOCK_REVENUE_BY_CATEGORY.map((item, index) => (
                     <div key={index}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-900">{item.category}</span>
-                        <span className="text-sm text-gray-500">{formatPrice(item.amount)}</span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{item.category}</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{formatPrice(item.amount)}</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
-                          className="bg-pink-500 h-2 rounded-full"
+                          className="bg-primary-500 h-2 rounded-full"
                           style={{ width: `${item.percentage}%` }}
                         />
                       </div>
@@ -259,15 +259,15 @@ export default function AnalyticsPage() {
                 <div className="space-y-4">
                   {MOCK_TOP_SELLERS.map((seller, index) => (
                     <div key={index} className="flex items-center gap-4">
-                      <div className="flex-shrink-0 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold text-gray-600">{index + 1}</span>
+                      <div className="flex-shrink-0 w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-gray-600 dark:text-gray-300">{index + 1}</span>
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{seller.name}</p>
-                        <p className="text-sm text-gray-500">{seller.sales} sales</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{seller.name}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{seller.sales} sales</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-gray-900">{formatPrice(seller.revenue)}</p>
+                        <p className="font-bold text-gray-900 dark:text-gray-100">{formatPrice(seller.revenue)}</p>
                       </div>
                     </div>
                   ))}
@@ -297,11 +297,11 @@ export default function AnalyticsPage() {
                   <p className="text-3xl font-bold text-red-600">12</p>
                   <p className="text-sm text-red-700">Cancelled</p>
                 </div>
-                <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <p className="text-3xl font-bold text-blue-600">
+                <div className="text-center p-4 bg-primary-50 rounded-lg dark:bg-primary-900/30">
+                  <p className="text-3xl font-bold text-primary-600 dark:text-primary-300">
                     {((stats.completedTransactions / stats.totalTransactions) * 100).toFixed(1)}%
                   </p>
-                  <p className="text-sm text-blue-700">Success Rate</p>
+                  <p className="text-sm text-primary-700 dark:text-primary-400">Success Rate</p>
                 </div>
               </div>
             </CardContent>

@@ -52,8 +52,11 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   ListingStatus? _editingListingStatus;
 
   /// Returns the appropriate provider based on mode
-  AutoDisposeStateNotifierProvider<CreateListingNotifierV2,
-      CreateListingStateV2> get _provider {
+  AutoDisposeStateNotifierProvider<
+    CreateListingNotifierV2,
+    CreateListingStateV2
+  >
+  get _provider {
     if (isEditMode) {
       return editListingProviderV2(widget.listingId!);
     }
@@ -77,8 +80,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     _editInitialized = true;
 
     try {
-      final listing =
-          await ref.read(listingProvider(widget.listingId!).future);
+      final listing = await ref.read(listingProvider(widget.listingId!).future);
       if (listing == null || !mounted) return;
 
       setState(() => _editingListingStatus = listing.status);
@@ -99,8 +101,11 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
       // Resolve location from cities
       if (listing.cityId != null) {
-        _resolveLocation(listing.cityId!, listing.divisionId,
-            categoryState.activeCities);
+        _resolveLocation(
+          listing.cityId!,
+          listing.divisionId,
+          categoryState.activeCities,
+        );
       }
     } catch (e) {
       // Listing load failed - error will be shown via provider
@@ -137,8 +142,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   /// Resolve city and division from the loaded cities list
-  void _resolveLocation(
-      String cityId, String? divisionId, List<City> cities) {
+  void _resolveLocation(String cityId, String? divisionId, List<City> cities) {
     for (final city in cities) {
       if (city.id == cityId) {
         setState(() => _selectedCity = city);
@@ -212,15 +216,21 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     final categoryState = ref.watch(categoryProvider);
 
     // Resolve category/location when data becomes available in edit mode
-    if (isEditMode && createState.categoryId != null &&
+    if (isEditMode &&
+        createState.categoryId != null &&
         _selectedMainCategory == null &&
         categoryState.mainCategories.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _resolveCategoryPath(
-            createState.categoryId!, categoryState.mainCategories);
+          createState.categoryId!,
+          categoryState.mainCategories,
+        );
         if (createState.cityId != null) {
-          _resolveLocation(createState.cityId!, createState.divisionId,
-              categoryState.activeCities);
+          _resolveLocation(
+            createState.cityId!,
+            createState.divisionId,
+            categoryState.activeCities,
+          );
         }
       });
     }
@@ -237,9 +247,11 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       if (next.createdListing != null && prev?.createdListing == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isEditMode
-                ? 'Listing updated successfully!'
-                : 'Listing submitted for review!'),
+            content: Text(
+              isEditMode
+                  ? 'Listing updated successfully!'
+                  : 'Listing submitted for review!',
+            ),
             backgroundColor: AppColors.success,
           ),
         );
@@ -538,9 +550,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to publish: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Failed to publish: $e')));
         }
       }
     }
@@ -1334,8 +1346,9 @@ class _AttributeField extends StatelessWidget {
 
   Widget _buildMultiSelect() {
     final label = '${attribute.name}${attribute.isRequired ? ' *' : ''}';
-    final selectedValues =
-        currentValue is List ? List<String>.from(currentValue) : <String>[];
+    final selectedValues = currentValue is List
+        ? List<String>.from(currentValue)
+        : <String>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1561,7 +1574,8 @@ class _ReviewStep extends StatelessWidget {
                         borderRadius: AppSpacing.cardRadius,
                         image: DecorationImage(
                           image: CachedNetworkImageProvider(
-                              state.uploadedImageUrls[index]),
+                            state.uploadedImageUrls[index],
+                          ),
                           fit: BoxFit.cover,
                         ),
                       ),

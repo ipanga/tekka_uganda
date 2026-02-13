@@ -1188,12 +1188,11 @@ final createListingProviderV2 =
     });
 
 /// Edit listing provider with new category system (reuses CreateListingNotifierV2)
-final editListingProviderV2 =
-    StateNotifierProvider.family.autoDispose<
-      CreateListingNotifierV2,
-      CreateListingStateV2,
-      String
-    >((ref, listingId) {
+final editListingProviderV2 = StateNotifierProvider.family
+    .autoDispose<CreateListingNotifierV2, CreateListingStateV2, String>((
+      ref,
+      listingId,
+    ) {
       final repository = ref.watch(listingApiRepositoryProvider);
       final imageService = ref.watch(imageServiceProvider);
       final storageService = ref.watch(storageServiceProvider);

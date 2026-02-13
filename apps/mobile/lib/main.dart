@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/theme.dart';
+import 'features/profile/application/theme_provider.dart';
 import 'router/app_router.dart';
 import 'shared/widgets/app_lock_wrapper.dart';
 
@@ -15,16 +16,6 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Set system UI style
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      statusBarIconBrightness: Brightness.dark,
-      systemNavigationBarColor: AppColors.surface,
-      systemNavigationBarIconBrightness: Brightness.dark,
-    ),
-  );
-
   runApp(const ProviderScope(child: TekkaApp()));
 }
 
@@ -35,12 +26,15 @@ class TekkaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final themeMode = ref.watch(currentThemeModeProvider);
 
     return AppLockWrapper(
       child: MaterialApp.router(
         title: 'Tekka',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
+        darkTheme: AppTheme.dark,
+        themeMode: themeMode,
         routerConfig: router,
       ),
     );

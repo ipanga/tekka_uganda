@@ -551,7 +551,7 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
         const selectedValues = (value as string[]) || [];
         return (
           <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               {attr.name}
               {isRequired && <span className="text-red-500 ml-1">*</span>}
             </label>
@@ -570,8 +570,8 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                   }}
                   className={`px-3 py-1.5 text-sm rounded-full border transition-colors ${
                     selectedValues.includes(v.value)
-                      ? 'bg-pink-600 text-white border-pink-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:border-pink-400'
+                      ? 'bg-primary-500 dark:bg-primary-400 text-white border-primary-500 dark:border-primary-400'
+                      : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-primary-400 dark:hover:border-primary-500'
                   }`}
                 >
                   {v.displayValue || v.value}
@@ -620,7 +620,7 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <Header />
 
       <main className="flex-1 py-8">
@@ -628,14 +628,14 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
           {/* Back Button */}
           <button
             onClick={() => (currentStepIndex > 0 ? handleBack() : router.back())}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 mb-6"
           >
             <ArrowLeftIcon className="w-5 h-5" />
             {currentStepIndex > 0 ? 'Previous step' : 'Cancel'}
           </button>
 
           {isEditMode && (
-            <h1 className="text-2xl font-bold text-gray-900 mb-6">Edit Listing</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Edit Listing</h1>
           )}
 
           {/* Progress Bar */}
@@ -646,8 +646,8 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                       index <= currentStepIndex
-                        ? 'bg-pink-600 text-white'
-                        : 'bg-gray-200 text-gray-500'
+                        ? 'bg-primary-500 dark:bg-primary-400 text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'
                     }`}
                   >
                     {index + 1}
@@ -655,7 +655,7 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                   {index < STEPS.length - 1 && (
                     <div
                       className={`w-full h-1 mx-1 ${
-                        index < currentStepIndex ? 'bg-pink-600' : 'bg-gray-200'
+                        index < currentStepIndex ? 'bg-primary-500 dark:bg-primary-400' : 'bg-gray-200 dark:bg-gray-700'
                       }`}
                       style={{ minWidth: '40px' }}
                     />
@@ -663,7 +663,7 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                 </div>
               ))}
             </div>
-            <div className="flex justify-between text-xs text-gray-500">
+            <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400">
               <span>Photos</span>
               <span>Category</span>
               <span>Details</span>
@@ -686,7 +686,7 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                 <CardTitle>{isEditMode ? 'Edit Photos' : 'Add Photos'}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-500 mb-4">
+                <p className="text-gray-500 dark:text-gray-400 mb-4">
                   Add up to 10 photos. The first photo will be your cover image.
                 </p>
 
@@ -727,24 +727,24 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                     <button
                       onClick={handleAddImageClick}
                       disabled={uploading}
-                      className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-pink-500 hover:bg-pink-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="aspect-square border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-primary-500 dark:hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {uploading ? (
                         <>
-                          <div className="w-8 h-8 border-2 border-pink-600 border-t-transparent rounded-full animate-spin" />
-                          <span className="text-sm text-gray-500">Uploading...</span>
+                          <div className="w-8 h-8 border-2 border-primary-500 dark:border-primary-400 border-t-transparent rounded-full animate-spin" />
+                          <span className="text-sm text-gray-500 dark:text-gray-400">Uploading...</span>
                         </>
                       ) : (
                         <>
-                          <PlusIcon className="w-8 h-8 text-gray-400" />
-                          <span className="text-sm text-gray-500">Add Photo</span>
+                          <PlusIcon className="w-8 h-8 text-gray-400 dark:text-gray-500" />
+                          <span className="text-sm text-gray-500 dark:text-gray-400">Add Photo</span>
                         </>
                       )}
                     </button>
                   )}
                 </div>
 
-                <p className="text-xs text-gray-400 mt-4">
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-4">
                   Tip: Use natural lighting and show the item from multiple angles
                 </p>
               </CardContent>
@@ -760,17 +760,17 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
               <CardContent>
                 {categoriesLoading ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="w-8 h-8 border-2 border-pink-600 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-8 h-8 border-2 border-primary-500 dark:border-primary-400 border-t-transparent rounded-full animate-spin" />
                   </div>
                 ) : (
                   <div className="space-y-6">
                     {/* Category Breadcrumb */}
                     {getCategoryBreadcrumb().length > 0 && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 p-3 rounded-lg">
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
                         {getCategoryBreadcrumb().map((name, index) => (
                           <span key={index} className="flex items-center gap-2">
-                            {index > 0 && <ChevronRightIcon className="w-4 h-4 text-gray-400" />}
-                            <span className={index === getCategoryBreadcrumb().length - 1 ? 'font-medium text-pink-600' : ''}>
+                            {index > 0 && <ChevronRightIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />}
+                            <span className={index === getCategoryBreadcrumb().length - 1 ? 'font-medium text-primary-500 dark:text-primary-300' : ''}>
                               {name}
                             </span>
                           </span>
@@ -780,7 +780,7 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
 
                     {/* Main Categories (Level 1) */}
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-3">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                         Main Category <span className="text-red-500">*</span>
                       </label>
                       <div className="grid grid-cols-2 gap-3">
@@ -793,11 +793,11 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                               onClick={() => handleMainCategorySelect(category)}
                               className={`p-4 text-left rounded-lg border-2 transition-colors ${
                                 selectedMainCategory?.id === category.id
-                                  ? 'border-pink-600 bg-pink-50'
-                                  : 'border-gray-200 hover:border-pink-300'
+                                  ? 'border-primary-500 dark:border-primary-400 bg-primary-50 dark:bg-primary-900/30'
+                                  : 'border-gray-200 dark:border-gray-600 hover:border-primary-300 dark:hover:border-primary-500'
                               }`}
                             >
-                              <span className="font-medium">{category.name}</span>
+                              <span className="font-medium dark:text-gray-100">{category.name}</span>
                             </button>
                           ))}
                       </div>
@@ -806,7 +806,7 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                     {/* Sub Categories (Level 2) */}
                     {selectedMainCategory && selectedMainCategory.children && selectedMainCategory.children.length > 0 && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                           Sub-Category <span className="text-red-500">*</span>
                         </label>
                         <div className="grid grid-cols-2 gap-3">
@@ -819,11 +819,11 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                                 onClick={() => handleSubCategorySelect(category)}
                                 className={`p-3 text-left rounded-lg border-2 transition-colors ${
                                   selectedSubCategory?.id === category.id
-                                    ? 'border-pink-600 bg-pink-50'
-                                    : 'border-gray-200 hover:border-pink-300'
+                                    ? 'border-primary-500 dark:border-primary-400 bg-primary-50 dark:bg-primary-900/30'
+                                    : 'border-gray-200 dark:border-gray-600 hover:border-primary-300 dark:hover:border-primary-500'
                                 }`}
                               >
-                                <span className="text-sm font-medium">{category.name}</span>
+                                <span className="text-sm font-medium dark:text-gray-100">{category.name}</span>
                               </button>
                             ))}
                         </div>
@@ -833,7 +833,7 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                     {/* Product Types (Level 3) */}
                     {selectedSubCategory && selectedSubCategory.children && selectedSubCategory.children.length > 0 && (
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-3">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                           Product Type <span className="text-red-500">*</span>
                         </label>
                         <div className="grid grid-cols-2 gap-3">
@@ -846,11 +846,11 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                                 onClick={() => handleProductTypeSelect(category)}
                                 className={`p-3 text-left rounded-lg border-2 transition-colors ${
                                   selectedProductType?.id === category.id
-                                    ? 'border-pink-600 bg-pink-50'
-                                    : 'border-gray-200 hover:border-pink-300'
+                                    ? 'border-primary-500 dark:border-primary-400 bg-primary-50 dark:bg-primary-900/30'
+                                    : 'border-gray-200 dark:border-gray-600 hover:border-primary-300 dark:hover:border-primary-500'
                                 }`}
                               >
-                                <span className="text-sm font-medium">{category.name}</span>
+                                <span className="text-sm font-medium dark:text-gray-100">{category.name}</span>
                               </button>
                             ))}
                         </div>
@@ -903,12 +903,12 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                 {/* Dynamic Attributes */}
                 {attributesLoading ? (
                   <div className="flex items-center justify-center py-8">
-                    <div className="w-6 h-6 border-2 border-pink-600 border-t-transparent rounded-full animate-spin" />
-                    <span className="ml-2 text-sm text-gray-500">Loading attributes...</span>
+                    <div className="w-6 h-6 border-2 border-primary-500 dark:border-primary-400 border-t-transparent rounded-full animate-spin" />
+                    <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">Loading attributes...</span>
                   </div>
                 ) : categoryAttributes.filter((attr) => attr.slug !== 'condition').length > 0 ? (
                   <div className="space-y-4 pt-4 border-t">
-                    <h4 className="text-sm font-medium text-gray-900">Additional Details</h4>
+                    <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Additional Details</h4>
                     {categoryAttributes
                       .filter((attr) => attr.slug !== 'condition')
                       .map((attr) => (
@@ -919,17 +919,17 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
 
                 {/* Location Selection */}
                 <div className="space-y-4 pt-4 border-t">
-                  <h4 className="text-sm font-medium text-gray-900">Pickup Location</h4>
+                  <h4 className="text-sm font-medium text-gray-900 dark:text-gray-100">Pickup Location</h4>
 
                   {citiesLoading ? (
                     <div className="flex items-center py-4">
-                      <div className="w-5 h-5 border-2 border-pink-600 border-t-transparent rounded-full animate-spin" />
-                      <span className="ml-2 text-sm text-gray-500">Loading locations...</span>
+                      <div className="w-5 h-5 border-2 border-primary-500 dark:border-primary-400 border-t-transparent rounded-full animate-spin" />
+                      <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">Loading locations...</span>
                     </div>
                   ) : (
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           City <span className="text-red-500">*</span>
                         </label>
                         <Select
@@ -1025,26 +1025,26 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                 {/* Details Summary */}
                 <div className="space-y-3">
                   <div>
-                    <span className="text-sm text-gray-500">Title</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Title</span>
                     <p className="font-medium">{title}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Price</span>
-                    <p className="text-xl font-bold text-pink-600">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Price</span>
+                    <p className="text-xl font-bold text-primary-500 dark:text-primary-400">
                       UGX {parseInt(price).toLocaleString()}
                     </p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Category</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Category</span>
                     <p>{getCategoryBreadcrumb().join(' > ')}</p>
                   </div>
                   <div>
-                    <span className="text-sm text-gray-500">Condition</span>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Condition</span>
                     <p>{CONDITION_LABELS[condition as ItemCondition]}</p>
                   </div>
                   {selectedCity && (
                     <div>
-                      <span className="text-sm text-gray-500">Location</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">Location</span>
                       <p>
                         {selectedCity.name}
                         {selectedDivision && `, ${selectedDivision.name}`}
@@ -1054,14 +1054,14 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                   {/* Show selected attributes */}
                   {Object.keys(attributeValues).length > 0 && (
                     <div>
-                      <span className="text-sm text-gray-500">Attributes</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-400">Attributes</span>
                       <div className="mt-1 space-y-1">
                         {categoryAttributes.map((attr) => {
                           const value = attributeValues[attr.slug];
                           if (!value || (Array.isArray(value) && value.length === 0)) return null;
                           return (
                             <p key={attr.id} className="text-sm">
-                              <span className="text-gray-600">{attr.name}:</span>{' '}
+                              <span className="text-gray-600 dark:text-gray-400">{attr.name}:</span>{' '}
                               {Array.isArray(value) ? value.join(', ') : value}
                             </p>
                           );
@@ -1070,8 +1070,8 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                     </div>
                   )}
                   <div>
-                    <span className="text-sm text-gray-500">Description</span>
-                    <p className="text-gray-600">{description}</p>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Description</span>
+                    <p className="text-gray-600 dark:text-gray-300">{description}</p>
                   </div>
                 </div>
 
