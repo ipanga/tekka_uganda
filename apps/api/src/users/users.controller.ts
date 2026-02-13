@@ -80,8 +80,11 @@ export class UsersController {
   // Remove FCM token
   @Delete('me/fcm-token/:token')
   @UseGuards(JwtAuthGuard)
-  async removeFcmToken(@Param('token') token: string) {
-    await this.usersService.removeFcmToken(token);
+  async removeFcmToken(
+    @CurrentUser() user: Prisma.User,
+    @Param('token') token: string,
+  ) {
+    await this.usersService.removeFcmToken(user.id, token);
     return { success: true };
   }
 

@@ -116,6 +116,16 @@ export class ListingsController {
     return { success: true };
   }
 
+  // Publish a draft listing (DRAFT → PENDING)
+  @Post(':id/publish')
+  @UseGuards(JwtAuthGuard)
+  async publishDraft(
+    @Param('id') id: string,
+    @CurrentUser() user: Prisma.User,
+  ) {
+    return this.listingsService.publishDraft(id, user.id);
+  }
+
   // Archive a listing
   @Post(':id/archive')
   @UseGuards(JwtAuthGuard)

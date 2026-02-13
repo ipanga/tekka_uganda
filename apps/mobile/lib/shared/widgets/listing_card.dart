@@ -102,7 +102,7 @@ class _ListingCardState extends ConsumerState<ListingCard> {
           children: [
             // Image
             AspectRatio(
-              aspectRatio: 4 / 3,
+              aspectRatio: 1,
               child: Stack(
                 fit: StackFit.expand,
                 children: [
@@ -200,13 +200,27 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                   ),
                   const SizedBox(height: 4),
                   Text(listing.formattedPrice, style: AppTypography.price),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${listing.location} · ${listing.timeAgo}',
-                    style: AppTypography.metadata,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                  if (listing.displayLocation != null) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.location_on_outlined,
+                          size: 12,
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 2),
+                        Expanded(
+                          child: Text(
+                            listing.displayLocation!,
+                            style: AppTypography.metadata,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

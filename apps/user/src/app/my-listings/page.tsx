@@ -34,7 +34,7 @@ export default function MyListingsPage() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
-  const [actionModal, setActionModal] = useState<'delete' | 'archive' | 'sold' | null>(null);
+  const [actionModal, setActionModal] = useState<'delete' | 'archive' | 'sold' | 'publish' | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
@@ -86,6 +86,13 @@ export default function MyListingsPage() {
         setListings(
           listings.map((l) =>
             l.id === selectedListing.id ? { ...l, status: 'SOLD' as ListingStatus } : l
+          )
+        );
+      } else if (actionModal === 'publish') {
+        await api.publishListing(selectedListing.id);
+        setListings(
+          listings.map((l) =>
+            l.id === selectedListing.id ? { ...l, status: 'PENDING' as ListingStatus } : l
           )
         );
       }
@@ -200,6 +207,18 @@ export default function MyListingsPage() {
                               </Button>
                             </Link>
 
+                            {listing.status === 'DRAFT' && (
+                              <Button
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedListing(listing);
+                                  setActionModal('publish');
+                                }}
+                              >
+                                Publish
+                              </Button>
+                            )}
+
                             {listing.status === 'ACTIVE' && (
                               <>
                                 <Button
@@ -265,6 +284,8 @@ export default function MyListingsPage() {
               ? 'Delete Listing'
               : actionModal === 'archive'
               ? 'Archive Listing'
+              : actionModal === 'publish'
+              ? 'Publish Listing'
               : 'Mark as Sold'
           }
           size="sm"
@@ -287,6 +308,11 @@ export default function MyListingsPage() {
                 Mark &quot;{selectedListing.title}&quot; as sold? This will remove it from active listings.
               </>
             )}
+            {actionModal === 'publish' && (
+              <>
+                Publish &quot;{selectedListing.title}&quot;? It will be submitted for review before going live.
+              </>
+            )}
           </p>
 
           <ModalFooter>
@@ -307,6 +333,7 @@ export default function MyListingsPage() {
               {actionModal === 'delete' && 'Delete'}
               {actionModal === 'archive' && 'Archive'}
               {actionModal === 'sold' && 'Mark Sold'}
+              {actionModal === 'publish' && 'Publish'}
             </Button>
           </ModalFooter>
         </Modal>

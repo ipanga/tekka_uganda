@@ -109,7 +109,7 @@ export class AuthController {
   @ApiOperation({ summary: 'Get current authenticated user' })
   @ApiResponse({ status: 200, description: 'Current user data' })
   getMe(@CurrentUser() user: User) {
-    return user;
+    return this.authService.sanitizeUser(user);
   }
 
   @Post('admin/login')

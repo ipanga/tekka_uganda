@@ -28,7 +28,7 @@ export class ListingsService {
   async create(sellerId: string, dto: CreateListingDto): Promise<Listing> {
     const status = dto.isDraft ? ListingStatus.DRAFT : ListingStatus.PENDING;
 
-    return this.prisma.listing.create({
+    const listing = await this.prisma.listing.create({
       data: {
         sellerId,
         title: dto.title,
@@ -55,6 +55,17 @@ export class ListingsService {
         status,
       },
     });
+
+    // Mark uploaded images as permanent in Cloudinary
+    if (dto.imageUrls?.length > 0) {
+      this.uploadService.markImagesPermanent(dto.imageUrls).catch((error) => {
+        this.logger.warn(
+          `Failed to mark images permanent for listing ${listing.id}: ${error.message}`,
+        );
+      });
+    }
+
+    return listing;
   }
 
   async findById(id: string): Promise<Listing> {
@@ -152,6 +163,33 @@ export class ListingsService {
 
     if (listing.status === ListingStatus.SOLD) {
       throw new BadRequestException('Cannot edit a sold listing');
+    }
+
+    // Clean up replaced images and mark new ones in Cloudinary
+    if (dto.imageUrls) {
+      const newUrls = dto.imageUrls;
+      const oldUrls = listing.imageUrls || [];
+      const removedUrls = oldUrls.filter(
+        (url) => !newUrls.includes(url),
+      );
+      const addedUrls = newUrls.filter(
+        (url) => !oldUrls.includes(url),
+      );
+
+      if (removedUrls.length > 0) {
+        this.uploadService.deleteImagesByUrls(removedUrls).catch((error) => {
+          this.logger.warn(
+            `Failed to cleanup replaced images for listing ${id}: ${error.message}`,
+          );
+        });
+      }
+      if (addedUrls.length > 0) {
+        this.uploadService.markImagesPermanent(addedUrls).catch((error) => {
+          this.logger.warn(
+            `Failed to mark new images permanent for listing ${id}: ${error.message}`,
+          );
+        });
+      }
     }
 
     // Track price changes for alerts
@@ -259,6 +297,34 @@ export class ListingsService {
         );
       }
     }
+  }
+
+  async publishDraft(id: string, sellerId: string): Promise<Listing> {
+    const listing = await this.findById(id);
+
+    if (listing.sellerId !== sellerId) {
+      throw new ForbiddenException('You can only publish your own listings');
+    }
+
+    if (listing.status !== ListingStatus.DRAFT) {
+      throw new BadRequestException('Only draft listings can be published');
+    }
+
+    if (
+      !listing.title ||
+      !listing.description ||
+      !listing.price ||
+      !listing.imageUrls?.length
+    ) {
+      throw new BadRequestException(
+        'Listing must have title, description, price, and at least one image to publish',
+      );
+    }
+
+    return this.prisma.listing.update({
+      where: { id },
+      data: { status: ListingStatus.PENDING },
+    });
   }
 
   async archive(id: string, sellerId: string): Promise<Listing> {

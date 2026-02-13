@@ -199,9 +199,9 @@ export class UsersService {
     });
   }
 
-  async removeFcmToken(token: string) {
+  async removeFcmToken(userId: string, token: string) {
     await this.prisma.fcmToken.deleteMany({
-      where: { token },
+      where: { token, userId },
     });
   }
 
@@ -498,7 +498,7 @@ export class UsersService {
     }
 
     // Generate 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = crypto.randomInt(100000, 1000000).toString();
     const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     await this.prisma.user.update({
@@ -612,7 +612,7 @@ export class UsersService {
   private generateBackupCodes(count: number): string[] {
     const codes: string[] = [];
     for (let i = 0; i < count; i++) {
-      codes.push(Math.floor(10000000 + Math.random() * 90000000).toString());
+      codes.push(crypto.randomInt(10000000, 100000000).toString());
     }
     return codes;
   }
@@ -725,7 +725,7 @@ export class UsersService {
     }
 
     // Generate 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = crypto.randomInt(100000, 1000000).toString();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
     // Store verification data

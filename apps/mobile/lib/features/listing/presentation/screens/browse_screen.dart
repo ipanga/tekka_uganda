@@ -272,7 +272,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
         crossAxisCount: 2,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 0.7,
+        childAspectRatio: 0.62,
       ),
       itemCount: 6,
       itemBuilder: (context, index) => _LoadingCard(),
@@ -341,7 +341,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
         crossAxisCount: 2,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 0.7,
+        childAspectRatio: 0.62,
       ),
       itemCount: listings.length,
       itemBuilder: (context, index) {
