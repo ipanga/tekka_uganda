@@ -305,7 +305,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         crossAxisCount: 2,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 0.7,
+        childAspectRatio: 0.75,
       ),
       itemCount: 4,
       itemBuilder: (context, index) => _LoadingCard(),
@@ -371,7 +371,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         crossAxisCount: 2,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 0.7,
+        childAspectRatio: 0.75,
       ),
       itemCount: listings.length,
       itemBuilder: (context, index) {

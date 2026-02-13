@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/theme.dart';
 import '../../../../core/config/app_config.dart';
+import '../../../../core/providers/repository_providers.dart';
 import '../../application/listing_provider.dart';
 import '../../application/category_provider.dart';
 import '../../domain/entities/listing.dart';
@@ -48,6 +49,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   // Edit mode
   bool get isEditMode => widget.listingId != null;
   bool _editInitialized = false;
+  ListingStatus? _editingListingStatus;
 
   /// Returns the appropriate provider based on mode
   AutoDisposeStateNotifierProvider<CreateListingNotifierV2,
@@ -78,6 +80,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       final listing =
           await ref.read(listingProvider(widget.listingId!).future);
       if (listing == null || !mounted) return;
+
+      setState(() => _editingListingStatus = listing.status);
 
       final notifier = ref.read(_provider.notifier);
       notifier.initFromListing(listing);
@@ -415,34 +419,69 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                 ),
               ),
             if (_currentStep > 0) const SizedBox(width: AppSpacing.space3),
-            Expanded(
-              flex: _currentStep == 0 ? 1 : 1,
-              child: ElevatedButton(
-                onPressed: state.isLoading || !_canProceed()
-                    ? null
-                    : () {
-                        if (_currentStep == _totalSteps - 1) {
-                          _publishListing(notifier);
-                        } else {
-                          _nextStep();
-                        }
-                      },
-                child: state.isLoading
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : Text(
-                        _currentStep == _totalSteps - 1
-                            ? (isEditMode ? 'Save Changes' : 'Publish')
-                            : 'Continue',
-                      ),
+            if (isEditMode &&
+                _editingListingStatus == ListingStatus.draft &&
+                _currentStep == _totalSteps - 1) ...[
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: state.isLoading || !_canProceed()
+                      ? null
+                      : () => _publishListing(notifier),
+                  child: state.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Save Draft'),
+                ),
               ),
-            ),
+              const SizedBox(width: AppSpacing.space3),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: state.isLoading || !_canProceed()
+                      ? null
+                      : () => _publishDraft(notifier),
+                  child: state.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Publish'),
+                ),
+              ),
+            ] else
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: state.isLoading || !_canProceed()
+                      ? null
+                      : () {
+                          if (_currentStep == _totalSteps - 1) {
+                            _publishListing(notifier);
+                          } else {
+                            _nextStep();
+                          }
+                        },
+                  child: state.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          _currentStep == _totalSteps - 1
+                              ? (isEditMode ? 'Save Changes' : 'Publish')
+                              : 'Continue',
+                        ),
+                ),
+              ),
           ],
         ),
       ),
@@ -483,6 +522,28 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
   Future<void> _publishListing(CreateListingNotifierV2 notifier) async {
     await notifier.submitListing();
+  }
+
+  Future<void> _publishDraft(CreateListingNotifierV2 notifier) async {
+    // Save changes first, then publish
+    final listing = await notifier.submitListing();
+    if (listing != null && mounted) {
+      try {
+        final repo = ref.read(listingApiRepositoryProvider);
+        await repo.publishDraft(listing.id);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Listing submitted for review!')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to publish: $e')),
+          );
+        }
+      }
+    }
   }
 }
 
@@ -1273,7 +1334,8 @@ class _AttributeField extends StatelessWidget {
 
   Widget _buildMultiSelect() {
     final label = '${attribute.name}${attribute.isRequired ? ' *' : ''}';
-    final selectedValues = (currentValue as List<String>?) ?? [];
+    final selectedValues =
+        currentValue is List ? List<String>.from(currentValue) : <String>[];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -89,6 +89,18 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
               SliverAppBar(
                 expandedHeight: AppSpacing.galleryHeight,
                 pinned: true,
+                leading: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: _CircularIconBackground(
+                    child: IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      onPressed: () => context.pop(),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      iconSize: AppSpacing.iconMedium,
+                    ),
+                  ),
+                ),
                 flexibleSpace: FlexibleSpaceBar(
                   background: _ImageGallery(
                     imageUrls: listing.imageUrls,
@@ -100,33 +112,55 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                   ),
                 ),
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.share_outlined),
-                    onPressed: () => _shareListing(listing),
+                  Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: _CircularIconBackground(
+                      child: IconButton(
+                        icon: const Icon(Icons.share_outlined),
+                        onPressed: () => _shareListing(listing),
+                      ),
+                    ),
                   ),
                   if (!isOwner)
-                    _FavoriteButton(
-                      listingId: listing.id,
-                      userId: currentUser?.uid,
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4.0),
+                      child: _CircularIconBackground(
+                        child: _FavoriteButton(
+                          listingId: listing.id,
+                          userId: currentUser?.uid,
+                        ),
+                      ),
                     ),
                   if (isOwner)
-                    PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert),
-                      onSelected: (value) => _handleOwnerAction(value, listing),
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'edit',
-                          child: Text('Edit Listing'),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4.0),
+                      child: _CircularIconBackground(
+                        child: PopupMenuButton<String>(
+                          icon: const Icon(Icons.more_vert),
+                          onSelected: (value) =>
+                              _handleOwnerAction(value, listing),
+                          itemBuilder: (context) => [
+                            const PopupMenuItem(
+                              value: 'edit',
+                              child: Text('Edit Listing'),
+                            ),
+                            if (listing.status == ListingStatus.draft)
+                              const PopupMenuItem(
+                                value: 'publish',
+                                child: Text('Publish Listing'),
+                              ),
+                            if (listing.status == ListingStatus.active)
+                              const PopupMenuItem(
+                                value: 'sold',
+                                child: Text('Mark as Sold'),
+                              ),
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Text('Delete Listing'),
+                            ),
+                          ],
                         ),
-                        const PopupMenuItem(
-                          value: 'sold',
-                          child: Text('Mark as Sold'),
-                        ),
-                        const PopupMenuItem(
-                          value: 'delete',
-                          child: Text('Delete Listing'),
-                        ),
-                      ],
+                      ),
                     ),
                 ],
               ),
@@ -534,6 +568,39 @@ Download Tekka to browse more fashion items!
       case 'edit':
         context.push(AppRoutes.editListing.replaceFirst(':id', listing.id));
         break;
+      case 'publish':
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('Publish Listing'),
+            content: const Text(
+              'Publish this listing? It will be submitted for review before going live.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('Publish'),
+              ),
+            ],
+          ),
+        );
+        if (confirm == true) {
+          await ref
+              .read(listingActionsProvider(listing.id).notifier)
+              .publishDraft();
+          ref.invalidate(listingProvider(listing.id));
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Listing submitted for review!')),
+            );
+          }
+        }
+        break;
       case 'sold':
         final confirm = await showDialog<bool>(
           context: context,
@@ -663,6 +730,27 @@ class _ImageGallery extends StatelessWidget {
             );
           },
         ),
+        // Top gradient for status bar readability
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 100,
+          child: IgnorePointer(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withValues(alpha: 0.3),
+                    Colors.black.withValues(alpha: 0.0),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
         // Page indicator
         if (imageUrls.length > 1)
           Positioned(
@@ -710,6 +798,8 @@ class _FullScreenImageGallery extends StatefulWidget {
 class _FullScreenImageGalleryState extends State<_FullScreenImageGallery> {
   late PageController _pageController;
   late int _currentIndex;
+  double _dragOffset = 0;
+  bool _isDragging = false;
 
   @override
   void initState() {
@@ -726,43 +816,137 @@ class _FullScreenImageGalleryState extends State<_FullScreenImageGallery> {
 
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          '${_currentIndex + 1} / ${widget.imageUrls.length}',
-          style: const TextStyle(color: Colors.white),
-        ),
-      ),
-      body: PageView.builder(
-        controller: _pageController,
-        itemCount: widget.imageUrls.length,
-        onPageChanged: (index) {
-          setState(() => _currentIndex = index);
+      body: GestureDetector(
+        onVerticalDragUpdate: (details) {
+          setState(() {
+            _isDragging = true;
+            _dragOffset += details.delta.dy;
+          });
         },
-        itemBuilder: (context, index) {
-          return InteractiveViewer(
-            minScale: 0.5,
-            maxScale: 4.0,
-            child: Center(
-              child: CachedNetworkImage(
-                imageUrl: widget.imageUrls[index],
-                fit: BoxFit.contain,
-                placeholder: (context, url) => const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                ),
-                errorWidget: (context, url, error) => const Icon(
-                  Icons.broken_image,
-                  size: 64,
-                  color: AppColors.gray400,
+        onVerticalDragEnd: (details) {
+          if (_dragOffset.abs() > 100) {
+            Navigator.pop(context);
+          } else {
+            setState(() {
+              _dragOffset = 0;
+              _isDragging = false;
+            });
+          }
+        },
+        child: AnimatedContainer(
+          duration: _isDragging
+              ? Duration.zero
+              : const Duration(milliseconds: 200),
+          transform: Matrix4.translationValues(0, _dragOffset, 0),
+          child: Stack(
+            children: [
+              // Image viewer
+              PageView.builder(
+                controller: _pageController,
+                itemCount: widget.imageUrls.length,
+                onPageChanged: (index) {
+                  setState(() => _currentIndex = index);
+                },
+                itemBuilder: (context, index) {
+                  return InteractiveViewer(
+                    minScale: 0.5,
+                    maxScale: 4.0,
+                    child: Center(
+                      child: CachedNetworkImage(
+                        imageUrl: widget.imageUrls[index],
+                        fit: BoxFit.contain,
+                        placeholder: (context, url) => const Center(
+                          child:
+                              CircularProgressIndicator(color: Colors.white),
+                        ),
+                        errorWidget: (context, url, error) => const Icon(
+                          Icons.broken_image,
+                          size: 64,
+                          color: AppColors.gray400,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+
+              // Top controls
+              Positioned(
+                top: topPadding + AppSpacing.space2,
+                left: AppSpacing.space3,
+                right: AppSpacing.space3,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Close button
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                        iconSize: AppSpacing.iconMedium,
+                      ),
+                    ),
+                    // Image counter pill
+                    if (widget.imageUrls.length > 1)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.space3,
+                          vertical: AppSpacing.space1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.5),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          '${_currentIndex + 1} / ${widget.imageUrls.length}',
+                          style: AppTypography.labelMedium.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    // Spacer to balance the row
+                    const SizedBox(width: 48),
+                  ],
                 ),
               ),
-            ),
-          );
-        },
+
+              // Bottom page indicator dots
+              if (widget.imageUrls.length > 1)
+                Positioned(
+                  bottom: MediaQuery.of(context).padding.bottom +
+                      AppSpacing.space6,
+                  left: 0,
+                  right: 0,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(
+                      widget.imageUrls.length,
+                      (index) => AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: index == _currentIndex ? 24 : 8,
+                        height: 8,
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: index == _currentIndex
+                              ? Colors.white
+                              : Colors.white.withValues(alpha: 0.4),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -871,6 +1055,23 @@ class _StatusBadge extends StatelessWidget {
         text,
         style: AppTypography.labelSmall.copyWith(color: AppColors.white),
       ),
+    );
+  }
+}
+
+class _CircularIconBackground extends StatelessWidget {
+  const _CircularIconBackground({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.9),
+        shape: BoxShape.circle,
+      ),
+      child: child,
     );
   }
 }

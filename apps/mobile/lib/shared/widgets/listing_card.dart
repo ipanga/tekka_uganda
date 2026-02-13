@@ -202,7 +202,12 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                   Text(listing.formattedPrice, style: AppTypography.price),
                   const SizedBox(height: 4),
                   Text(
-                    '${listing.location} · ${listing.timeAgo}',
+                    [
+                      if (listing.location != null &&
+                          listing.location!.isNotEmpty)
+                        listing.location!,
+                      listing.timeAgo,
+                    ].join(' · '),
                     style: AppTypography.metadata,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

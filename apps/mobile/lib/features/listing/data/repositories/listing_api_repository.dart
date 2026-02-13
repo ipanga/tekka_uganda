@@ -301,6 +301,14 @@ class ListingApiRepository {
     await _apiClient.delete('/listings/$id');
   }
 
+  /// Publish a draft listing (DRAFT → PENDING)
+  Future<Listing> publishDraft(String id) async {
+    final response = await _apiClient.post<Map<String, dynamic>>(
+      '/listings/$id/publish',
+    );
+    return Listing.fromJson(response);
+  }
+
   /// Archive a listing
   Future<Listing> archive(String id) async {
     final response = await _apiClient.post<Map<String, dynamic>>(

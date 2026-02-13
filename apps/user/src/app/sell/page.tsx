@@ -427,6 +427,50 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
     }
   };
 
+  const handlePublishDraft = async () => {
+    setError(null);
+
+    if (!authManager.isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+
+    const finalCategory = getFinalCategory();
+    if (!finalCategory) {
+      setError('Please select a category');
+      return;
+    }
+
+    if (imageUrls.length === 0) {
+      setError('Please add at least one photo');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Save changes first
+      await api.updateListing(listingId!, {
+        title: title.trim(),
+        description: description.trim(),
+        price: parseInt(price.replace(/,/g, ''), 10),
+        condition: condition as ItemCondition,
+        imageUrls,
+        categoryId: finalCategory.id,
+        attributes: attributeValues,
+        cityId: selectedCity?.id,
+        divisionId: selectedDivision?.id,
+      });
+      // Then publish (DRAFT → PENDING)
+      await api.publishListing(listingId!);
+      router.push(`/listing/${listingId}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to publish listing');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Render attribute field based on type
   const renderAttributeField = (attr: AttributeDefinition) => {
     const value = attributeValues[attr.slug];
@@ -1055,12 +1099,22 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
                     Cancel
                   </Button>
                   <Button
+                    variant={existingListing?.status === 'DRAFT' ? 'outline' : undefined}
                     onClick={() => handleSubmit(false)}
                     loading={loading}
                     className="flex-1"
                   >
                     Save Changes
                   </Button>
+                  {existingListing?.status === 'DRAFT' && (
+                    <Button
+                      onClick={handlePublishDraft}
+                      loading={loading}
+                      className="flex-1"
+                    >
+                      Publish
+                    </Button>
+                  )}
                 </>
               ) : (
                 <>

@@ -604,6 +604,16 @@ class ListingActionsNotifier extends StateNotifier<AsyncValue<void>> {
     }
   }
 
+  Future<void> publishDraft() async {
+    state = const AsyncValue.loading();
+    try {
+      await _repository.publishDraft(listingId);
+      state = const AsyncValue.data(null);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
   Future<void> deleteListing() async {
     state = const AsyncValue.loading();
     try {

@@ -214,6 +214,10 @@ class ApiClient {
     return this.get<PaginatedResponse<Listing>>(`/listings/seller/${sellerId}${this.buildQueryString(params)}`);
   }
 
+  publishListing(id: string): Promise<Listing> {
+    return this.post<Listing>(`/listings/${id}/publish`);
+  }
+
   archiveListing(id: string): Promise<Listing> {
     return this.post<Listing>(`/listings/${id}/archive`);
   }

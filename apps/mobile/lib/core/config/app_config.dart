@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 /// App configuration for different environments
 enum Environment { dev, staging, prod }
 
@@ -14,9 +16,10 @@ class AppConfig {
   static String get apiBaseUrl {
     switch (_environment) {
       case Environment.dev:
-        // Use 127.0.0.1 for iOS simulator compatibility (localhost doesn't work on iOS sim)
-        // API runs on port 4000 (port 3000 is the User Dashboard)
-        return 'http://127.0.0.1:4000/api/v1';
+        // Android emulator uses 10.0.2.2 to reach the host machine,
+        // iOS simulator uses 127.0.0.1
+        final host = Platform.isAndroid ? '10.0.2.2' : '127.0.0.1';
+        return 'http://$host:4000/api/v1';
       case Environment.staging:
         return 'https://staging-api.tekka.ug/api/v1';
       case Environment.prod:

@@ -261,6 +261,34 @@ export class ListingsService {
     }
   }
 
+  async publishDraft(id: string, sellerId: string): Promise<Listing> {
+    const listing = await this.findById(id);
+
+    if (listing.sellerId !== sellerId) {
+      throw new ForbiddenException('You can only publish your own listings');
+    }
+
+    if (listing.status !== ListingStatus.DRAFT) {
+      throw new BadRequestException('Only draft listings can be published');
+    }
+
+    if (
+      !listing.title ||
+      !listing.description ||
+      !listing.price ||
+      !listing.imageUrls?.length
+    ) {
+      throw new BadRequestException(
+        'Listing must have title, description, price, and at least one image to publish',
+      );
+    }
+
+    return this.prisma.listing.update({
+      where: { id },
+      data: { status: ListingStatus.PENDING },
+    });
+  }
+
   async archive(id: string, sellerId: string): Promise<Listing> {
     const listing = await this.findById(id);
 
