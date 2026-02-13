@@ -192,7 +192,7 @@ export class AuthService {
   /**
    * Remove sensitive fields from user object
    */
-  private sanitizeUser(user: User): Partial<User> {
+  sanitizeUser(user: User): Partial<User> {
     const {
       passwordHash: _passwordHash,
       twoFactorSecret: _twoFactorSecret,

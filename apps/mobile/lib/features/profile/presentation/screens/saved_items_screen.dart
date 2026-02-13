@@ -58,7 +58,7 @@ class SavedItemsScreen extends ConsumerWidget {
               padding: AppSpacing.screenPadding,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.75,
+                childAspectRatio: 0.62,
                 crossAxisSpacing: AppSpacing.space3,
                 mainAxisSpacing: AppSpacing.space3,
               ),
@@ -261,7 +261,7 @@ class _FavoriteCard extends ConsumerWidget {
                       const SizedBox(width: 2),
                       Expanded(
                         child: Text(
-                          listing.location ?? 'Unknown',
+                          listing.displayLocation ?? 'Unknown',
                           style: AppTypography.bodySmall.copyWith(
                             color: AppColors.onSurfaceVariant,
                           ),

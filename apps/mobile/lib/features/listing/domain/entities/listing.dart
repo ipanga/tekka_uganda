@@ -153,6 +153,8 @@ class Listing {
   final Map<String, dynamic>? attributes; // Dynamic attributes JSON
   final String? cityId;
   final String? divisionId;
+  final String? cityName; // Resolved city name for display
+  final String? divisionName; // Resolved division name for display
   final String? categoryName; // Resolved category name for display
 
   const Listing({
@@ -190,6 +192,8 @@ class Listing {
     this.attributes,
     this.cityId,
     this.divisionId,
+    this.cityName,
+    this.divisionName,
     this.categoryName,
   });
 
@@ -228,6 +232,8 @@ class Listing {
     Map<String, dynamic>? attributes,
     String? cityId,
     String? divisionId,
+    String? cityName,
+    String? divisionName,
     String? categoryName,
   }) {
     return Listing(
@@ -264,6 +270,8 @@ class Listing {
       attributes: attributes ?? this.attributes,
       cityId: cityId ?? this.cityId,
       divisionId: divisionId ?? this.divisionId,
+      cityName: cityName ?? this.cityName,
+      divisionName: divisionName ?? this.divisionName,
       categoryName: categoryName ?? this.categoryName,
     );
   }
@@ -317,6 +325,10 @@ class Listing {
     final categoryData = json['categoryData'] as Map<String, dynamic>?;
     final categoryName = categoryData?['name'] as String?;
 
+    // Handle location - new system has city/division objects
+    final cityData = json['city'] as Map<String, dynamic>?;
+    final divisionData = json['division'] as Map<String, dynamic>?;
+
     return Listing(
       id: json['id'] as String,
       sellerId: sellerId,
@@ -362,6 +374,8 @@ class Listing {
       attributes: json['attributes'] as Map<String, dynamic>?,
       cityId: json['cityId'] as String?,
       divisionId: json['divisionId'] as String?,
+      cityName: cityData?['name'] as String?,
+      divisionName: divisionData?['name'] as String?,
       categoryName: categoryName,
     );
   }
@@ -435,6 +449,18 @@ class Listing {
     }
   }
 
+  /// Get display location (prefers city/division, falls back to legacy location)
+  String? get displayLocation {
+    final parts = <String>[];
+    if (divisionName != null && divisionName!.isNotEmpty) {
+      parts.add(divisionName!);
+    }
+    if (cityName != null && cityName!.isNotEmpty) parts.add(cityName!);
+    if (parts.isNotEmpty) return parts.join(', ');
+    if (location != null && location!.isNotEmpty) return location;
+    return null;
+  }
+
   /// Get formatted price
   String get formattedPrice => 'UGX ${_formatNumber(price)}';
 
@@ -448,12 +474,13 @@ class Listing {
   }
 
   String _formatNumber(int number) {
-    if (number >= 1000000) {
-      return '${(number / 1000000).toStringAsFixed(1)}M';
-    } else if (number >= 1000) {
-      return '${(number / 1000).toStringAsFixed(0)}K';
+    final str = number.toString();
+    final buffer = StringBuffer();
+    for (var i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) buffer.write(',');
+      buffer.write(str[i]);
     }
-    return number.toString();
+    return buffer.toString();
   }
 
   /// Alias for backward compatibility

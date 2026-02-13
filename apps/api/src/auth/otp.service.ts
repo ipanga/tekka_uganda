@@ -5,6 +5,7 @@ import {
   OnModuleDestroy,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
 import { ThinkXCloudService } from './thinkxcloud.service';
 
 interface OtpStore {
@@ -71,12 +72,9 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
    * Generate a secure random OTP
    */
   private generateOTP(): string {
-    const digits = '0123456789';
-    let otp = '';
-    for (let i = 0; i < this.OTP_LENGTH; i++) {
-      otp += digits[Math.floor(Math.random() * digits.length)];
-    }
-    return otp;
+    const min = Math.pow(10, this.OTP_LENGTH - 1);
+    const max = Math.pow(10, this.OTP_LENGTH);
+    return crypto.randomInt(min, max).toString();
   }
 
   /**
@@ -167,7 +165,7 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
         // Fall back to mock mode in development
         if (isDevelopment) {
           console.log(
-            `[OTP] [MOCK] Development mode - OTP ${otp} for ${phoneNumber} (expires at ${expiresAt.toISOString()})`,
+            `[OTP] [MOCK] Development mode - OTP sent to ${phoneNumber} (expires at ${expiresAt.toISOString()})`,
           );
           return {
             success: true,
@@ -185,7 +183,7 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
         // If SMS fails and we're in development, use mock mode
         if (isDevelopment) {
           console.log(
-            `[OTP] [MOCK] Development mode - OTP ${otp} for ${phoneNumber} (expires at ${expiresAt.toISOString()})`,
+            `[OTP] [MOCK] Development mode - OTP sent to ${phoneNumber} (expires at ${expiresAt.toISOString()})`,
           );
           return {
             success: true,

@@ -206,7 +206,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                             ),
                             const SizedBox(width: AppSpacing.space1),
                             Text(
-                              listing.location ?? 'Unknown',
+                              listing.displayLocation ?? 'Unknown',
                               style: AppTypography.bodySmall,
                             ),
                             const SizedBox(width: AppSpacing.space4),
@@ -403,7 +403,7 @@ Check out "${listing.title}" on Tekka!
 
 ${listing.formattedPrice}
 ${listing.condition.displayName} condition
-Location: ${listing.location}
+Location: ${listing.displayLocation ?? 'Unknown'}
 
 ${listing.description.isNotEmpty ? listing.description : 'No description provided.'}
 

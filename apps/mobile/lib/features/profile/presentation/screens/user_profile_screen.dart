@@ -401,7 +401,7 @@ class UserProfileScreen extends ConsumerWidget {
                             crossAxisCount: 2,
                             mainAxisSpacing: AppSpacing.space3,
                             crossAxisSpacing: AppSpacing.space3,
-                            childAspectRatio: 0.75,
+                            childAspectRatio: 0.62,
                           ),
                       delegate: SliverChildBuilderDelegate((context, index) {
                         final listing = activeListings[index];
