@@ -162,11 +162,15 @@ abstract class AppTypography {
     labelSmall: labelSmall,
   );
 
-  static TextStyle get price =>
-      titleMedium.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700);
+  static TextStyle get price => titleMedium.copyWith(
+    color: AppColors.primary,
+    fontWeight: FontWeight.w700,
+  );
 
-  static TextStyle get priceLarge =>
-      headlineLarge.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700);
+  static TextStyle get priceLarge => headlineLarge.copyWith(
+    color: AppColors.primary,
+    fontWeight: FontWeight.w700,
+  );
 
   static TextStyle get metadata =>
       bodySmall.copyWith(color: AppColors.onSurfaceVariant);

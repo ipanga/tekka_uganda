@@ -860,8 +860,7 @@ class _FullScreenImageGalleryState extends State<_FullScreenImageGallery> {
                         imageUrl: widget.imageUrls[index],
                         fit: BoxFit.contain,
                         placeholder: (context, url) => const Center(
-                          child:
-                              CircularProgressIndicator(color: Colors.white),
+                          child: CircularProgressIndicator(color: Colors.white),
                         ),
                         errorWidget: (context, url, error) => const Icon(
                           Icons.broken_image,
@@ -921,8 +920,8 @@ class _FullScreenImageGalleryState extends State<_FullScreenImageGallery> {
               // Bottom page indicator dots
               if (widget.imageUrls.length > 1)
                 Positioned(
-                  bottom: MediaQuery.of(context).padding.bottom +
-                      AppSpacing.space6,
+                  bottom:
+                      MediaQuery.of(context).padding.bottom + AppSpacing.space6,
                   left: 0,
                   right: 0,
                   child: Row(
