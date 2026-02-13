@@ -249,13 +249,13 @@ export default function ListingsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Item</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="hidden lg:table-cell">Views</TableHead>
-                      <TableHead className="hidden lg:table-cell">Saves</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="w-[35%]">Item</TableHead>
+                      <TableHead className="w-[14%]">Category</TableHead>
+                      <TableHead className="w-[12%]">Price</TableHead>
+                      <TableHead className="w-[10%]">Status</TableHead>
+                      <TableHead className="hidden lg:table-cell w-[7%]">Views</TableHead>
+                      <TableHead className="hidden lg:table-cell w-[7%]">Saves</TableHead>
+                      <TableHead className="w-[15%]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -263,16 +263,16 @@ export default function ListingsPage() {
                       filteredListings.map((listing) => (
                         <TableRow key={listing.id}>
                           <TableCell>
-                            <div className="flex items-center">
+                            <div className="flex items-center min-w-0">
                               {listing.imageUrls?.[0] && (
                                 <img
                                   src={listing.imageUrls[0]}
                                   alt={listing.title}
-                                  className="mr-3 h-12 w-12 rounded-md object-cover"
+                                  className="mr-3 h-10 w-10 shrink-0 rounded-md object-cover"
                                 />
                               )}
-                              <div>
-                                <p className="font-medium">{listing.title}</p>
+                              <div className="min-w-0">
+                                <p className="font-medium truncate" title={listing.title}>{listing.title}</p>
                                 <p className="text-xs text-gray-500">
                                   {listing.condition}
                                 </p>
@@ -282,10 +282,10 @@ export default function ListingsPage() {
                           <TableCell>
                             <Badge>{listing.categoryData?.name || listing.category?.replace('_', ' ') || 'Uncategorized'}</Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="whitespace-nowrap">
                             UGX {listing.price.toLocaleString()}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="whitespace-nowrap">
                             <Badge variant={getStatusVariant(listing.status)}>
                               {listing.status}
                             </Badge>

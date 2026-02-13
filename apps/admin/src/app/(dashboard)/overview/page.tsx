@@ -163,25 +163,25 @@ export default function OverviewPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Item</TableHead>
-                      <TableHead>Seller</TableHead>
-                      <TableHead>Price</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableHead className="w-[35%]">Item</TableHead>
+                      <TableHead className="w-[20%]">Seller</TableHead>
+                      <TableHead className="w-[15%]">Price</TableHead>
+                      <TableHead className="w-[30%]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {pendingListings.map((listing) => (
                       <TableRow key={listing.id}>
                         <TableCell>
-                          <div className="flex items-center">
+                          <div className="flex items-center min-w-0">
                             {listing.imageUrls?.[0] && (
                               <img
                                 src={listing.imageUrls[0]}
                                 alt={listing.title}
-                                className="mr-3 h-10 w-10 rounded-md object-cover"
+                                className="mr-3 h-10 w-10 shrink-0 rounded-md object-cover"
                               />
                             )}
-                            <span className="font-medium">{listing.title}</span>
+                            <span className="font-medium truncate" title={listing.title}>{listing.title}</span>
                           </div>
                         </TableCell>
                         <TableCell>{listing.seller?.displayName || 'Unknown'}</TableCell>

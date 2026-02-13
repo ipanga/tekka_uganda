@@ -69,6 +69,6 @@ jobs:
           script: |
             cd /opt/tekka
             git pull origin main --ff-only || true
+            docker image prune -f || true
             docker compose -f infra/docker/docker-compose.prod.yml --env-file .env pull api
             docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d api
-            docker image prune -f
