@@ -7,8 +7,8 @@ interface TableProps {
 
 export function Table({ children, className = '' }: TableProps) {
   return (
-    <div className={`overflow-x-auto ${className}`}>
-      <table className="min-w-full divide-y divide-gray-200">{children}</table>
+    <div className={`overflow-hidden ${className}`}>
+      <table className="w-full table-fixed divide-y divide-gray-200">{children}</table>
     </div>
   );
 }
@@ -54,7 +54,7 @@ interface TableHeadProps {
 export function TableHead({ children, className = '' }: TableHeadProps) {
   return (
     <th
-      className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 ${className}`}
+      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 ${className}`}
     >
       {children}
     </th>
@@ -70,7 +70,7 @@ interface TableCellProps {
 export function TableCell({ children, className = '', colSpan }: TableCellProps) {
   return (
     <td
-      className={`whitespace-nowrap px-6 py-4 text-sm text-gray-900 ${className}`}
+      className={`px-4 py-3 text-sm text-gray-900 ${className}`}
       colSpan={colSpan}
     >
       {children}
