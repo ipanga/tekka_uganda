@@ -59,25 +59,25 @@ export function Modal({
             leaveTo="opacity-0 scale-95"
           >
             <DialogPanel
-              className={`w-full rounded-xl bg-white shadow-xl ${sizeStyles[size]}`}
+              className={`w-full rounded-xl bg-white shadow-xl dark:bg-gray-800 ${sizeStyles[size]}`}
             >
               {/* Header */}
               {(title || showCloseButton) && (
-                <div className="flex items-start justify-between px-6 py-4 border-b border-gray-200">
+                <div className="flex items-start justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
                   <div>
                     {title && (
-                      <DialogTitle className="text-lg font-semibold text-gray-900">
+                      <DialogTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         {title}
                       </DialogTitle>
                     )}
                     {description && (
-                      <p className="mt-1 text-sm text-gray-500">{description}</p>
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{description}</p>
                     )}
                   </div>
                   {showCloseButton && (
                     <button
                       onClick={onClose}
-                      className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                      className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:text-gray-300 dark:hover:bg-gray-700 transition-colors"
                     >
                       <XMarkIcon className="h-5 w-5" />
                     </button>
@@ -101,7 +101,7 @@ export interface ModalFooterProps {
 
 export function ModalFooter({ children }: ModalFooterProps) {
   return (
-    <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 rounded-b-xl -mx-6 -mb-4">
+    <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-900 rounded-b-xl -mx-6 -mb-4">
       {children}
     </div>
   );

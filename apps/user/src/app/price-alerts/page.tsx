@@ -101,15 +101,15 @@ export default function PriceAlertsPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <Header />
 
       <main className="flex-1 py-8">
         <div className="max-w-3xl mx-auto px-4">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Price Alerts</h1>
-            <p className="text-gray-500 mt-1">
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Price Alerts</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">
               Notifications when items you&apos;ve saved drop in price
             </p>
           </div>
@@ -119,10 +119,10 @@ export default function PriceAlertsPage() {
             <Card>
               <CardContent className="py-12 text-center">
                 <BellAlertIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                   No price alerts yet
                 </h3>
-                <p className="text-gray-500 mb-6">
+                <p className="text-gray-500 dark:text-gray-400 mb-6">
                   Save items you like - we&apos;ll notify you when their prices drop
                 </p>
                 <Button onClick={() => router.push('/')}>
@@ -135,7 +135,7 @@ export default function PriceAlertsPage() {
               {priceAlerts.map((alert) => (
                 <Card
                   key={alert.id}
-                  className={!alert.isRead ? 'ring-2 ring-pink-200' : ''}
+                  className={!alert.isRead ? 'ring-2 ring-primary-200 dark:ring-primary-700' : ''}
                 >
                   <CardContent className="py-4">
                     <div className="flex gap-4">
@@ -164,7 +164,7 @@ export default function PriceAlertsPage() {
                         <div className="flex items-start justify-between gap-2">
                           <Link
                             href={`/listing/${alert.listingId}`}
-                            className="font-medium text-gray-900 hover:text-pink-600 truncate"
+                            className="font-medium text-gray-900 dark:text-gray-100 hover:text-primary-500 dark:hover:text-primary-300 truncate"
                             onClick={() => !alert.isRead && handleMarkAsRead(alert.id)}
                           >
                             {alert.listingTitle}
@@ -173,7 +173,7 @@ export default function PriceAlertsPage() {
                         </div>
 
                         {/* Seller Info */}
-                        <p className="text-sm text-gray-500 mt-1">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                           by {alert.sellerName}
                         </p>
 
@@ -183,7 +183,7 @@ export default function PriceAlertsPage() {
                             <span className="text-gray-400 line-through">
                               {formatPrice(alert.originalPrice)}
                             </span>
-                            <span className="font-bold text-pink-600">
+                            <span className="font-bold text-primary-500 dark:text-primary-400">
                               {formatPrice(alert.newPrice)}
                             </span>
                           </div>
@@ -198,7 +198,7 @@ export default function PriceAlertsPage() {
                         </div>
 
                         {/* Meta */}
-                        <p className="text-xs text-gray-400 mt-2">
+                        <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                           {formatRelativeTime(alert.createdAt)}
                         </p>
                       </div>
@@ -229,11 +229,11 @@ export default function PriceAlertsPage() {
           )}
 
           {/* How it works */}
-          <div className="mt-8 p-6 bg-white rounded-lg border border-gray-200">
-            <h3 className="font-medium text-gray-900 mb-4">How price alerts work</h3>
-            <ul className="space-y-3 text-sm text-gray-600">
+          <div className="mt-8 p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-4">How price alerts work</h3>
+            <ul className="space-y-3 text-sm text-gray-600 dark:text-gray-300">
               <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center flex-shrink-0 text-xs font-medium">
+                <span className="w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-500 dark:text-primary-300 flex items-center justify-center flex-shrink-0 text-xs font-medium">
                   1
                 </span>
                 <span>
@@ -241,7 +241,7 @@ export default function PriceAlertsPage() {
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center flex-shrink-0 text-xs font-medium">
+                <span className="w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-500 dark:text-primary-300 flex items-center justify-center flex-shrink-0 text-xs font-medium">
                   2
                 </span>
                 <span>
@@ -249,7 +249,7 @@ export default function PriceAlertsPage() {
                 </span>
               </li>
               <li className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center flex-shrink-0 text-xs font-medium">
+                <span className="w-6 h-6 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-500 dark:text-primary-300 flex items-center justify-center flex-shrink-0 text-xs font-medium">
                   3
                 </span>
                 <span>
@@ -278,7 +278,7 @@ export default function PriceAlertsPage() {
         title="Delete Price Alert"
         size="sm"
       >
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-300">
           Are you sure you want to delete this price alert? This action cannot be
           undone.
         </p>

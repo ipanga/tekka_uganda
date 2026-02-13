@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/app_colors.dart';
 
 /// Extension methods on BuildContext for easy access to theme and media
 extension ContextExtensions on BuildContext {
@@ -54,7 +55,7 @@ extension ContextExtensions on BuildContext {
             Expanded(child: Text(message)),
           ],
         ),
-        backgroundColor: const Color(0xFF28A745),
+        backgroundColor: AppColors.success,
         behavior: SnackBarBehavior.floating,
       ),
     );

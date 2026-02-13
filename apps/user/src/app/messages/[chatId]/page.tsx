@@ -152,7 +152,7 @@ export default function ChatDetailPage() {
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-xl font-bold text-gray-900 mb-2">Conversation not found</h1>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-2">Conversation not found</h1>
             <Button onClick={() => router.push('/messages')}>Back to Messages</Button>
           </div>
         </main>
@@ -164,14 +164,14 @@ export default function ChatDetailPage() {
   const listing = chat.listing;
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col bg-white dark:bg-gray-900">
       {/* Custom Header */}
-      <header className="sticky top-0 z-40 bg-white border-b border-gray-200">
+      <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
         <div className="max-w-3xl mx-auto px-4 py-3">
           <div className="flex items-center gap-4">
             <button
               onClick={() => router.push('/messages')}
-              className="p-2 -ml-2 hover:bg-gray-100 rounded-lg"
+              className="p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
             >
               <ArrowLeftIcon className="w-5 h-5" />
             </button>
@@ -183,16 +183,16 @@ export default function ChatDetailPage() {
                 size="md"
               />
               <div>
-                <h1 className="font-semibold text-gray-900">
+                <h1 className="font-semibold text-gray-900 dark:text-gray-100">
                   {otherUser?.displayName || 'Unknown'}
                 </h1>
                 {otherUser?.location && (
-                  <p className="text-xs text-gray-500">{otherUser.location}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{otherUser.location}</p>
                 )}
               </div>
             </Link>
 
-            <button className="p-2 hover:bg-gray-100 rounded-lg">
+            <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
               <EllipsisVerticalIcon className="w-5 h-5" />
             </button>
           </div>
@@ -201,7 +201,7 @@ export default function ChatDetailPage() {
           {listing && (
             <Link
               href={`/listing/${listing.id}`}
-              className="flex items-center gap-3 mt-3 p-2 bg-gray-50 rounded-lg hover:bg-gray-100"
+              className="flex items-center gap-3 mt-3 p-2 bg-gray-50 dark:bg-gray-800 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
             >
               <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
                 {listing.imageUrls[0] ? (
@@ -216,8 +216,8 @@ export default function ChatDetailPage() {
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 truncate">{listing.title}</p>
-                <p className="text-pink-600 font-bold">{formatPrice(listing.price)}</p>
+                <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{listing.title}</p>
+                <p className="text-primary-500 dark:text-primary-400 font-bold">{formatPrice(listing.price)}</p>
               </div>
             </Link>
           )}
@@ -239,8 +239,8 @@ export default function ChatDetailPage() {
                   className={cn(
                     'max-w-[75%] rounded-2xl px-4 py-2',
                     isOwn
-                      ? 'bg-pink-600 text-white rounded-br-md'
-                      : 'bg-gray-100 text-gray-900 rounded-bl-md'
+                      ? 'bg-primary-500 dark:bg-primary-400 text-white rounded-br-md'
+                      : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-bl-md'
                   )}
                 >
                   {message.type === 'TEXT' && <p>{message.content}</p>}
@@ -270,7 +270,7 @@ export default function ChatDetailPage() {
                   <p
                     className={cn(
                       'text-xs mt-1',
-                      isOwn ? 'text-pink-200' : 'text-gray-500'
+                      isOwn ? 'text-primary-100' : 'text-gray-500 dark:text-gray-400'
                     )}
                   >
                     {formatMessageTime(message.createdAt)}
@@ -284,7 +284,7 @@ export default function ChatDetailPage() {
       </main>
 
       {/* Message Input */}
-      <footer className="sticky bottom-0 bg-white border-t border-gray-200">
+      <footer className="sticky bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
         <div className="max-w-3xl mx-auto px-4 py-3">
           {/* Quick Actions */}
           {listing && (
@@ -302,7 +302,7 @@ export default function ChatDetailPage() {
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
               placeholder="Type a message..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:outline-none focus:border-pink-500"
+              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-full focus:outline-none focus:border-primary-500"
             />
             <button
               type="submit"
@@ -310,8 +310,8 @@ export default function ChatDetailPage() {
               className={cn(
                 'p-2 rounded-full transition-colors',
                 messageText.trim()
-                  ? 'bg-pink-600 text-white hover:bg-pink-700'
-                  : 'bg-gray-100 text-gray-400'
+                  ? 'bg-primary-500 dark:bg-primary-400 text-white hover:bg-primary-600 dark:hover:bg-primary-300'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-400'
               )}
             >
               <PaperAirplaneIcon className="w-5 h-5" />

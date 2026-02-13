@@ -75,7 +75,7 @@ export function CategoryNav() {
   if (mainCategories.length === 0) return null;
 
   return (
-    <nav ref={navRef} className="hidden md:block bg-white border-b border-gray-100 relative">
+    <nav ref={navRef} className="hidden md:block bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <ul className="flex items-center gap-1 h-12">
           {mainCategories.map((category) => {
@@ -94,14 +94,14 @@ export function CategoryNav() {
                   href={`/explore?categoryId=${category.id}`}
                   className={`block px-4 py-2 text-sm font-medium transition-colors ${
                     isActive || isHovered
-                      ? 'text-pink-600'
-                      : 'text-gray-700 hover:text-pink-600'
+                      ? 'text-primary-500 dark:text-primary-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-300'
                   }`}
                 >
                   {category.name}
                 </Link>
                 {(isActive || isHovered) && (
-                  <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-pink-600" />
+                  <div className="absolute bottom-0 left-4 right-4 h-0.5 bg-primary-500 dark:bg-primary-400" />
                 )}
               </li>
             );
@@ -112,7 +112,7 @@ export function CategoryNav() {
       {/* Mega Menu Dropdown */}
       {hoveredCategory && subcategories.length > 0 && (
         <div
-          className="absolute left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-40"
+          className="absolute left-0 right-0 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-lg z-40"
           onMouseEnter={handleDropdownEnter}
           onMouseLeave={handleMouseLeave}
         >
@@ -120,7 +120,7 @@ export function CategoryNav() {
             <div className="flex gap-8">
               {/* Left: Subcategory List */}
               <div className="flex-shrink-0 w-56">
-                <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
                   Top categories
                 </h3>
                 <ul className="space-y-0.5">
@@ -132,8 +132,8 @@ export function CategoryNav() {
                           href={`/explore?categoryId=${sub.id}`}
                           className={`block py-1.5 text-sm transition-colors ${
                             isActive
-                              ? 'text-pink-600 font-medium'
-                              : 'text-gray-600 hover:text-pink-600'
+                              ? 'text-primary-500 dark:text-primary-300 font-medium'
+                              : 'text-gray-600 dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-300'
                           }`}
                         >
                           {sub.name}
@@ -149,7 +149,7 @@ export function CategoryNav() {
                 <div className="hidden lg:flex flex-1 min-h-0">
                   <Link
                     href={`/explore?categoryId=${hoveredCategoryData?.id}`}
-                    className="relative w-full rounded-xl overflow-hidden bg-gray-100 block"
+                    className="relative w-full rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 block"
                   >
                     <img
                       src={categoryImage}
@@ -162,7 +162,7 @@ export function CategoryNav() {
                       <h4 className="text-2xl font-bold text-white mb-3">
                         {hoveredCategoryData?.name}
                       </h4>
-                      <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-gray-900 text-sm font-semibold rounded-full">
+                      <span className="inline-flex items-center gap-1.5 px-4 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm font-semibold rounded-full">
                         Shop now
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />

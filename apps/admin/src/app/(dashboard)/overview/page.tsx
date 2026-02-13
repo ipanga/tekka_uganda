@@ -108,7 +108,7 @@ export default function OverviewPage() {
   if (loading) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
       </div>
     );
   }
@@ -209,7 +209,7 @@ export default function OverviewPage() {
                   </TableBody>
                 </Table>
               ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
+                <div className="flex flex-col items-center justify-center py-12 text-gray-500 dark:text-gray-400">
                   <ClockIcon className="h-12 w-12 mb-3" />
                   <p>No pending listings</p>
                 </div>
@@ -233,12 +233,12 @@ export default function OverviewPage() {
                 ].map((activity, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                         {activity.action}
                       </p>
-                      <p className="text-xs text-gray-500">by {activity.user}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">by {activity.user}</p>
                     </div>
-                    <span className="text-xs text-gray-400">{activity.time}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500">{activity.time}</span>
                   </div>
                 ))}
               </div>

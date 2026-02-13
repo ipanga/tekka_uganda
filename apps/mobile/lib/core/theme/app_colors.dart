@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 /// Tekka Design System - Color Tokens
 ///
 /// Based on Material Design 3 with custom Tekka branding.
-/// Primary: Warm Coral (#E07A5F) - Fashion-forward, boutique feel
-/// Design Direction: Clean Boutique
+/// Primary: Tekka Blue (#0E64B1) - Fashion-forward, marketplace feel
+/// Design Direction: Modern Fashion Marketplace
 abstract class AppColors {
   AppColors._();
 
@@ -12,23 +12,23 @@ abstract class AppColors {
   // PRIMARY PALETTE
   // ==========================================================================
 
-  /// Primary brand color - Warm Coral
-  static const Color primary = Color(0xFFE07A5F);
+  /// Primary brand color - Tekka Blue
+  static const Color primary = Color(0xFF0E64B1);
 
   /// Darker shade for pressed states
-  static const Color primaryDark = Color(0xFFC96A52);
+  static const Color primaryDark = Color(0xFF0B5499);
 
   /// Lighter shade for highlights
-  static const Color primaryLight = Color(0xFFF4A896);
+  static const Color primaryLight = Color(0xFF75ABDB);
 
   /// Very light shade for containers/backgrounds
-  static const Color primaryContainer = Color(0xFFFFF1ED);
+  static const Color primaryContainer = Color(0xFFEBF2FA);
 
   /// Text color on primary
   static const Color onPrimary = Color(0xFFFFFFFF);
 
   /// Text color on primary container
-  static const Color onPrimaryContainer = Color(0xFFC96A52);
+  static const Color onPrimaryContainer = Color(0xFF0B5499);
 
   // ==========================================================================
   // SECONDARY PALETTE
@@ -155,8 +155,42 @@ abstract class AppColors {
   static const LinearGradient primaryPressedGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [primaryDark, Color(0xFFB85A45)],
+    colors: [primaryDark, Color(0xFF094480)],
   );
+
+  // ==========================================================================
+  // DARK THEME COLORS
+  // ==========================================================================
+
+  /// Dark background
+  static const Color darkBackground = Color(0xFF0F172A);
+
+  /// Dark surface (cards, sheets)
+  static const Color darkSurface = Color(0xFF1E293B);
+
+  /// Dark surface variant (elevated elements)
+  static const Color darkSurfaceVariant = Color(0xFF334155);
+
+  /// Text on dark surface
+  static const Color darkOnSurface = Color(0xFFF1F5F9);
+
+  /// Secondary text on dark surface
+  static const Color darkOnSurfaceVariant = Color(0xFF94A3B8);
+
+  /// Borders in dark theme
+  static const Color darkOutline = Color(0xFF334155);
+
+  /// Subtle borders in dark theme
+  static const Color darkOutlineVariant = Color(0xFF1E293B);
+
+  /// Primary color for dark theme (lighter variant for visibility)
+  static const Color darkPrimary = Color(0xFF75ABDB);
+
+  /// Primary container in dark theme
+  static const Color darkPrimaryContainer = Color(0xFF063466);
+
+  /// Text on primary container in dark theme
+  static const Color darkOnPrimaryContainer = Color(0xFFD1E3F3);
 
   // ==========================================================================
   // MATERIAL COLOR SCHEME
@@ -192,5 +226,37 @@ abstract class AppColors {
     onInverseSurface: white,
     inversePrimary: primaryLight,
     surfaceContainerHighest: gray100,
+  );
+
+  /// Dark theme color scheme
+  static ColorScheme get darkColorScheme => const ColorScheme(
+    brightness: Brightness.dark,
+    primary: darkPrimary,
+    onPrimary: Color(0xFF04244D),
+    primaryContainer: darkPrimaryContainer,
+    onPrimaryContainer: darkOnPrimaryContainer,
+    secondary: Color(0xFF8B8FAE),
+    onSecondary: Color(0xFF1E293B),
+    secondaryContainer: Color(0xFF3D405B),
+    onSecondaryContainer: Color(0xFFE8E8EE),
+    tertiary: gold,
+    onTertiary: Color(0xFF1E293B),
+    tertiaryContainer: Color(0xFF5C4A1E),
+    onTertiaryContainer: goldDark,
+    error: Color(0xFFFF6B6B),
+    onError: Color(0xFF3D0000),
+    errorContainer: Color(0xFF5C1A1A),
+    onErrorContainer: Color(0xFFFFB4B4),
+    surface: darkSurface,
+    onSurface: darkOnSurface,
+    onSurfaceVariant: darkOnSurfaceVariant,
+    outline: darkOutline,
+    outlineVariant: darkOutlineVariant,
+    shadow: Color(0x40000000),
+    scrim: Color(0x73000000),
+    inverseSurface: Color(0xFFF1F5F9),
+    onInverseSurface: Color(0xFF1E293B),
+    inversePrimary: primary,
+    surfaceContainerHighest: darkSurfaceVariant,
   );
 }

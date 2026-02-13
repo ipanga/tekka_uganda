@@ -95,14 +95,14 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <Header />
 
       <main className="flex-1 py-8">
         <div className="max-w-3xl mx-auto px-4">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Messages</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Messages</h1>
           </div>
 
           {/* Search */}
@@ -120,7 +120,7 @@ export default function MessagesPage() {
             searchQuery ? (
               <Card>
                 <CardContent className="py-12 text-center">
-                  <p className="text-gray-500">No conversations found</p>
+                  <p className="text-gray-500 dark:text-gray-400">No conversations found</p>
                 </CardContent>
               </Card>
             ) : (
@@ -145,7 +145,7 @@ export default function MessagesPage() {
                               size="lg"
                             />
                             {chat.unreadCount > 0 && (
-                              <span className="absolute -top-1 -right-1 w-5 h-5 bg-pink-600 text-white text-xs rounded-full flex items-center justify-center">
+                              <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary-500 dark:bg-primary-400 text-white text-xs rounded-full flex items-center justify-center">
                                 {chat.unreadCount > 9 ? '9+' : chat.unreadCount}
                               </span>
                             )}
@@ -154,11 +154,11 @@ export default function MessagesPage() {
                           {/* Content */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between">
-                              <span className="font-medium text-gray-900">
+                              <span className="font-medium text-gray-900 dark:text-gray-100">
                                 {otherUser?.displayName || 'Unknown'}
                               </span>
                               {lastMessage && (
-                                <span className="text-xs text-gray-500">
+                                <span className="text-xs text-gray-500 dark:text-gray-400">
                                   {formatChatDate(lastMessage.createdAt)}
                                 </span>
                               )}
@@ -179,7 +179,7 @@ export default function MessagesPage() {
                                     <div className="w-full h-full bg-gray-200" />
                                   )}
                                 </div>
-                                <span className="text-sm text-gray-600 truncate">
+                                <span className="text-sm text-gray-600 dark:text-gray-300 truncate">
                                   {chat.listing.title}
                                 </span>
                               </div>
@@ -190,8 +190,8 @@ export default function MessagesPage() {
                               <p
                                 className={`text-sm mt-1 truncate ${
                                   chat.unreadCount > 0
-                                    ? 'text-gray-900 font-medium'
-                                    : 'text-gray-500'
+                                    ? 'text-gray-900 dark:text-gray-100 font-medium'
+                                    : 'text-gray-500 dark:text-gray-400'
                                 }`}
                               >
                                 {lastMessage.senderId === user?.id && 'You: '}

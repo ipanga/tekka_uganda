@@ -230,7 +230,7 @@ export default function VerificationsPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             >
               {STATUS_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -241,7 +241,7 @@ export default function VerificationsPage() {
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
             >
               {TYPE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -261,7 +261,7 @@ export default function VerificationsPage() {
         <CardContent>
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
             </div>
           ) : verifications.length === 0 ? (
             <div className="text-center py-8">
@@ -306,7 +306,7 @@ export default function VerificationsPage() {
                               setSelectedVerification(verification);
                               setShowViewModal(true);
                             }}
-                            className="text-sm text-pink-600 hover:underline flex items-center gap-1"
+                            className="text-sm text-primary-500 dark:text-primary-300 hover:underline flex items-center gap-1"
                           >
                             <EyeIcon className="w-4 h-4" />
                             View Documents
@@ -433,7 +433,7 @@ export default function VerificationsPage() {
                       href={selectedVerification.documentUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-pink-600 hover:underline break-all"
+                      className="text-primary-500 dark:text-primary-300 hover:underline break-all"
                     >
                       {selectedVerification.documentUrl}
                     </a>
@@ -450,7 +450,7 @@ export default function VerificationsPage() {
                       href={selectedVerification.selfieUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-pink-600 hover:underline break-all"
+                      className="text-primary-500 dark:text-primary-300 hover:underline break-all"
                     >
                       {selectedVerification.selfieUrl}
                     </a>
@@ -507,7 +507,7 @@ export default function VerificationsPage() {
               <textarea
                 value={approvalNotes}
                 onChange={(e) => setApprovalNotes(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 rows={3}
                 placeholder="Add any notes..."
               />
@@ -547,7 +547,7 @@ export default function VerificationsPage() {
               <textarea
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 rows={3}
                 placeholder="Explain why this verification is being rejected..."
               />

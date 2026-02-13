@@ -126,14 +126,14 @@ export default function MyListingsPage() {
   const filteredListings = getFilteredListings();
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
       <Header />
 
       <main className="flex-1 py-8">
         <div className="max-w-4xl mx-auto px-4">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">My Listings</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">My Listings</h1>
             <Link href="/sell">
               <Button>
                 <PlusIcon className="w-5 h-5 mr-2" />
@@ -166,8 +166,8 @@ export default function MyListingsPage() {
                                 className="object-cover"
                               />
                             ) : (
-                              <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                                <span className="text-gray-400 text-xs">No image</span>
+                              <div className="w-full h-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                                <span className="text-gray-400 dark:text-gray-500 text-xs">No image</span>
                               </div>
                             )}
                           </div>
@@ -179,11 +179,11 @@ export default function MyListingsPage() {
                             <div>
                               <Link
                                 href={`/listing/${listing.id}`}
-                                className="font-medium text-gray-900 hover:text-pink-600 line-clamp-1"
+                                className="font-medium text-gray-900 dark:text-gray-100 hover:text-primary-500 dark:hover:text-primary-300 line-clamp-1"
                               >
                                 {listing.title}
                               </Link>
-                              <p className="text-lg font-bold text-pink-600 mt-1">
+                              <p className="text-lg font-bold text-primary-500 dark:text-primary-400 mt-1">
                                 {formatPrice(listing.price)}
                               </p>
                             </div>
@@ -192,7 +192,7 @@ export default function MyListingsPage() {
                             </Badge>
                           </div>
 
-                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                          <div className="flex items-center gap-4 mt-2 text-sm text-gray-500 dark:text-gray-400">
                             <span>{listing.viewCount} views</span>
                             <span>{listing.saveCount} saves</span>
                             <span>Listed {formatRelativeTime(listing.createdAt)}</span>
@@ -290,7 +290,7 @@ export default function MyListingsPage() {
           }
           size="sm"
         >
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-300">
             {actionModal === 'delete' && (
               <>
                 Are you sure you want to delete &quot;{selectedListing.title}&quot;? This action cannot be

@@ -98,8 +98,8 @@ export function MeetupCard({ meetup, currentUserId, onUpdate }: MeetupCardProps)
           {/* Details */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between gap-2">
-              <Link href={`/profile/${otherUser?.id}`} className="hover:text-pink-600">
-                <span className="font-medium text-gray-900">
+              <Link href={`/profile/${otherUser?.id}`} className="hover:text-primary-500 dark:hover:text-primary-300">
+                <span className="font-medium text-gray-900 dark:text-gray-100">
                   {otherUser?.displayName || 'Unknown User'}
                 </span>
               </Link>
@@ -108,8 +108,8 @@ export function MeetupCard({ meetup, currentUserId, onUpdate }: MeetupCardProps)
 
             {/* Location and Time */}
             <div className="mt-3 space-y-2">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <MapPinIcon className="w-4 h-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <MapPinIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                 <span>
                   {meetup.location ? (
                     <span className="flex items-center gap-1">
@@ -122,20 +122,20 @@ export function MeetupCard({ meetup, currentUserId, onUpdate }: MeetupCardProps)
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <CalendarIcon className="w-4 h-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <CalendarIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                 <span>{formatDate(meetup.scheduledAt)}</span>
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <ClockIcon className="w-4 h-4 text-gray-400" />
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
+                <ClockIcon className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                 <span>{formatTime(meetup.scheduledAt)}</span>
               </div>
             </div>
 
             {/* Notes */}
             {meetup.notes && (
-              <p className="mt-3 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+              <p className="mt-3 text-sm text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-900 p-3 rounded-lg">
                 {meetup.notes}
               </p>
             )}
@@ -179,7 +179,7 @@ export function MeetupCard({ meetup, currentUserId, onUpdate }: MeetupCardProps)
             )}
 
             {isProposer && isPending && (
-              <p className="text-sm text-gray-500 mt-3">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">
                 Waiting for {otherUser?.displayName || 'them'} to respond...
               </p>
             )}

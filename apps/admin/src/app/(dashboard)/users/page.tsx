@@ -156,7 +156,7 @@ export default function UsersPage() {
                   placeholder="Search by name, email, or phone..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="h-9 w-full rounded-md border border-gray-300 pl-9 pr-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="h-9 w-full rounded-md border border-gray-300 pl-9 pr-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
                 />
               </div>
 
@@ -164,7 +164,7 @@ export default function UsersPage() {
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="h-9 rounded-md border border-gray-300 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="h-9 rounded-md border border-gray-300 px-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
               >
                 <option value="">All Roles</option>
                 {roles.map((role) => (
@@ -182,7 +182,7 @@ export default function UsersPage() {
           <CardContent className="p-0">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
               </div>
             ) : (
               <>
@@ -261,7 +261,7 @@ export default function UsersPage() {
                             <div className="flex gap-1">
                               {user.isVerified && (
                                 <ShieldCheckIcon
-                                  className="h-5 w-5 text-blue-500"
+                                  className="h-5 w-5 text-primary-500"
                                   title="Verified"
                                 />
                               )}
@@ -315,8 +315,8 @@ export default function UsersPage() {
                 </Table>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between border-t px-6 py-3">
-                  <p className="text-sm text-gray-500">
+                <div className="flex items-center justify-between border-t dark:border-gray-700 px-6 py-3">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
                     Page {page} of {totalPages}
                   </p>
                   <div className="flex gap-2">

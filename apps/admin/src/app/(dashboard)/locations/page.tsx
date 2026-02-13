@@ -138,8 +138,8 @@ export default function LocationsPage() {
           <Card>
             <CardContent className="py-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <BuildingOfficeIcon className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+                  <BuildingOfficeIcon className="h-6 w-6 text-primary-500" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{cities.length}</p>
@@ -190,7 +190,7 @@ export default function LocationsPage() {
           <CardContent className="p-0">
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent" />
+                <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
               </div>
             ) : (
               <Table>
@@ -221,7 +221,7 @@ export default function LocationsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            <BuildingOfficeIcon className="h-5 w-5 text-blue-600" />
+                            <BuildingOfficeIcon className="h-5 w-5 text-primary-500" />
                             <span className="font-medium">{city.name}</span>
                           </div>
                         </TableCell>
@@ -249,7 +249,7 @@ export default function LocationsPage() {
                               title="Edit"
                               onClick={() => handleEditCity(city)}
                             >
-                              <PencilIcon className="h-4 w-4 text-blue-600" />
+                              <PencilIcon className="h-4 w-4 text-primary-500" />
                             </Button>
                             <Button
                               size="sm"
@@ -282,7 +282,7 @@ export default function LocationsPage() {
                           <TableCell>
                             <div className="flex gap-1">
                               <Button size="sm" variant="ghost" title="Edit">
-                                <PencilIcon className="h-4 w-4 text-blue-600" />
+                                <PencilIcon className="h-4 w-4 text-primary-500" />
                               </Button>
                               <Button size="sm" variant="ghost" title="Delete">
                                 <TrashIcon className="h-4 w-4 text-red-600" />
@@ -309,7 +309,7 @@ export default function LocationsPage() {
         />
 
         {/* Info */}
-        <div className="mt-4 p-4 bg-blue-50 rounded-lg text-sm text-blue-700">
+        <div className="mt-4 p-4 bg-primary-50 rounded-lg text-sm text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
           <p className="font-medium">Location Coverage</p>
           <p className="mt-1">
             Currently serving Kampala and Entebbe. More cities will be added based on demand.

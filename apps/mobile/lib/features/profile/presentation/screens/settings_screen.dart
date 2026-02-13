@@ -8,6 +8,7 @@ import '../../../auth/application/auth_provider.dart';
 import '../../application/rate_app_provider.dart';
 import '../../application/language_provider.dart';
 import '../../application/location_provider.dart';
+import '../../application/theme_provider.dart';
 import '../widgets/rate_app_dialog.dart';
 
 /// App settings screen
@@ -76,7 +77,9 @@ class SettingsScreen extends ConsumerWidget {
           _SectionHeader(title: 'Preferences'),
           Container(
             color: AppColors.surface,
-            child: Column(children: [_LanguageTile(), _LocationTile()]),
+            child: Column(
+              children: [_ThemeTile(), _LanguageTile(), _LocationTile()],
+            ),
           ),
 
           const SizedBox(height: AppSpacing.space4),
@@ -279,6 +282,77 @@ class _SettingsTile extends StatelessWidget {
                 )
               : null),
       onTap: onTap,
+    );
+  }
+}
+
+class _ThemeTile extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themeState = ref.watch(themeProvider);
+
+    return ListTile(
+      leading: Icon(
+        themeState.selectedTheme.icon,
+        color: AppColors.onSurfaceVariant,
+      ),
+      title: Text('Theme', style: AppTypography.bodyLarge),
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            themeState.selectedTheme.displayName,
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(width: 4),
+          const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
+        ],
+      ),
+      onTap: () => _showThemeBottomSheet(context, ref),
+    );
+  }
+
+  void _showThemeBottomSheet(BuildContext context, WidgetRef ref) {
+    final currentTheme = ref.read(themeProvider).selectedTheme;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.space4,
+                AppSpacing.space2,
+                AppSpacing.space4,
+                AppSpacing.space2,
+              ),
+              child: Text(
+                'Choose Theme',
+                style: AppTypography.titleLarge,
+              ),
+            ),
+            ...AppThemeMode.values.map(
+              (mode) => ListTile(
+                leading: Icon(mode.icon),
+                title: Text(mode.displayName, style: AppTypography.bodyLarge),
+                trailing: currentTheme == mode
+                    ? const Icon(Icons.check, color: AppColors.primary)
+                    : null,
+                onTap: () {
+                  ref.read(themeProvider.notifier).setTheme(mode);
+                  Navigator.pop(context);
+                },
+              ),
+            ),
+            const SizedBox(height: AppSpacing.space2),
+          ],
+        ),
+      ),
     );
   }
 }
