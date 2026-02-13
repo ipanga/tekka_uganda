@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Header } from '@/components/layout/Header';
 import { CategoryNav } from '@/components/layout/CategoryNav';
 import { Footer } from '@/components/layout/Footer';
@@ -41,59 +42,47 @@ function HomeContent() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="relative overflow-hidden bg-gradient-to-br from-primary-500 via-primary-600 to-primary-800 dark:from-primary-900 dark:via-primary-800 dark:to-gray-900">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-              <div className="text-white">
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                  Uganda&apos;s Fashion{' '}
-                  <span className="block text-primary-200">Marketplace</span>
-                </h1>
-                <p className="mt-4 text-lg text-primary-100 max-w-lg">
-                  Buy and sell pre-loved fashion with confidence. Join thousands of fashion lovers across Uganda.
+        <section className="border-b border-[var(--border)] bg-[var(--surface)]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-8 items-center">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary-600 dark:text-primary-300">
+                  Tekka Pre-Loved Fashion
                 </p>
-                <div className="mt-8 flex flex-col sm:flex-row gap-4">
-                  <Link
-                    href="/explore"
-                    className="inline-flex items-center justify-center px-8 py-3.5 bg-white text-primary-600 font-semibold rounded-full hover:bg-primary-50 transition-colors shadow-lg"
-                  >
-                    Start Shopping
-                  </Link>
+                <h1 className="mt-3 text-4xl md:text-5xl lg:text-[3.35rem] font-bold leading-[1.08] text-gray-900 dark:text-gray-100">
+                  Fashion Finds That Feel New, Priced for Real Life
+                </h1>
+                <p className="mt-4 max-w-lg text-base md:text-lg text-gray-600 dark:text-gray-300">
+                  Buy and sell quality second-hand pieces in minutes, with a trusted marketplace built for everyday style.
+                </p>
+                <div className="mt-7">
                   <Link
                     href="/sell"
-                    className="inline-flex items-center justify-center px-8 py-3.5 border-2 border-white/30 text-white font-semibold rounded-full hover:bg-white/10 transition-colors"
+                    className="inline-flex items-center justify-center rounded-full bg-primary-500 px-7 py-3 text-sm font-semibold text-white transition hover:bg-primary-600"
                   >
-                    Sell Your Fashion
+                    Start Selling
                   </Link>
                 </div>
               </div>
-              <div className="hidden md:flex justify-center">
-                <div className="grid grid-cols-2 gap-4 opacity-20">
-                  {[...Array(6)].map((_, i) => (
-                    <div
-                      key={i}
-                      className={`rounded-2xl bg-white/20 ${
-                        i % 3 === 0 ? 'h-32 w-32' : i % 3 === 1 ? 'h-40 w-32' : 'h-28 w-32'
-                      }`}
-                    />
-                  ))}
+
+              <div className="relative">
+                <div className="relative overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--surface-elevated)]">
+                  <Image
+                    src="/images/hero-fashion.svg"
+                    alt="Second-hand fashion clothing pieces on display"
+                    width={960}
+                    height={720}
+                    priority
+                    className="h-auto w-full"
+                  />
                 </div>
               </div>
             </div>
           </div>
-          {/* Wave bottom edge */}
-          <div className="absolute bottom-0 left-0 right-0">
-            <svg viewBox="0 0 1440 60" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full">
-              <path
-                d="M0 60V30C240 0 480 0 720 30C960 60 1200 60 1440 30V60H0Z"
-                className="fill-gray-50 dark:fill-gray-900"
-              />
-            </svg>
-          </div>
         </section>
 
         {/* Listings Section */}
-        <section id="listings" className="py-12 bg-gray-50 dark:bg-gray-900">
+        <section id="listings" className="py-12 bg-[var(--background)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">Just Dropped</h2>
@@ -123,21 +112,6 @@ function HomeContent() {
           </div>
         </section>
 
-        {/* CTA Section */}
-        <section className="py-12 bg-gradient-to-r from-primary-500 to-primary-600 text-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">Ready to Start Selling?</h2>
-            <p className="text-primary-100 mb-6 max-w-xl mx-auto text-sm md:text-base">
-              Turn your closet into cash. List your first item today.
-            </p>
-            <Link
-              href="/sell"
-              className="inline-flex items-center justify-center px-6 py-3 bg-white text-primary-500 font-semibold rounded-full hover:bg-primary-50 transition-colors"
-            >
-              Start Selling Now
-            </Link>
-          </div>
-        </section>
       </main>
 
       <Footer />

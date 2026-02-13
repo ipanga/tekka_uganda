@@ -17,8 +17,10 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colorScheme.surfaceContainerHighest,
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         children: [
@@ -27,7 +29,7 @@ class SettingsScreen extends ConsumerWidget {
           // Account section
           _SectionHeader(title: 'Account'),
           Container(
-            color: AppColors.surface,
+            color: colorScheme.surface,
             child: Column(
               children: [
                 _SettingsTile(
@@ -59,7 +61,7 @@ class SettingsScreen extends ConsumerWidget {
           // Notifications section
           _SectionHeader(title: 'Notifications'),
           Container(
-            color: AppColors.surface,
+            color: colorScheme.surface,
             child: Column(
               children: [
                 _SettingsTile(
@@ -76,7 +78,7 @@ class SettingsScreen extends ConsumerWidget {
           // Preferences section
           _SectionHeader(title: 'Preferences'),
           Container(
-            color: AppColors.surface,
+            color: colorScheme.surface,
             child: Column(
               children: [_ThemeTile(), _LanguageTile(), _LocationTile()],
             ),
@@ -87,7 +89,7 @@ class SettingsScreen extends ConsumerWidget {
           // Support section
           _SectionHeader(title: 'Support'),
           Container(
-            color: AppColors.surface,
+            color: colorScheme.surface,
             child: Column(
               children: [
                 _SettingsTile(
@@ -119,7 +121,7 @@ class SettingsScreen extends ConsumerWidget {
           // About section
           _SectionHeader(title: 'About'),
           Container(
-            color: AppColors.surface,
+            color: colorScheme.surface,
             child: Column(
               children: [
                 _SettingsTile(
@@ -128,7 +130,7 @@ class SettingsScreen extends ConsumerWidget {
                   trailing: Text(
                     '1.0.0',
                     style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.onSurfaceVariant,
+                      color: colorScheme.onSurfaceVariant,
                     ),
                   ),
                   showChevron: false,
@@ -147,7 +149,7 @@ class SettingsScreen extends ConsumerWidget {
 
           // Danger zone
           Container(
-            color: AppColors.surface,
+            color: colorScheme.surface,
             child: Column(
               children: [
                 _SettingsTile(
@@ -225,6 +227,8 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.space4,
@@ -235,7 +239,7 @@ class _SectionHeader extends StatelessWidget {
       child: Text(
         title.toUpperCase(),
         style: AppTypography.labelSmall.copyWith(
-          color: AppColors.onSurfaceVariant,
+          color: colorScheme.onSurfaceVariant,
           letterSpacing: 1.2,
         ),
       ),
@@ -262,24 +266,23 @@ class _SettingsTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return ListTile(
       leading: Icon(
         icon,
-        color: isDestructive ? AppColors.error : AppColors.onSurfaceVariant,
+        color: isDestructive ? colorScheme.error : colorScheme.onSurfaceVariant,
       ),
       title: Text(
         title,
         style: AppTypography.bodyLarge.copyWith(
-          color: isDestructive ? AppColors.error : AppColors.onSurface,
+          color: isDestructive ? colorScheme.error : colorScheme.onSurface,
         ),
       ),
       trailing:
           trailing ??
           (showChevron && onTap != null
-              ? const Icon(
-                  Icons.chevron_right,
-                  color: AppColors.onSurfaceVariant,
-                )
+              ? Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant)
               : null),
       onTap: onTap,
     );
@@ -290,11 +293,12 @@ class _ThemeTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeState = ref.watch(themeProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return ListTile(
       leading: Icon(
         themeState.selectedTheme.icon,
-        color: AppColors.onSurfaceVariant,
+        color: colorScheme.onSurfaceVariant,
       ),
       title: Text('Theme', style: AppTypography.bodyLarge),
       trailing: Row(
@@ -303,11 +307,11 @@ class _ThemeTile extends ConsumerWidget {
           Text(
             themeState.selectedTheme.displayName,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
+          Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
         ],
       ),
       onTap: () => _showThemeBottomSheet(context, ref),
@@ -316,6 +320,7 @@ class _ThemeTile extends ConsumerWidget {
 
   void _showThemeBottomSheet(BuildContext context, WidgetRef ref) {
     final currentTheme = ref.read(themeProvider).selectedTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     showModalBottomSheet(
       context: context,
@@ -331,17 +336,14 @@ class _ThemeTile extends ConsumerWidget {
                 AppSpacing.space4,
                 AppSpacing.space2,
               ),
-              child: Text(
-                'Choose Theme',
-                style: AppTypography.titleLarge,
-              ),
+              child: Text('Choose Theme', style: AppTypography.titleLarge),
             ),
             ...AppThemeMode.values.map(
               (mode) => ListTile(
                 leading: Icon(mode.icon),
                 title: Text(mode.displayName, style: AppTypography.bodyLarge),
                 trailing: currentTheme == mode
-                    ? const Icon(Icons.check, color: AppColors.primary)
+                    ? Icon(Icons.check, color: colorScheme.primary)
                     : null,
                 onTap: () {
                   ref.read(themeProvider.notifier).setTheme(mode);
@@ -361,9 +363,10 @@ class _LanguageTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final languageState = ref.watch(languageProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return ListTile(
-      leading: const Icon(Icons.language, color: AppColors.onSurfaceVariant),
+      leading: Icon(Icons.language, color: colorScheme.onSurfaceVariant),
       title: Text('Language', style: AppTypography.bodyLarge),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -371,11 +374,11 @@ class _LanguageTile extends ConsumerWidget {
           Text(
             languageState.selectedLanguage.displayName,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
+          Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
         ],
       ),
       onTap: () => context.push(AppRoutes.language),
@@ -387,11 +390,12 @@ class _LocationTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locationState = ref.watch(locationPreferencesProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return ListTile(
-      leading: const Icon(
+      leading: Icon(
         Icons.location_on_outlined,
-        color: AppColors.onSurfaceVariant,
+        color: colorScheme.onSurfaceVariant,
       ),
       title: Text('Default Location', style: AppTypography.bodyLarge),
       trailing: Row(
@@ -400,11 +404,11 @@ class _LocationTile extends ConsumerWidget {
           Text(
             locationState.selectedLocation.displayName,
             style: AppTypography.bodyMedium.copyWith(
-              color: AppColors.onSurfaceVariant,
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(width: 4),
-          const Icon(Icons.chevron_right, color: AppColors.onSurfaceVariant),
+          Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
         ],
       ),
       onTap: () => context.push(AppRoutes.defaultLocation),

@@ -108,7 +108,7 @@ export function Header({ title }: HeaderProps) {
   ].filter(item => item.count > 0);
 
   return (
-    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-6 dark:border-gray-700 dark:bg-gray-800">
+    <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-[var(--border)] bg-[var(--surface)] px-6">
       <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{title}</h1>
 
       <div className="ml-auto flex items-center gap-4">
@@ -124,13 +124,32 @@ export function Header({ title }: HeaderProps) {
 
         {/* Theme Toggle */}
         {mounted && (
-          <button
-            onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-            className="rounded-md p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-500 dark:hover:bg-gray-700 dark:hover:text-gray-300 transition-colors"
-            aria-label="Toggle theme"
-          >
-            {resolvedTheme === 'dark' ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-          </button>
+          <div className="flex items-center gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-700/70">
+            <button
+              onClick={() => setTheme('light')}
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                resolvedTheme !== 'dark'
+                  ? 'bg-primary-500 text-white'
+                  : 'text-gray-600 hover:text-primary-500 dark:text-gray-300 dark:hover:text-primary-300'
+              }`}
+              aria-label="Set light theme"
+            >
+              <SunIcon className="h-4 w-4" />
+              Light
+            </button>
+            <button
+              onClick={() => setTheme('dark')}
+              className={`inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors ${
+                resolvedTheme === 'dark'
+                  ? 'bg-primary-500 text-white'
+                  : 'text-gray-600 hover:text-primary-500 dark:text-gray-300 dark:hover:text-primary-300'
+              }`}
+              aria-label="Set dark theme"
+            >
+              <MoonIcon className="h-4 w-4" />
+              Dark
+            </button>
+          </div>
         )}
 
         {/* Notifications */}

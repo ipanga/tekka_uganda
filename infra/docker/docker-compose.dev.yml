@@ -1,4 +1,7 @@
 services:
+# Usage:
+#   docker compose --env-file .env.development -f infra/docker/docker-compose.dev.yml up -d --build
+
   # ===========================================
   # Backend API (api.tekka.ug)
   # ===========================================
@@ -15,7 +18,7 @@ services:
     environment:
       NODE_ENV: development
       DATABASE_URL: ${DATABASE_URL}
-      PORT: 4000
+      PORT: ${API_PORT:-4000}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
       FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
@@ -25,14 +28,14 @@ services:
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
       THINKXCLOUD_API_KEY: ${THINKXCLOUD_API_KEY}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:8080}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:${USER_PORT:-3000},http://localhost:${ADMIN_PORT:-3001},http://localhost:8080}
     ports:
-      - "4000:4000"
+      - "${API_PORT:-4000}:${API_PORT:-4000}"
     networks:
       - tekka-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "node -e \"const net = require('net'); const s = net.connect(4000, 'localhost', () => { s.destroy(); process.exit(0); }); s.on('error', () => process.exit(1));\""]
+      test: ["CMD-SHELL", "node -e \"const net = require('net'); const s = net.connect(${API_PORT:-4000}, 'localhost', () => { s.destroy(); process.exit(0); }); s.on('error', () => process.exit(1));\""]
       interval: 10s
       timeout: 5s
       start_period: 45s
@@ -56,9 +59,9 @@ services:
     container_name: tekka-admin
     environment:
       NODE_ENV: production
-      PORT: 3001
+      PORT: ${ADMIN_PORT:-3001}
     ports:
-      - "3001:3001"
+      - "${ADMIN_PORT:-3001}:${ADMIN_PORT:-3001}"
     depends_on:
       api:
         condition: service_healthy
@@ -84,9 +87,9 @@ services:
     container_name: tekka-user
     environment:
       NODE_ENV: production
-      PORT: 3000
+      PORT: ${USER_PORT:-3000}
     ports:
-      - "3000:3000"
+      - "${USER_PORT:-3000}:${USER_PORT:-3000}"
     depends_on:
       api:
         condition: service_healthy

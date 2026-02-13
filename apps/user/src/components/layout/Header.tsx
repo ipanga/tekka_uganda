@@ -33,14 +33,17 @@ export function Header() {
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
   const { user, isAuthenticated, logout } = useAuthStore();
   const { unreadCount: notificationCount, setUnreadCount: setNotificationCount } = useNotificationStore();
   const { unreadCount: chatCount, setUnreadCount: setChatCount } = useChatStore();
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     const loadCounts = async () => {
@@ -96,7 +99,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+    <header className="sticky top-0 z-50 bg-[var(--surface)] border-b border-[var(--border)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -156,15 +159,12 @@ export function Header() {
                   )}
                 </Link>
 
-                {/* Theme Toggle */}
                 {mounted && (
-                  <button
-                    onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-                    className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    aria-label="Toggle theme"
-                  >
-                    {resolvedTheme === 'dark' ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-                  </button>
+                  <ThemeModeToggle
+                    resolvedTheme={resolvedTheme}
+                    onLight={() => setTheme('light')}
+                    onDark={() => setTheme('dark')}
+                  />
                 )}
 
                 {/* User Menu */}
@@ -270,15 +270,12 @@ export function Header() {
               </>
             ) : (
               <>
-                {/* Theme Toggle (unauthenticated) */}
                 {mounted && (
-                  <button
-                    onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-                    className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    aria-label="Toggle theme"
-                  >
-                    {resolvedTheme === 'dark' ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-                  </button>
+                  <ThemeModeToggle
+                    resolvedTheme={resolvedTheme}
+                    onLight={() => setTheme('light')}
+                    onDark={() => setTheme('dark')}
+                  />
                 )}
                 <Link
                   href="/login"
@@ -325,15 +322,13 @@ export function Header() {
               </div>
             </form>
             <nav className="flex flex-col space-y-3">
-              {/* Theme Toggle - Mobile */}
               {mounted && (
-                <button
-                  onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
-                  className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary-500 dark:hover:text-primary-300 py-2"
-                >
-                  {resolvedTheme === 'dark' ? <SunIcon className="h-5 w-5" /> : <MoonIcon className="h-5 w-5" />}
-                  {resolvedTheme === 'dark' ? 'Light Mode' : 'Dark Mode'}
-                </button>
+                <ThemeModeToggle
+                  resolvedTheme={resolvedTheme}
+                  onLight={() => setTheme('light')}
+                  onDark={() => setTheme('dark')}
+                  mobile
+                />
               )}
               {isAuthenticated ? (
                 <>
@@ -433,3 +428,54 @@ export function Header() {
 }
 
 export default Header;
+
+function ThemeModeToggle({
+  resolvedTheme,
+  onLight,
+  onDark,
+  mobile = false,
+}: {
+  resolvedTheme?: string;
+  onLight: () => void;
+  onDark: () => void;
+  mobile?: boolean;
+}) {
+  const buttonBase = mobile
+    ? 'flex-1 items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors'
+    : 'inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium transition-colors';
+
+  const lightActive = resolvedTheme !== 'dark';
+  const darkActive = resolvedTheme === 'dark';
+
+  return (
+    <div
+      className={mobile ? 'flex items-center gap-2' : 'flex items-center gap-1 rounded-lg bg-gray-100 p-1 dark:bg-gray-800'}
+      aria-label="Theme mode"
+    >
+      <button
+        onClick={onLight}
+        className={`${buttonBase} ${
+          lightActive
+            ? 'border-primary-500 bg-primary-500 text-white'
+            : 'border-gray-300 text-gray-600 hover:border-primary-300 hover:text-primary-500 dark:border-gray-600 dark:text-gray-300 dark:hover:border-primary-300 dark:hover:text-primary-300'
+        }`}
+        aria-label="Set light theme"
+      >
+        <SunIcon className="h-4 w-4" />
+        {mobile && 'Light'}
+      </button>
+      <button
+        onClick={onDark}
+        className={`${buttonBase} ${
+          darkActive
+            ? 'border-primary-500 bg-primary-500 text-white'
+            : 'border-gray-300 text-gray-600 hover:border-primary-300 hover:text-primary-500 dark:border-gray-600 dark:text-gray-300 dark:hover:border-primary-300 dark:hover:text-primary-300'
+        }`}
+        aria-label="Set dark theme"
+      >
+        <MoonIcon className="h-4 w-4" />
+        {mobile && 'Dark'}
+      </button>
+    </div>
+  );
+}
