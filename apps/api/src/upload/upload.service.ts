@@ -40,6 +40,7 @@ export class UploadService {
         {
           folder,
           resource_type: 'image',
+          context: `status=temp|uploadedAt=${new Date().toISOString()}`,
           transformation: [
             { width: 1200, height: 1200, crop: 'limit' },
             { quality: qualityLevel },
@@ -146,6 +147,84 @@ export class UploadService {
       `Cloudinary bulk delete: ${results.deleted} deleted, ${results.failed} failed`,
     );
     return results;
+  }
+
+  /**
+   * Mark images as permanent in Cloudinary (called when listing is created/updated)
+   */
+  async markImagesPermanent(imageUrls: string[]): Promise<void> {
+    if (!imageUrls || imageUrls.length === 0) return;
+
+    const promises = imageUrls.map(async (url) => {
+      const publicId = this.extractPublicIdFromUrl(url);
+      if (!publicId) return;
+
+      try {
+        await cloudinary.uploader.explicit(publicId, {
+          type: 'upload',
+          context: 'status=permanent',
+        });
+      } catch (error) {
+        this.logger.warn(
+          `Failed to mark image permanent ${publicId}: ${error.message}`,
+        );
+      }
+    });
+
+    await Promise.all(promises);
+    this.logger.log(`Marked ${imageUrls.length} images as permanent`);
+  }
+
+  /**
+   * Clean up temporary images older than the specified max age
+   * @returns Number of images deleted
+   */
+  async cleanupTempImages(maxAgeHours = 24): Promise<number> {
+    const cutoff = new Date(Date.now() - maxAgeHours * 60 * 60 * 1000);
+    let deleted = 0;
+    let nextCursor: string | undefined;
+
+    try {
+      do {
+        const searchQuery = cloudinary.search
+          .expression('folder:listings AND context.status:temp')
+          .sort_by('created_at', 'asc')
+          .with_field('context')
+          .max_results(100);
+
+        if (nextCursor) {
+          searchQuery.next_cursor(nextCursor);
+        }
+
+        const result = await searchQuery.execute();
+        nextCursor = result.next_cursor;
+
+        for (const resource of result.resources) {
+          const uploadedAt = resource.context?.custom?.uploadedAt;
+          if (uploadedAt && new Date(uploadedAt) > cutoff) {
+            continue;
+          }
+
+          // Also check created_at as fallback
+          if (!uploadedAt && new Date(resource.created_at) > cutoff) {
+            continue;
+          }
+
+          try {
+            await cloudinary.uploader.destroy(resource.public_id);
+            deleted++;
+          } catch (error) {
+            this.logger.warn(
+              `Failed to delete temp image ${resource.public_id}: ${error.message}`,
+            );
+          }
+        }
+      } while (nextCursor);
+    } catch (error) {
+      this.logger.error(`Temp image cleanup failed: ${error.message}`);
+    }
+
+    return deleted;
   }
 
   /**
