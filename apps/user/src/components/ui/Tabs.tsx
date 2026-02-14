@@ -35,8 +35,8 @@ export function Tabs({
             className={cn(
               'inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors',
               activeTab === tab.id
-                ? 'bg-primary-500 dark:bg-primary-400 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                ? 'bg-primary-500 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
             )}
           >
             {tab.icon}
@@ -46,8 +46,8 @@ export function Tabs({
                 className={cn(
                   'ml-1 px-2 py-0.5 rounded-full text-xs',
                   activeTab === tab.id
-                    ? 'bg-primary-500 dark:bg-primary-400 text-white'
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-gray-200 text-gray-600'
                 )}
               >
                 {tab.count}
@@ -60,7 +60,7 @@ export function Tabs({
   }
 
   return (
-    <div className={cn('border-b border-gray-200 dark:border-gray-700', className)}>
+    <div className={cn('border-b border-gray-200', className)}>
       <nav className="flex gap-8 -mb-px">
         {tabs.map((tab) => (
           <button
@@ -69,8 +69,8 @@ export function Tabs({
             className={cn(
               'inline-flex items-center gap-2 py-4 px-1 text-sm font-medium border-b-2 transition-colors',
               activeTab === tab.id
-                ? 'border-primary-500 text-primary-500 dark:text-primary-300'
-                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:border-gray-300 dark:hover:border-gray-600'
+                ? 'border-primary-500 text-primary-500'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
             )}
           >
             {tab.icon}
@@ -80,8 +80,8 @@ export function Tabs({
                 className={cn(
                   'ml-1 px-2 py-0.5 rounded-full text-xs',
                   activeTab === tab.id
-                    ? 'bg-primary-100 dark:bg-primary-900 text-primary-500 dark:text-primary-300'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'
+                    ? 'bg-primary-100 text-primary-500'
+                    : 'bg-gray-100 text-gray-600'
                 )}
               >
                 {tab.count}

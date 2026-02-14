@@ -17,7 +17,7 @@ export function Spinner({ size = 'md', className }: SpinnerProps) {
   return (
     <div
       className={cn(
-        'animate-spin rounded-full border-primary-500 dark:border-primary-400 border-t-transparent',
+        'animate-spin rounded-full border-primary-500 border-t-transparent',
         sizeStyles[size],
         className
       )}
@@ -31,10 +31,10 @@ export interface LoadingOverlayProps {
 
 export function LoadingOverlay({ message = 'Loading...' }: LoadingOverlayProps) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm">
       <div className="flex flex-col items-center gap-4">
         <Spinner size="lg" />
-        <p className="text-sm text-gray-600 dark:text-gray-300">{message}</p>
+        <p className="text-sm text-gray-600">{message}</p>
       </div>
     </div>
   );

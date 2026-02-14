@@ -113,7 +113,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
 
       <main className="flex-1 py-8">
@@ -121,13 +121,13 @@ export default function SettingsPage() {
           {/* Back Button */}
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 mb-6"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
           >
             <ArrowLeftIcon className="w-5 h-5" />
             Back
           </button>
 
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-6">Settings</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">Settings</h1>
 
           {/* Notification Settings */}
           <Card className="mb-6">
@@ -254,10 +254,10 @@ export default function SettingsPage() {
         size="sm"
       >
         <div className="space-y-4">
-          <p className="text-gray-600 dark:text-gray-300">
+          <p className="text-gray-600">
             Are you sure you want to delete your account? This action cannot be undone.
           </p>
-          <ul className="text-sm text-gray-500 dark:text-gray-400 list-disc list-inside space-y-1">
+          <ul className="text-sm text-gray-500 list-disc list-inside space-y-1">
             <li>All your listings will be removed</li>
             <li>Your messages will be deleted</li>
             <li>Your reviews will be anonymized</li>
@@ -292,13 +292,13 @@ function ToggleSetting({ label, description, checked, onChange }: ToggleSettingP
   return (
     <div className="flex items-center justify-between">
       <div>
-        <p className="font-medium text-gray-900 dark:text-gray-100">{label}</p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{description}</p>
+        <p className="font-medium text-gray-900">{label}</p>
+        <p className="text-sm text-gray-500">{description}</p>
       </div>
       <button
         onClick={() => onChange(!checked)}
         className={`relative w-12 h-6 rounded-full transition-colors ${
-          checked ? 'bg-primary-500 dark:bg-primary-400' : 'bg-gray-200 dark:bg-gray-600'
+          checked ? 'bg-primary-500' : 'bg-gray-200'
         }`}
       >
         <span

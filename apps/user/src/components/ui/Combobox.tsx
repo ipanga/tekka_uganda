@@ -49,7 +49,7 @@ export function Combobox({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
           {showRequired && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -68,8 +68,8 @@ export function Combobox({
           <div className="relative w-full">
             <HeadlessCombobox.Input
               className={cn(
-                'block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2.5',
-                'text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500',
+                'block w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5',
+                'text-gray-900 placeholder-gray-400',
                 'focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20 focus:outline-none',
                 'disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed',
                 'transition-colors duration-200',
@@ -82,7 +82,7 @@ export function Combobox({
             />
             <HeadlessCombobox.Button className="absolute inset-y-0 right-0 flex items-center pr-3">
               <ChevronUpDownIcon
-                className="h-5 w-5 text-gray-400 dark:text-gray-500"
+                className="h-5 w-5 text-gray-400"
                 aria-hidden="true"
               />
             </HeadlessCombobox.Button>
@@ -94,9 +94,9 @@ export function Combobox({
             leaveTo="opacity-0"
             afterLeave={() => setQuery('')}
           >
-            <HeadlessCombobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white dark:bg-gray-800 py-1 text-base shadow-lg ring-1 ring-black/5 dark:ring-white/10 focus:outline-none sm:text-sm">
+            <HeadlessCombobox.Options className="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
               {filteredOptions.length === 0 && query !== '' ? (
-                <div className="relative cursor-default select-none px-4 py-2 text-gray-500 dark:text-gray-400">
+                <div className="relative cursor-default select-none px-4 py-2 text-gray-500">
                   No results found.
                 </div>
               ) : (
@@ -106,7 +106,7 @@ export function Combobox({
                     className={({ active }) =>
                       cn(
                         'relative cursor-pointer select-none py-2 pl-10 pr-4',
-                        active ? 'bg-primary-50 dark:bg-primary-900 text-primary-900 dark:text-primary-100' : 'text-gray-900 dark:text-gray-100'
+                        active ? 'bg-primary-50 text-primary-900' : 'text-gray-900'
                       )
                     }
                     value={option.value}
@@ -125,7 +125,7 @@ export function Combobox({
                           <span
                             className={cn(
                               'absolute inset-y-0 left-0 flex items-center pl-3',
-                              active ? 'text-primary-500 dark:text-primary-300' : 'text-primary-500 dark:text-primary-300'
+                              active ? 'text-primary-500' : 'text-primary-500'
                             )}
                           >
                             <CheckIcon className="h-5 w-5" aria-hidden="true" />
@@ -142,7 +142,7 @@ export function Combobox({
       </HeadlessCombobox>
       {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
       {helperText && !error && (
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{helperText}</p>
+        <p className="mt-1 text-sm text-gray-500">{helperText}</p>
       )}
     </div>
   );

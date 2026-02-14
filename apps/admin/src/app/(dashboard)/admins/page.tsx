@@ -217,8 +217,8 @@ export default function AdminsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Admin Users</h1>
-          <p className="text-gray-500 dark:text-gray-400">Manage administrators and moderators</p>
+          <h1 className="text-2xl font-bold text-gray-900">Admin Users</h1>
+          <p className="text-gray-500">Manage administrators and moderators</p>
         </div>
         <Button onClick={() => setShowCreateModal(true)}>
           <PlusIcon className="w-5 h-5 mr-2" />
@@ -231,7 +231,7 @@ export default function AdminsPage() {
         <Card>
           <CardContent className="py-4">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+              <div className="p-3 bg-primary-100 rounded-lg">
                 <ShieldCheckIcon className="w-6 h-6 text-primary-500" />
               </div>
               <div>
@@ -246,7 +246,7 @@ export default function AdminsPage() {
         <Card>
           <CardContent className="py-4">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+              <div className="p-3 bg-primary-100 rounded-lg">
                 <UserGroupIcon className="w-6 h-6 text-primary-500" />
               </div>
               <div>
@@ -384,38 +384,38 @@ export default function AdminsPage() {
       {/* Create Admin Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Add Admin User</h3>
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Add Admin User</h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input
                   type="email"
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="admin@tekka.ug"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Display Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Display Name</label>
                 <input
                   type="text"
                   value={formDisplayName}
                   onChange={(e) => setFormDisplayName(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="John Doe"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
                 <select
                   value={formRole}
                   onChange={(e) => setFormRole(e.target.value as 'ADMIN' | 'MODERATOR')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   <option value="MODERATOR">Moderator</option>
                   <option value="ADMIN">Administrator</option>
@@ -423,15 +423,15 @@ export default function AdminsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Permissions</label>
-                <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Permissions</label>
+                <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3">
                   {ALL_PERMISSIONS.map((perm) => (
                     <label key={perm.value} className="flex items-start gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={formPermissions.includes(perm.value)}
                         onChange={() => togglePermission(perm.value)}
-                        className="mt-1 rounded border-gray-300 text-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                        className="mt-1 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
                       />
                       <div>
                         <p className="text-sm font-medium text-gray-900">{perm.label}</p>
@@ -467,19 +467,19 @@ export default function AdminsPage() {
       {/* Edit Permissions Modal */}
       {showPermissionsModal && selectedAdmin && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
               Edit Permissions - {selectedAdmin.displayName}
             </h3>
 
-            <div className="space-y-2 max-h-64 overflow-y-auto border border-gray-200 dark:border-gray-600 rounded-lg p-3">
+            <div className="space-y-2 max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3">
               {ALL_PERMISSIONS.map((perm) => (
                 <label key={perm.value} className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={formPermissions.includes(perm.value)}
                     onChange={() => togglePermission(perm.value)}
-                    className="mt-1 rounded border-gray-300 text-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                    className="mt-1 rounded border-gray-300 text-primary-500 focus:ring-primary-500"
                   />
                   <div>
                     <p className="text-sm font-medium text-gray-900">{perm.label}</p>
@@ -510,9 +510,9 @@ export default function AdminsPage() {
       {/* Delete Confirmation Modal */}
       {showDeleteModal && selectedAdmin && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Remove Admin</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
+          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Remove Admin</h3>
+            <p className="text-gray-600 mb-4">
               Are you sure you want to remove <strong>{selectedAdmin.displayName}</strong> from the
               admin team? They will lose all admin privileges.
             </p>

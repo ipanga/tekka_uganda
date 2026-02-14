@@ -31,11 +31,11 @@ export function ReviewCard({ review, showReviewee = false }: ReviewCardProps) {
             <div className="flex items-center justify-between">
               <Link
                 href={`/profile/${displayUser?.id}`}
-                className="font-medium text-gray-900 dark:text-gray-100 hover:text-primary-500 dark:hover:text-primary-300"
+                className="font-medium text-gray-900 hover:text-primary-500"
               >
                 {displayUser?.displayName || 'Anonymous'}
               </Link>
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-gray-500">
                 {formatRelativeTime(review.createdAt)}
               </span>
             </div>
@@ -54,14 +54,14 @@ export function ReviewCard({ review, showReviewee = false }: ReviewCardProps) {
 
             {/* Comment */}
             {review.comment && (
-              <p className="text-gray-600 dark:text-gray-300 mt-2">{review.comment}</p>
+              <p className="text-gray-600 mt-2">{review.comment}</p>
             )}
 
             {/* Listing Reference */}
             {review.listing && (
               <Link
                 href={`/listing/${review.listing.id}`}
-                className="inline-block mt-2 text-sm text-primary-500 dark:text-primary-300 hover:text-primary-600 dark:hover:text-primary-200"
+                className="inline-block mt-2 text-sm text-primary-500 hover:text-primary-600"
               >
                 View listing: {review.listing.title}
               </Link>
@@ -97,7 +97,7 @@ export function ReviewStars({ rating, size = 'md', showCount }: ReviewStarsProps
         />
       ))}
       {showCount !== undefined && (
-        <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">({showCount})</span>
+        <span className="text-sm text-gray-500 ml-1">({showCount})</span>
       )}
     </div>
   );

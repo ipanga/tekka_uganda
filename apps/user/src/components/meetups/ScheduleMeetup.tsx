@@ -121,15 +121,15 @@ export function ScheduleMeetup({
       <div className="space-y-6">
         {/* Safe Locations */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
             <MapPinIcon className="w-4 h-4 inline mr-1" />
             Choose a meeting location
           </label>
 
           {loadingLocations ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 dark:border-primary-400 mx-auto"></div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading safe locations...</p>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 mx-auto"></div>
+              <p className="text-sm text-gray-500 mt-2">Loading safe locations...</p>
             </div>
           ) : (
             <>
@@ -156,16 +156,16 @@ export function ScheduleMeetup({
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                            <span className="font-medium text-gray-900 truncate">
                               {location.name}
                             </span>
                             <Badge variant="success" size="sm">Safe</Badge>
                           </div>
-                          <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                          <p className="text-sm text-gray-500 truncate">
                             {location.address}
                           </p>
                           {location.openingHours && (
-                            <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            <p className="text-xs text-gray-400 mt-1">
                               {location.openingHours}
                             </p>
                           )}
@@ -185,12 +185,12 @@ export function ScheduleMeetup({
                 }}
                 className={`w-full p-3 border rounded-lg text-left transition-colors ${
                   useCustomLocation
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900'
-                    : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                    ? 'border-primary-500 bg-primary-50'
+                    : 'border-gray-200 hover:border-gray-300'
                 }`}
               >
-                <span className="font-medium text-gray-900 dark:text-gray-100">Use custom location</span>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
+                <span className="font-medium text-gray-900">Use custom location</span>
+                <p className="text-sm text-gray-500">
                   Enter your own meeting location
                 </p>
               </button>

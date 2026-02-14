@@ -74,7 +74,7 @@ export function ListingCard({ listing, onSaveChange, showStatus }: ListingCardPr
   };
 
   return (
-    <div className="group relative bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+    <div className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       {/* Image Container */}
       <Link href={`/listing/${listing.id}`} className="block aspect-[3/4] relative overflow-hidden">
         {listing.imageUrls.length > 0 ? (
@@ -85,8 +85,8 @@ export function ListingCard({ listing, onSaveChange, showStatus }: ListingCardPr
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-            <span className="text-gray-400 dark:text-gray-500">No image</span>
+          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-400">No image</span>
           </div>
         )}
 
@@ -110,37 +110,37 @@ export function ListingCard({ listing, onSaveChange, showStatus }: ListingCardPr
         className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-colors disabled:opacity-50"
       >
         {isSaved ? (
-          <HeartSolidIcon className="h-5 w-5 text-primary-500 dark:text-primary-300" />
+          <HeartSolidIcon className="h-5 w-5 text-primary-500" />
         ) : (
-          <HeartIcon className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+          <HeartIcon className="h-5 w-5 text-gray-600" />
         )}
       </button>
 
       {/* Details */}
       <div className="p-3">
         <Link href={`/listing/${listing.id}`}>
-          <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate hover:text-primary-500 dark:hover:text-primary-300 transition-colors">
+          <h3 className="font-medium text-gray-900 truncate hover:text-primary-500 transition-colors">
             {listing.title}
           </h3>
         </Link>
 
         <div className="mt-1 flex items-center justify-between">
-          <span className="text-lg font-bold text-primary-500 dark:text-primary-300">
+          <span className="text-lg font-bold text-primary-500">
             {formatPrice(listing.price)}
           </span>
           {listing.originalPrice && listing.originalPrice > listing.price && (
-            <span className="text-sm text-gray-400 dark:text-gray-500 line-through">
+            <span className="text-sm text-gray-400 line-through">
               {formatPrice(listing.originalPrice)}
             </span>
           )}
         </div>
 
         {listing.size && (
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Size: {listing.size}</p>
+          <p className="mt-1 text-sm text-gray-500">Size: {listing.size}</p>
         )}
 
         {listing.location && (
-          <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{listing.location}</p>
+          <p className="mt-1 text-xs text-gray-400">{listing.location}</p>
         )}
       </div>
     </div>

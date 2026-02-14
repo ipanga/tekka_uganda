@@ -441,7 +441,7 @@ export default function CategoriesPage() {
           <Card>
             <CardContent className="py-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+                <div className="p-2 bg-primary-100 rounded-lg">
                   <FolderIcon className="h-6 w-6 text-primary-500" />
                 </div>
                 <div>
@@ -641,7 +641,7 @@ export default function CategoriesPage() {
                     type="checkbox"
                     checked={attrRequired}
                     onChange={(e) => setAttrRequired(e.target.checked)}
-                    className="h-4 w-4 text-primary-500 rounded border-gray-300 dark:border-gray-600"
+                    className="h-4 w-4 text-primary-500 rounded border-gray-300"
                   />
                   Required
                 </label>
@@ -676,7 +676,7 @@ export default function CategoriesPage() {
                 type="text"
                 value={selectedCategory.name}
                 onChange={(e) => setSelectedCategory({ ...selectedCategory, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 placeholder="e.g. Women, Clothing, Dresses"
               />
             </div>
@@ -687,7 +687,7 @@ export default function CategoriesPage() {
                 type="text"
                 value={selectedCategory.slug || selectedCategory.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}
                 onChange={(e) => setSelectedCategory({ ...selectedCategory, slug: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 placeholder="auto-generated-from-name"
                 disabled={!!selectedCategory.id}
               />
@@ -712,7 +712,7 @@ export default function CategoriesPage() {
                 type="text"
                 value={selectedCategory.iconName || ''}
                 onChange={(e) => setSelectedCategory({ ...selectedCategory, iconName: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 placeholder="e.g. woman, man, shirt"
               />
             </div>
@@ -723,7 +723,7 @@ export default function CategoriesPage() {
                 id="isActive"
                 checked={selectedCategory.isActive}
                 onChange={(e) => setSelectedCategory({ ...selectedCategory, isActive: e.target.checked })}
-                className="h-4 w-4 text-primary-500 rounded border-gray-300 dark:border-gray-600"
+                className="h-4 w-4 text-primary-500 rounded border-gray-300"
               />
               <label htmlFor="isActive" className="text-sm text-gray-700">Active</label>
             </div>

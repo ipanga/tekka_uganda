@@ -177,7 +177,7 @@ function ExploreContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
 
       <main className="flex-1">
@@ -207,7 +207,7 @@ function ExploreContent() {
 
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4 md:mb-0">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4 md:mb-0">
               {searchQuery
                 ? `Results for "${searchQuery}"`
                 : categoryId
@@ -236,14 +236,14 @@ function ExploreContent() {
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center px-4 py-2 border rounded-lg transition-colors ${
                   activeFilterCount > 0
-                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 text-primary-500 dark:text-primary-300'
+                    ? 'border-primary-500 bg-primary-50 text-primary-500'
                     : 'border-gray-300 hover:bg-gray-50'
                 }`}
               >
                 <FunnelIcon className="h-5 w-5 mr-2" />
                 Filters
                 {activeFilterCount > 0 && (
-                  <span className="ml-2 inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary-500 dark:bg-primary-400 text-white text-xs font-medium">
+                  <span className="ml-2 inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary-500 text-white text-xs font-medium">
                     {activeFilterCount}
                   </span>
                 )}
@@ -253,13 +253,13 @@ function ExploreContent() {
               <div className="hidden md:flex border border-gray-300 rounded-lg overflow-hidden">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 ${viewMode === 'grid' ? 'bg-primary-100 dark:bg-primary-900 text-primary-500 dark:text-primary-300' : 'hover:bg-gray-50'}`}
+                  className={`p-2 ${viewMode === 'grid' ? 'bg-primary-100 text-primary-500' : 'hover:bg-gray-50'}`}
                 >
                   <Squares2X2Icon className="h-5 w-5" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 ${viewMode === 'list' ? 'bg-primary-100 dark:bg-primary-900 text-primary-500 dark:text-primary-300' : 'hover:bg-gray-50'}`}
+                  className={`p-2 ${viewMode === 'list' ? 'bg-primary-100 text-primary-500' : 'hover:bg-gray-50'}`}
                 >
                   <ListBulletIcon className="h-5 w-5" />
                 </button>
@@ -373,7 +373,7 @@ function ExploreContent() {
                 <div className="mt-4 pt-4 border-t border-gray-100 flex justify-end">
                   <button
                     onClick={clearAllFilters}
-                    className="text-sm font-medium text-primary-500 dark:text-primary-300 hover:text-primary-600 dark:hover:text-primary-200"
+                    className="text-sm font-medium text-primary-500 hover:text-primary-600"
                   >
                     Clear all filters
                   </button>
@@ -388,8 +388,8 @@ function ExploreContent() {
               onClick={() => setCategoryId('')}
               className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                 categoryId === ''
-                  ? 'bg-primary-500 dark:bg-primary-400 text-white'
-                  : 'bg-white text-gray-700 hover:bg-primary-50 dark:hover:bg-gray-700 hover:text-primary-500 dark:hover:text-primary-300 border border-gray-200'
+                  ? 'bg-primary-500 text-white'
+                  : 'bg-white text-gray-700 hover:bg-primary-50 hover:text-primary-500 border border-gray-200'
               }`}
             >
               All
@@ -400,8 +400,8 @@ function ExploreContent() {
                 onClick={() => setCategoryId(cat.id)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
                   categoryId === cat.id
-                    ? 'bg-primary-500 dark:bg-primary-400 text-white'
-                    : 'bg-white text-gray-700 hover:bg-primary-50 dark:hover:bg-gray-700 hover:text-primary-500 dark:hover:text-primary-300 border border-gray-200'
+                    ? 'bg-primary-500 text-white'
+                    : 'bg-white text-gray-700 hover:bg-primary-50 hover:text-primary-500 border border-gray-200'
                 }`}
               >
                 {cat.name}
@@ -416,7 +416,7 @@ function ExploreContent() {
                 <button
                   key={sub.id}
                   onClick={() => setCategoryId(sub.id)}
-                  className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-primary-50 dark:hover:bg-gray-700 hover:text-primary-500 dark:hover:text-primary-300 border border-gray-200 transition-colors"
+                  className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-primary-50 hover:text-primary-500 border border-gray-200 transition-colors"
                 >
                   {sub.name}
                 </button>
@@ -428,7 +428,7 @@ function ExploreContent() {
           {/* Listings Grid */}
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 dark:border-primary-400 border-t-transparent" />
+              <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
             </div>
           ) : !listings || listings.length === 0 ? (
             <div className="text-center py-12">
@@ -438,7 +438,7 @@ function ExploreContent() {
               {(searchQuery || activeFilterCount > 0) && (
                 <button
                   onClick={clearAllFilters}
-                  className="mt-3 text-primary-500 dark:text-primary-300 hover:text-primary-600 dark:hover:text-primary-200 font-medium"
+                  className="mt-3 text-primary-500 hover:text-primary-600 font-medium"
                 >
                   Clear all filters
                 </button>
@@ -470,7 +470,7 @@ export default function ExplorePage() {
     <Suspense
       fallback={
         <div className="min-h-screen flex items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 dark:border-primary-400 border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
         </div>
       }
     >

@@ -138,7 +138,7 @@ export default function LocationsPage() {
           <Card>
             <CardContent className="py-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+                <div className="p-2 bg-primary-100 rounded-lg">
                   <BuildingOfficeIcon className="h-6 w-6 text-primary-500" />
                 </div>
                 <div>
@@ -309,7 +309,7 @@ export default function LocationsPage() {
         />
 
         {/* Info */}
-        <div className="mt-4 p-4 bg-primary-50 rounded-lg text-sm text-primary-700 dark:bg-primary-900/30 dark:text-primary-300">
+        <div className="mt-4 p-4 bg-primary-50 rounded-lg text-sm text-primary-700">
           <p className="font-medium">Location Coverage</p>
           <p className="mt-1">
             Currently serving Kampala and Entebbe. More cities will be added based on demand.

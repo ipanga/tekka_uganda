@@ -202,7 +202,7 @@ export default function ListingsPage() {
                   placeholder="Search listings..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="h-9 w-full rounded-md border border-gray-300 pl-9 pr-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="h-9 w-full rounded-md border border-gray-300 pl-9 pr-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 />
               </div>
 
@@ -210,7 +210,7 @@ export default function ListingsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-9 rounded-md border border-gray-300 px-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                className="h-9 rounded-md border border-gray-300 px-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
               >
                 <option value="">All Statuses</option>
                 {statuses.map((status) => (
@@ -224,7 +224,7 @@ export default function ListingsPage() {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="h-9 rounded-md border border-gray-300 px-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                className="h-9 rounded-md border border-gray-300 px-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
               >
                 <option value="">All Categories</option>
                 {categories.map((category) => (
@@ -355,8 +355,8 @@ export default function ListingsPage() {
                 </Table>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between border-t dark:border-gray-700 px-6 py-3">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center justify-between border-t px-6 py-3">
+                  <p className="text-sm text-gray-500">
                     Page {page} of {totalPages}
                   </p>
                   <div className="flex gap-2">
@@ -419,7 +419,7 @@ export default function ListingsPage() {
             {/* Basic Info */}
             <div>
               <h3 className="text-lg font-semibold">{selectedListing.title}</h3>
-              <p className="text-2xl font-bold text-primary-500 dark:text-primary-300 mt-1">
+              <p className="text-2xl font-bold text-primary-500 mt-1">
                 UGX {selectedListing.price.toLocaleString()}
               </p>
             </div>
@@ -435,8 +435,8 @@ export default function ListingsPage() {
 
             {/* Description */}
             <div>
-              <h4 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Description</h4>
-              <p className="text-sm text-gray-700 dark:text-gray-300">{selectedListing.description}</p>
+              <h4 className="text-sm font-medium text-gray-500 mb-1">Description</h4>
+              <p className="text-sm text-gray-700">{selectedListing.description}</p>
             </div>
 
             {/* Details Grid */}

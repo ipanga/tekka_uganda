@@ -213,7 +213,7 @@ export default function NotificationsPage() {
         <Card>
           <CardContent className="py-4">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+              <div className="p-3 bg-primary-100 rounded-lg">
                 <PaperAirplaneIcon className="w-6 h-6 text-primary-500" />
               </div>
               <div>
@@ -387,7 +387,7 @@ export default function NotificationsPage() {
                 <select
                   value={formType}
                   onChange={(e) => setFormType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   {NOTIFICATION_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>
@@ -403,7 +403,7 @@ export default function NotificationsPage() {
                   type="text"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder="Notification title..."
                 />
               </div>
@@ -413,7 +413,7 @@ export default function NotificationsPage() {
                 <textarea
                   value={formBody}
                   onChange={(e) => setFormBody(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   rows={4}
                   placeholder="Notification message..."
                 />
@@ -424,7 +424,7 @@ export default function NotificationsPage() {
                 <select
                   value={formTargetType}
                   onChange={(e) => setFormTargetType(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                 >
                   {TARGET_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>
@@ -440,7 +440,7 @@ export default function NotificationsPage() {
                   <select
                     value={formTargetRole}
                     onChange={(e) => setFormTargetRole(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
                   >
                     <option value="USER">Users</option>
                     <option value="ADMIN">Admins</option>
@@ -455,7 +455,7 @@ export default function NotificationsPage() {
                   id="sendNow"
                   checked={formSendNow}
                   onChange={(e) => setFormSendNow(e.target.checked)}
-                  className="rounded border-gray-300 text-primary-500 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="rounded border-gray-300 text-primary-500 focus:ring-primary-500"
                 />
                 <label htmlFor="sendNow" className="text-sm text-gray-700">
                   Send immediately after creation

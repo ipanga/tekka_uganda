@@ -188,8 +188,8 @@ export default function ListingDetailPage() {
         <Header />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">Listing not found</h1>
-            <p className="text-gray-500 dark:text-gray-400 mb-6">This listing may have been removed or is no longer available.</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Listing not found</h1>
+            <p className="text-gray-500 mb-6">This listing may have been removed or is no longer available.</p>
             <Button onClick={() => router.push('/')}>Browse Listings</Button>
           </div>
         </main>
@@ -204,7 +204,7 @@ export default function ListingDetailPage() {
     : 0;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
 
       <main className="flex-1 py-8">
@@ -221,30 +221,30 @@ export default function ListingDetailPage() {
 
           {/* Draft Notice - Only shown to listing owner */}
           {isOwnListing && listing.status === 'DRAFT' && (
-            <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
-              <p className="text-gray-700 dark:text-gray-300">
+            <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+              <p className="text-gray-700">
                 <strong>Draft:</strong> This listing is saved as a draft and is not visible to others. Publish it when you&apos;re ready.
               </p>
             </div>
           )}
 
-          <nav className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400 mb-6">
-            <Link href="/" className="hover:text-gray-700 dark:hover:text-gray-200">Home</Link>
+          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+            <Link href="/" className="hover:text-gray-700">Home</Link>
             <span>/</span>
             <Link
               href={listing.categoryId ? `/?categoryId=${listing.categoryId}` : '/'}
-              className="hover:text-gray-700 dark:hover:text-gray-200"
+              className="hover:text-gray-700"
             >
               {listing.categoryData?.name || (listing.category && CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS]) || 'Category'}
             </Link>
             <span>/</span>
-            <span className="text-gray-900 dark:text-gray-100 truncate max-w-xs">{listing.title}</span>
+            <span className="text-gray-900 truncate max-w-xs">{listing.title}</span>
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Image Gallery */}
             <div className="space-y-4">
-              <div className="relative aspect-square bg-white dark:bg-gray-800 rounded-2xl overflow-hidden shadow-sm">
+              <div className="relative aspect-square bg-white rounded-2xl overflow-hidden shadow-sm">
                 {listing.imageUrls.length > 0 ? (
                   <>
                     <Image
@@ -284,8 +284,8 @@ export default function ListingDetailPage() {
                     )}
                   </>
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-700">
-                    <span className="text-gray-400 dark:text-gray-500">No image</span>
+                  <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                    <span className="text-gray-400">No image</span>
                   </div>
                 )}
 
@@ -309,7 +309,7 @@ export default function ListingDetailPage() {
                       onClick={() => setCurrentImageIndex(index)}
                       className={cn(
                         'relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0',
-                        index === currentImageIndex && 'ring-2 ring-primary-500 dark:ring-primary-400'
+                        index === currentImageIndex && 'ring-2 ring-primary-500'
                       )}
                     >
                       <Image
@@ -328,9 +328,9 @@ export default function ListingDetailPage() {
             <div className="space-y-6">
               {/* Title & Price */}
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">{listing.title}</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">{listing.title}</h1>
                 <div className="flex items-baseline gap-3">
-                  <span className="text-3xl font-bold text-primary-500 dark:text-primary-400">
+                  <span className="text-3xl font-bold text-primary-500">
                     {formatPrice(listing.price)}
                   </span>
                   {listing.originalPrice && listing.originalPrice > listing.price && (
@@ -349,27 +349,27 @@ export default function ListingDetailPage() {
                 <button
                   onClick={handleSaveToggle}
                   disabled={savingItem}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
                 >
                   {isSaved ? (
-                    <HeartSolidIcon className="w-5 h-5 text-primary-500 dark:text-primary-400" />
+                    <HeartSolidIcon className="w-5 h-5 text-primary-500" />
                   ) : (
-                    <HeartIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+                    <HeartIcon className="w-5 h-5 text-gray-500" />
                   )}
-                  <span className="text-sm dark:text-gray-300">{isSaved ? 'Saved' : 'Save'}</span>
+                  <span className="text-sm">{isSaved ? 'Saved' : 'Save'}</span>
                 </button>
                 <button
                   onClick={handleShare}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
                 >
-                  <ShareIcon className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                  <span className="text-sm dark:text-gray-300">Share</span>
+                  <ShareIcon className="w-5 h-5 text-gray-500" />
+                  <span className="text-sm">Share</span>
                 </button>
               </div>
 
               {/* Seller Card */}
               {seller && (
-                <div className="bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-200 dark:border-gray-700">
+                <div className="bg-white rounded-xl p-4 border border-gray-200">
                   <div className="flex items-center gap-4">
                     <Link href={`/profile/${seller.id}`}>
                       <Avatar
@@ -383,7 +383,7 @@ export default function ListingDetailPage() {
                     <div className="flex-1">
                       <Link
                         href={`/profile/${seller.id}`}
-                        className="font-semibold text-gray-900 dark:text-gray-100 hover:text-primary-500 dark:hover:text-primary-300 flex items-center gap-1"
+                        className="font-semibold text-gray-900 hover:text-primary-500 flex items-center gap-1"
                       >
                         {seller.displayName || 'Anonymous'}
                         {seller.isVerified && (
@@ -391,7 +391,7 @@ export default function ListingDetailPage() {
                         )}
                       </Link>
                       {seller.location && (
-                        <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                        <p className="text-sm text-gray-500 flex items-center gap-1">
                           <MapPinIcon className="w-4 h-4" />
                           {seller.location}
                         </p>
@@ -410,7 +410,7 @@ export default function ListingDetailPage() {
                               />
                             ))}
                           </div>
-                          <span className="text-sm text-gray-500 dark:text-gray-400 ml-1">
+                          <span className="text-sm text-gray-500 ml-1">
                             {sellerStats.averageRating.toFixed(1)} ({sellerStats.totalReviews} {sellerStats.totalReviews === 1 ? 'review' : 'reviews'})
                           </span>
                         </div>
@@ -418,7 +418,7 @@ export default function ListingDetailPage() {
                     </div>
                     <Link
                       href={`/profile/${seller.id}`}
-                      className="text-sm text-primary-500 dark:text-primary-300 hover:text-primary-600 dark:hover:text-primary-200"
+                      className="text-sm text-primary-500 hover:text-primary-600"
                     >
                       View profile
                     </Link>
@@ -449,11 +449,11 @@ export default function ListingDetailPage() {
               )}
 
               {/* Details */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 space-y-4">
-                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Details</h2>
+              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+                <h2 className="font-semibold text-gray-900">Details</h2>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-500 dark:text-gray-400">Category</span>
+                    <span className="text-gray-500">Category</span>
                     <p className="font-medium">
                       {listing.categoryData?.name?.trim() || CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS] || 'N/A'}
                     </p>
@@ -537,13 +537,13 @@ export default function ListingDetailPage() {
               </div>
 
               {/* Description */}
-              <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700 space-y-4">
-                <h2 className="font-semibold text-gray-900 dark:text-gray-100">Description</h2>
-                <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">{listing.description}</p>
+              <div className="bg-white rounded-xl p-6 border border-gray-200 space-y-4">
+                <h2 className="font-semibold text-gray-900">Description</h2>
+                <p className="text-gray-600 whitespace-pre-wrap">{listing.description}</p>
               </div>
 
               {/* Stats & Meta */}
-              <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+              <div className="flex items-center justify-between text-sm text-gray-500">
                 <div className="flex items-center gap-4">
                   <span className="flex items-center gap-1">
                     <EyeIcon className="w-4 h-4" />
