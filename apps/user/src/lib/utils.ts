@@ -190,6 +190,110 @@ export function isValidPassword(password: string): boolean {
 // IMAGE HELPERS
 // ============================================
 
+/** Maximum image dimension (width or height) in pixels before upload */
+const MAX_IMAGE_DIMENSION = 1920;
+/** JPEG compression quality (0-1) for resized images */
+const IMAGE_COMPRESSION_QUALITY = 0.85;
+
+/**
+ * Resize an image File if either dimension exceeds MAX_IMAGE_DIMENSION.
+ * Maintains aspect ratio, outputs JPEG at IMAGE_COMPRESSION_QUALITY.
+ * Returns the original file if no resizing is needed and it's already JPEG.
+ */
+export async function resizeImageFile(file: File): Promise<File> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+
+      const { width, height } = img;
+
+      // If already within limits, still compress to JPEG for consistency
+      // but skip canvas resize if dimensions are fine
+      if (width <= MAX_IMAGE_DIMENSION && height <= MAX_IMAGE_DIMENSION) {
+        // For non-JPEG files, convert to JPEG for size savings
+        if (!file.type.startsWith('image/jpeg')) {
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) { resolve(file); return; }
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) { resolve(file); return; }
+              resolve(new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' }));
+            },
+            'image/jpeg',
+            IMAGE_COMPRESSION_QUALITY,
+          );
+          return;
+        }
+        resolve(file);
+        return;
+      }
+
+      // Calculate new dimensions maintaining aspect ratio
+      let newWidth = width;
+      let newHeight = height;
+
+      if (width > height) {
+        if (width > MAX_IMAGE_DIMENSION) {
+          newHeight = Math.round(height * (MAX_IMAGE_DIMENSION / width));
+          newWidth = MAX_IMAGE_DIMENSION;
+        }
+      } else {
+        if (height > MAX_IMAGE_DIMENSION) {
+          newWidth = Math.round(width * (MAX_IMAGE_DIMENSION / height));
+          newHeight = MAX_IMAGE_DIMENSION;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = newWidth;
+      canvas.height = newHeight;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) { resolve(file); return; }
+
+      // Use high-quality downscaling
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, newWidth, newHeight);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) { resolve(file); return; }
+          const resizedFile = new File(
+            [blob],
+            file.name.replace(/\.\w+$/, '.jpg'),
+            { type: 'image/jpeg' },
+          );
+          resolve(resizedFile);
+        },
+        'image/jpeg',
+        IMAGE_COMPRESSION_QUALITY,
+      );
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Failed to load image for resizing'));
+    };
+
+    img.src = url;
+  });
+}
+
+/**
+ * Resize multiple image files in parallel.
+ */
+export async function resizeImageFiles(files: File[]): Promise<File[]> {
+  return Promise.all(files.map(resizeImageFile));
+}
+
 export function getImageUrl(url: string | undefined, fallback: string = '/placeholder.jpg'): string {
   if (!url) return fallback;
 
