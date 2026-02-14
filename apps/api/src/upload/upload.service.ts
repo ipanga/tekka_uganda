@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
+import { imageSize } from 'image-size';
 
 @Injectable()
 export class UploadService {
@@ -29,6 +30,28 @@ export class UploadService {
     // Validate file size (max 5MB before compression)
     if (file.size > 5 * 1024 * 1024) {
       throw new BadRequestException('Image must be less than 5MB');
+    }
+
+    // Validate image dimensions (safety guard)
+    try {
+      const dimensions = imageSize(file.buffer);
+      if (dimensions.width && dimensions.height) {
+        const maxDimension = 4000; // Reject truly excessive images
+        if (dimensions.width > maxDimension || dimensions.height > maxDimension) {
+          throw new BadRequestException(
+            `Image dimensions (${dimensions.width}x${dimensions.height}) exceed maximum allowed (${maxDimension}x${maxDimension}). Please resize before uploading.`,
+          );
+        }
+        if (dimensions.width > 1920 || dimensions.height > 1920) {
+          this.logger.warn(
+            `Oversized image uploaded: ${dimensions.width}x${dimensions.height} - Cloudinary will resize to 1200x1200`,
+          );
+        }
+      }
+    } catch (error) {
+      // Don't block upload if dimension check fails - Cloudinary will handle it
+      if (error instanceof BadRequestException) throw error;
+      this.logger.warn(`Could not read image dimensions: ${error.message}`);
     }
 
     // Determine quality level based on file size

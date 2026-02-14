@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
 import { authManager } from '@/lib/auth';
+import { resizeImageFiles } from '@/lib/utils';
 import {
   Listing,
   ItemCondition,
@@ -319,7 +320,10 @@ export function ListingForm({ mode, existingListing, listingId }: ListingFormPro
         return;
       }
 
-      const { urls } = await api.uploadImages(validFiles);
+      // Resize images before upload (max 1920x1920, JPEG compression)
+      const resizedFiles = await resizeImageFiles(validFiles);
+
+      const { urls } = await api.uploadImages(resizedFiles);
       setImageUrls([...imageUrls, ...urls]);
     } catch (err) {
       console.error('Upload error:', err);
