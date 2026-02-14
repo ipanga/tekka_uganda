@@ -158,20 +158,20 @@ function RegisterContent() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
 
       <main className="flex-1 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8">
+          <div className="bg-white rounded-2xl shadow-lg p-8">
             {/* Header */}
             <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+              <h1 className="text-2xl font-bold text-gray-900">
                 {step === 'phone' && 'Create your account'}
                 {step === 'otp' && 'Verify your phone'}
                 {step === 'profile' && 'Complete your profile'}
               </h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-2">
+              <p className="text-gray-500 mt-2">
                 {step === 'phone' && 'Enter your phone number to get started'}
                 {step === 'otp' && 'Enter the code sent to your phone'}
                 {step === 'profile' && 'Tell us a bit about yourself'}
@@ -185,7 +185,7 @@ function RegisterContent() {
                   <div
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                       step === s
-                        ? 'bg-primary-500 dark:bg-primary-400 text-white'
+                        ? 'bg-primary-500 text-white'
                         : index < ['phone', 'otp', 'profile'].indexOf(step)
                         ? 'bg-green-500 text-white'
                         : 'bg-gray-200 text-gray-500'
@@ -258,7 +258,7 @@ function RegisterContent() {
 
                 <p className="text-center text-sm text-gray-500">
                   Already have an account?{' '}
-                  <Link href="/login" className="text-primary-500 dark:text-primary-300 hover:text-primary-600 dark:hover:text-primary-200 font-medium">
+                  <Link href="/login" className="text-primary-500 hover:text-primary-600 font-medium">
                     Sign in
                   </Link>
                 </p>
@@ -315,7 +315,7 @@ function RegisterContent() {
 
                   {citiesLoading ? (
                     <div className="flex items-center py-2">
-                      <div className="w-4 h-4 border-2 border-primary-500 dark:border-primary-400 border-t-transparent rounded-full animate-spin" />
+                      <div className="w-4 h-4 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
                       <span className="ml-2 text-sm text-gray-500">Loading locations...</span>
                     </div>
                   ) : (
@@ -356,11 +356,11 @@ function RegisterContent() {
           {/* Terms */}
           <p className="text-center text-xs text-gray-500 mt-6">
             By creating an account, you agree to our{' '}
-            <Link href="/terms" className="text-primary-500 dark:text-primary-300 hover:underline">
+            <Link href="/terms" className="text-primary-500 hover:underline">
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link href="/privacy" className="text-primary-500 dark:text-primary-300 hover:underline">
+            <Link href="/privacy" className="text-primary-500 hover:underline">
               Privacy Policy
             </Link>
           </p>

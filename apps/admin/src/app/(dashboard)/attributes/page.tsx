@@ -275,7 +275,7 @@ export default function AttributesPage() {
           <Card>
             <CardContent className="py-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
+                <div className="p-2 bg-primary-100 rounded-lg">
                   <TagIcon className="h-6 w-6 text-primary-500" />
                 </div>
                 <div>
@@ -461,7 +461,7 @@ export default function AttributesPage() {
                 type="text"
                 value={selectedAttribute.name}
                 onChange={(e) => setSelectedAttribute({ ...selectedAttribute, name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 placeholder="e.g. Clothing Size, Color, Brand"
               />
             </div>
@@ -472,7 +472,7 @@ export default function AttributesPage() {
                 type="text"
                 value={selectedAttribute.slug || selectedAttribute.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}
                 onChange={(e) => setSelectedAttribute({ ...selectedAttribute, slug: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 placeholder="auto-generated-from-name"
                 disabled={!!selectedAttribute.id}
               />
@@ -486,7 +486,7 @@ export default function AttributesPage() {
               <select
                 value={selectedAttribute.type}
                 onChange={(e) => setSelectedAttribute({ ...selectedAttribute, type: e.target.value as AttributeType })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 disabled={!!selectedAttribute.id}
               >
                 <option value="SINGLE_SELECT">Single Select (dropdown)</option>
@@ -505,7 +505,7 @@ export default function AttributesPage() {
                 <textarea
                   value={selectedAttribute.values}
                   onChange={(e) => setSelectedAttribute({ ...selectedAttribute, values: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   rows={3}
                   placeholder="e.g. XS, S, M, L, XL, XXL"
                 />
@@ -522,7 +522,7 @@ export default function AttributesPage() {
                   id="isRequired"
                   checked={selectedAttribute.isRequired}
                   onChange={(e) => setSelectedAttribute({ ...selectedAttribute, isRequired: e.target.checked })}
-                  className="h-4 w-4 text-primary-500 rounded border-gray-300 dark:border-gray-600"
+                  className="h-4 w-4 text-primary-500 rounded border-gray-300"
                 />
                 <label htmlFor="isRequired" className="text-sm text-gray-700">Required</label>
               </div>
@@ -532,7 +532,7 @@ export default function AttributesPage() {
                   id="isActive"
                   checked={selectedAttribute.isActive}
                   onChange={(e) => setSelectedAttribute({ ...selectedAttribute, isActive: e.target.checked })}
-                  className="h-4 w-4 text-primary-500 rounded border-gray-300 dark:border-gray-600"
+                  className="h-4 w-4 text-primary-500 rounded border-gray-300"
                 />
                 <label htmlFor="isActive" className="text-sm text-gray-700">Active</label>
               </div>

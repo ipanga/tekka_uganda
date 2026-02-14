@@ -137,7 +137,7 @@ export default function ReviewsPage() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                  className="h-9 w-full rounded-md border border-gray-300 pl-9 pr-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  className="h-9 w-full rounded-md border border-gray-300 pl-9 pr-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                 />
               </div>
               <Button size="sm" onClick={handleSearch}>
@@ -228,7 +228,7 @@ export default function ReviewsPage() {
                           <TableCell>
                             <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                               review.type === 'BUYER'
-                                ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
+                                ? 'bg-primary-100 text-primary-700'
                                 : 'bg-purple-100 text-purple-700'
                             }`}>
                               {review.type === 'BUYER' ? 'Buyer Review' : 'Seller Review'}
@@ -270,8 +270,8 @@ export default function ReviewsPage() {
                 </Table>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between border-t dark:border-gray-700 px-6 py-3">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center justify-between border-t px-6 py-3">
+                  <p className="text-sm text-gray-500">
                     Page {page} of {totalPages}
                   </p>
                   <div className="flex gap-2">
@@ -379,7 +379,7 @@ export default function ReviewsPage() {
             <div className="flex justify-between text-sm text-gray-500">
               <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
                 selectedReview.type === 'BUYER'
-                  ? 'bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300'
+                  ? 'bg-primary-100 text-primary-700'
                   : 'bg-purple-100 text-purple-700'
               }`}>
                 {selectedReview.type === 'BUYER' ? 'Buyer Review' : 'Seller Review'}

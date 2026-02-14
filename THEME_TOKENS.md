@@ -32,28 +32,21 @@
     "success": { "500": "#16A34A" },
     "warning": { "500": "#D97706" },
     "error": { "500": "#DC2626" },
-    "background": {
-      "light": "#F8FAFC",
-      "dark": "#0F141B"
-    },
+    "background": "#F8FAFC",
     "surface": {
-      "light": "#FFFFFF",
-      "lightElevated": "#F1F5F9",
-      "dark": "#151C24",
-      "darkElevated": "#1D2631"
+      "default": "#FFFFFF",
+      "elevated": "#F1F5F9"
     },
-    "border": {
-      "light": "#E2E8F0",
-      "dark": "#2A3745"
-    },
+    "border": "#E2E8F0",
     "text": {
-      "primaryLight": "#1E293B",
-      "secondaryLight": "#64748B",
-      "mutedLight": "#94A3B8",
-      "primaryDark": "#F8FAFC",
-      "secondaryDark": "#CBD5E1",
-      "mutedDark": "#94A3B8"
+      "primary": "#1E293B",
+      "secondary": "#64748B",
+      "muted": "#94A3B8"
     }
   }
 }
 ```
+
+## Web Theme (Light Mode Only)
+The web dashboards (User and Admin) use Light Mode exclusively.
+Dark mode is supported only in the Flutter mobile app.

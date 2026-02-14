@@ -156,7 +156,7 @@ export default function EditProfilePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
 
       <main className="flex-1 py-8">
@@ -164,7 +164,7 @@ export default function EditProfilePage() {
           {/* Back Button */}
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 mb-6"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
           >
             <ArrowLeftIcon className="w-5 h-5" />
             Back
@@ -186,12 +186,12 @@ export default function EditProfilePage() {
                     />
                     <button
                       type="button"
-                      className="absolute bottom-0 right-0 p-2 bg-primary-500 dark:bg-primary-400 text-white rounded-full hover:bg-primary-600 dark:hover:bg-primary-300 transition-colors"
+                      className="absolute bottom-0 right-0 p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors"
                     >
                       <CameraIcon className="w-4 h-4" />
                     </button>
                   </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Click to change photo</p>
+                  <p className="text-sm text-gray-500 mt-2">Click to change photo</p>
                 </div>
 
                 {/* Error Message */}
@@ -268,13 +268,13 @@ export default function EditProfilePage() {
 
                 {/* Phone Number (Read-only) */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
                     Phone Number
                   </label>
-                  <div className="px-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg text-gray-600 dark:text-gray-300">
+                  <div className="px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600">
                     {user.phoneNumber}
                   </div>
-                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  <p className="mt-1 text-sm text-gray-500">
                     Phone number cannot be changed
                   </p>
                 </div>

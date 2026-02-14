@@ -100,15 +100,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <div className="w-full max-w-md">
-        <div className="rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-lg">
+        <div className="rounded-2xl bg-white p-8 shadow-lg">
           {/* Logo */}
           <div className="mb-8 text-center">
-            <Link href="/">
-              <Logo variant="auto" height={40} />
+            <Link href="/" className="inline-block mx-auto">
+              <Logo height={40} className="mx-auto" />
             </Link>
-            <p className="mt-2 text-gray-600 dark:text-gray-300">Welcome back!</p>
+            <p className="mt-2 text-gray-600">Welcome back!</p>
           </div>
 
           {/* Dev Mode Notice */}
@@ -130,12 +130,12 @@ export default function LoginPage() {
               <div>
                 <label
                   htmlFor="phone"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  className="block text-sm font-medium text-gray-700"
                 >
                   Phone Number
                 </label>
                 <div className="mt-1 flex">
-                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-sm font-medium select-none">
+                  <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-100 text-gray-600 text-sm font-medium select-none">
                     🇺🇬 +256
                   </span>
                   <input
@@ -146,12 +146,12 @@ export default function LoginPage() {
                     onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 10))}
                     required
                     maxLength={10}
-                    className="flex-1 block w-full rounded-r-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                    className="flex-1 block w-full rounded-r-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                     placeholder="712 345 678"
                     autoComplete="tel-national"
                   />
                 </div>
-                <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-1.5 text-xs text-gray-500">
                   Enter your number with or without the leading 0
                 </p>
               </div>
@@ -170,11 +170,11 @@ export default function LoginPage() {
               <div>
                 <label
                   htmlFor="otp"
-                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  className="block text-sm font-medium text-gray-700"
                 >
                   Enter OTP
                 </label>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                <p className="text-sm text-gray-500 mt-1">
                   We sent a code to +256{phoneNumber}
                 </p>
                 <input
@@ -184,7 +184,7 @@ export default function LoginPage() {
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                   required
                   maxLength={6}
-                  className="mt-2 block w-full rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 px-3 py-2 text-center text-2xl tracking-widest focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                  className="mt-2 block w-full rounded-lg border border-gray-300 bg-white text-gray-900 px-3 py-2 text-center text-2xl tracking-widest focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
                   placeholder="000000"
                 />
               </div>
@@ -201,7 +201,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setStep('phone')}
-                className="w-full text-center text-sm text-gray-500 dark:text-gray-400 hover:text-primary-500 dark:hover:text-primary-300"
+                className="w-full text-center text-sm text-gray-500 hover:text-primary-500"
               >
                 Change phone number
               </button>
@@ -209,9 +209,9 @@ export default function LoginPage() {
           )}
 
           {/* Footer */}
-          <p className="mt-6 text-center text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-6 text-center text-sm text-gray-500">
             Don&apos;t have an account?{' '}
-            <Link href="/register" className="text-primary-500 dark:text-primary-300 hover:text-primary-600 dark:hover:text-primary-200 font-medium">
+            <Link href="/register" className="text-primary-500 hover:text-primary-600 font-medium">
               Sign up
             </Link>
           </p>

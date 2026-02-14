@@ -48,7 +48,7 @@ export function Avatar({
         <div
           className={cn(
             styles.container,
-            'relative rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800'
+            'relative rounded-full overflow-hidden bg-gray-100'
           )}
         >
           <Image
@@ -62,7 +62,7 @@ export function Avatar({
         <div
           className={cn(
             styles.container,
-            'flex items-center justify-center rounded-full bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-300 font-medium',
+            'flex items-center justify-center rounded-full bg-primary-100 text-primary-600 font-medium',
             styles.text
           )}
         >
@@ -72,7 +72,7 @@ export function Avatar({
       {showBadge && (
         <span
           className={cn(
-            'absolute bottom-0 right-0 block rounded-full ring-2 ring-white dark:ring-gray-800',
+            'absolute bottom-0 right-0 block rounded-full ring-2 ring-white',
             styles.badge,
             badgeColors[badgeColor]
           )}
@@ -114,7 +114,7 @@ export function AvatarGroup({
         <div
           className={cn(
             styles.container,
-            'flex items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 font-medium ring-2 ring-white dark:ring-gray-800',
+            'flex items-center justify-center rounded-full bg-gray-100 text-gray-600 font-medium ring-2 ring-white',
             styles.text
           )}
         >

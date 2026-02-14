@@ -54,15 +54,15 @@ export function StatsCard({ title, value, icon, change, trend, description }: St
   };
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</p>
-          <p className="mt-1 text-3xl font-semibold text-gray-900 dark:text-gray-100">
+          <p className="text-sm font-medium text-gray-500">{title}</p>
+          <p className="mt-1 text-3xl font-semibold text-gray-900">
             {typeof value === 'number' ? value.toLocaleString() : value}
           </p>
         </div>
-        <div className="rounded-lg bg-primary-50 p-3 text-primary-500 dark:bg-primary-900/30 dark:text-primary-300">{renderIcon()}</div>
+        <div className="rounded-lg bg-primary-50 p-3 text-primary-500">{renderIcon()}</div>
       </div>
 
       {(changeValue !== undefined || description) && (
@@ -82,7 +82,7 @@ export function StatsCard({ title, value, icon, change, trend, description }: St
             </span>
           )}
           {description && (
-            <span className="ml-2 text-gray-500 dark:text-gray-400">{description}</span>
+            <span className="ml-2 text-gray-500">{description}</span>
           )}
         </div>
       )}

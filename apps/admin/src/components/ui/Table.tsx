@@ -8,7 +8,7 @@ interface TableProps {
 export function Table({ children, className = '' }: TableProps) {
   return (
     <div className={`overflow-hidden ${className}`}>
-      <table className="w-full table-fixed divide-y divide-gray-200 dark:divide-gray-700">{children}</table>
+      <table className="w-full table-fixed divide-y divide-gray-200">{children}</table>
     </div>
   );
 }
@@ -18,7 +18,7 @@ interface TableHeaderProps {
 }
 
 export function TableHeader({ children }: TableHeaderProps) {
-  return <thead className="bg-gray-50 dark:bg-gray-800">{children}</thead>;
+  return <thead className="bg-gray-50">{children}</thead>;
 }
 
 interface TableBodyProps {
@@ -26,7 +26,7 @@ interface TableBodyProps {
 }
 
 export function TableBody({ children }: TableBodyProps) {
-  return <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">{children}</tbody>;
+  return <tbody className="divide-y divide-gray-200 bg-white">{children}</tbody>;
 }
 
 interface TableRowProps {
@@ -38,7 +38,7 @@ interface TableRowProps {
 export function TableRow({ children, className = '', onClick }: TableRowProps) {
   return (
     <tr
-      className={`${onClick ? 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700' : ''} ${className}`}
+      className={`${onClick ? 'cursor-pointer hover:bg-gray-50' : ''} ${className}`}
       onClick={onClick}
     >
       {children}
@@ -54,7 +54,7 @@ interface TableHeadProps {
 export function TableHead({ children, className = '' }: TableHeadProps) {
   return (
     <th
-      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400 ${className}`}
+      className={`px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 ${className}`}
     >
       {children}
     </th>
@@ -70,7 +70,7 @@ interface TableCellProps {
 export function TableCell({ children, className = '', colSpan }: TableCellProps) {
   return (
     <td
-      className={`px-4 py-3 text-sm text-gray-900 dark:text-gray-100 ${className}`}
+      className={`px-4 py-3 text-sm text-gray-900 ${className}`}
       colSpan={colSpan}
     >
       {children}

@@ -122,7 +122,7 @@ export default function ReportsPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="h-9 rounded-md border border-gray-300 px-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                className="h-9 rounded-md border border-gray-300 px-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
               >
                 <option value="">All Statuses</option>
                 {statuses.map((status) => (
@@ -238,8 +238,8 @@ export default function ReportsPage() {
                 </Table>
 
                 {/* Pagination */}
-                <div className="flex items-center justify-between border-t dark:border-gray-700 px-6 py-3">
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex items-center justify-between border-t px-6 py-3">
+                  <p className="text-sm text-gray-500">
                     Page {page} of {totalPages}
                   </p>
                   <div className="flex gap-2">

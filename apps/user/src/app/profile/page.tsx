@@ -102,7 +102,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen flex flex-col bg-gray-50">
       <Header />
 
       <main className="flex-1 py-8">
@@ -121,7 +121,7 @@ export default function ProfilePage() {
 
                 <div className="flex-1 text-center sm:text-left">
                   <div className="flex items-center justify-center sm:justify-start gap-2">
-                    <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                    <h1 className="text-2xl font-bold text-gray-900">
                       {user.displayName || 'Anonymous'}
                     </h1>
                     {user.isVerified && (
@@ -130,10 +130,10 @@ export default function ProfilePage() {
                   </div>
 
                   {user.bio && (
-                    <p className="text-gray-600 dark:text-gray-300 mt-2">{user.bio}</p>
+                    <p className="text-gray-600 mt-2">{user.bio}</p>
                   )}
 
-                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 mt-3 text-sm text-gray-500 dark:text-gray-400">
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 mt-3 text-sm text-gray-500">
                     {user.location && (
                       <span className="flex items-center gap-1">
                         <MapPinIcon className="w-4 h-4" />
@@ -168,32 +168,32 @@ export default function ProfilePage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
             <Card>
               <CardContent className="py-4 text-center">
-                <ShoppingBagIcon className="w-6 h-6 text-primary-500 dark:text-primary-300 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats?.activeListings || 0}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Active Listings</div>
+                <ShoppingBagIcon className="w-6 h-6 text-primary-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900">{stats?.activeListings || 0}</div>
+                <div className="text-sm text-gray-500">Active Listings</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="py-4 text-center">
-                <HeartIcon className="w-6 h-6 text-primary-500 dark:text-primary-300 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats?.soldListings || 0}</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Items Sold</div>
+                <HeartIcon className="w-6 h-6 text-primary-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900">{stats?.soldListings || 0}</div>
+                <div className="text-sm text-gray-500">Items Sold</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="py-4 text-center">
-                <StarIcon className="w-6 h-6 text-primary-500 dark:text-primary-300 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                <StarIcon className="w-6 h-6 text-primary-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900">
                   {stats?.averageRating?.toFixed(1) || '-'}
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Rating</div>
+                <div className="text-sm text-gray-500">Rating</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="py-4 text-center">
-                <ChatBubbleLeftRightIcon className="w-6 h-6 text-primary-500 dark:text-primary-300 mx-auto mb-2" />
-                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats?.responseRate || 0}%</div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">Response Rate</div>
+                <ChatBubbleLeftRightIcon className="w-6 h-6 text-primary-500 mx-auto mb-2" />
+                <div className="text-2xl font-bold text-gray-900">{stats?.responseRate || 0}%</div>
+                <div className="text-sm text-gray-500">Response Rate</div>
               </CardContent>
             </Card>
           </div>
@@ -203,21 +203,21 @@ export default function ProfilePage() {
             <Link href="/my-listings">
               <Card hoverable>
                 <CardContent className="py-4 text-center">
-                  <span className="text-primary-500 dark:text-primary-300 font-medium">My Listings</span>
+                  <span className="text-primary-500 font-medium">My Listings</span>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/saved">
               <Card hoverable>
                 <CardContent className="py-4 text-center">
-                  <span className="text-primary-500 dark:text-primary-300 font-medium">Saved Items</span>
+                  <span className="text-primary-500 font-medium">Saved Items</span>
                 </CardContent>
               </Card>
             </Link>
             <Link href="/messages">
               <Card hoverable>
                 <CardContent className="py-4 text-center">
-                  <span className="text-primary-500 dark:text-primary-300 font-medium">Messages</span>
+                  <span className="text-primary-500 font-medium">Messages</span>
                 </CardContent>
               </Card>
             </Link>
@@ -244,8 +244,8 @@ export default function ProfilePage() {
                 <Card>
                   <CardContent className="py-12 text-center">
                     <ShoppingBagIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No listings under review</h3>
-                    <p className="text-gray-500 dark:text-gray-400">Listings pending review, suspended, or rejected will appear here.</p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No listings under review</h3>
+                    <p className="text-gray-500">Listings pending review, suspended, or rejected will appear here.</p>
                   </CardContent>
                 </Card>
               ) : (
@@ -269,8 +269,8 @@ export default function ProfilePage() {
                 <Card>
                   <CardContent className="py-12 text-center">
                     <StarIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">No reviews yet</h3>
-                    <p className="text-gray-500 dark:text-gray-400">Reviews from your transactions will appear here.</p>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">No reviews yet</h3>
+                    <p className="text-gray-500">Reviews from your transactions will appear here.</p>
                   </CardContent>
                 </Card>
               ) : (
