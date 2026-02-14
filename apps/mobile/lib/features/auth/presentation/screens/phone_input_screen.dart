@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../../../core/widgets/tekka_logo.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/extensions/string_extensions.dart';
 import '../../../../router/app_router.dart';
@@ -74,14 +75,7 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
                 const SizedBox(height: AppSpacing.space10),
 
                 // Logo
-                Text(
-                  'Tekka',
-                  style: AppTypography.displayMedium.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                const Center(child: TekkaLogo(height: 48)),
 
                 const SizedBox(height: AppSpacing.space2),
 

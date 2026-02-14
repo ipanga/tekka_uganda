@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../../../core/widgets/tekka_logo.dart';
 import '../../application/app_lock_provider.dart';
 import '../../application/biometric_auth_provider.dart';
 
@@ -106,7 +107,7 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
   Widget _buildHeader() {
     return Column(
       children: [
-        // Logo placeholder
+        // Lock icon
         Container(
           width: 80,
           height: 80,
@@ -117,12 +118,7 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
           child: Icon(Icons.lock_outline, size: 40, color: AppColors.primary),
         ),
         const SizedBox(height: AppSpacing.space4),
-        Text(
-          'Tekka',
-          style: AppTypography.headlineMedium.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        const TekkaLogo(height: 36),
         const SizedBox(height: AppSpacing.space2),
         Text(
           'Unlock to continue',

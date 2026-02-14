@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Logo } from '@/components/ui/Logo';
 
 export function Footer() {
   return (
@@ -7,8 +8,8 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="col-span-1">
-            <Link href="/" className="text-2xl font-bold text-white">
-              Tekka.ug
+            <Link href="/">
+              <Logo variant="light" height={28} />
             </Link>
             <p className="mt-4 text-sm">
               Uganda&apos;s premier marketplace for pre-loved fashion. Buy and sell with confidence.

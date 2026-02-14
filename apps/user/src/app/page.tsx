@@ -42,40 +42,40 @@ function HomeContent() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="border-b border-[var(--border)] bg-[var(--surface)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
-            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.15fr] gap-8 items-center">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary-600 dark:text-primary-300">
-                  Tekka Pre-Loved Fashion
-                </p>
-                <h1 className="mt-3 text-4xl md:text-5xl lg:text-[3.35rem] font-bold leading-[1.08] text-gray-900 dark:text-gray-100">
-                  Fashion Finds That Feel New, Priced for Real Life
-                </h1>
-                <p className="mt-4 max-w-lg text-base md:text-lg text-gray-600 dark:text-gray-300">
-                  Buy and sell quality second-hand pieces in minutes, with a trusted marketplace built for everyday style.
-                </p>
-                <div className="mt-7">
-                  <Link
-                    href="/sell"
-                    className="inline-flex items-center justify-center rounded-full bg-primary-500 px-7 py-3 text-sm font-semibold text-white transition hover:bg-primary-600"
-                  >
-                    Start Selling
-                  </Link>
-                </div>
-              </div>
+        <section className="relative h-[280px] sm:h-[340px] md:h-[400px] lg:h-[440px] overflow-hidden">
+          <Image
+            src="/images/hero-bg.jpg"
+            alt="Woman browsing fashion clothing on a rack"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-[70%_30%] sm:object-center"
+          />
+          {/* Subtle gradient for depth on the left */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/35 via-black/15 to-transparent" />
 
-              <div className="relative">
-                <div className="relative overflow-hidden rounded-[1.75rem] border border-[var(--border)] bg-[var(--surface-elevated)]">
-                  <Image
-                    src="/images/hero-fashion.svg"
-                    alt="Second-hand fashion clothing pieces on display"
-                    width={960}
-                    height={720}
-                    priority
-                    className="h-auto w-full"
-                  />
-                </div>
+          {/* Left-aligned floating card */}
+          <div className="absolute inset-0 flex items-end sm:items-center justify-start">
+            <div className="px-4 sm:px-6 lg:px-10 xl:px-16 pb-5 sm:pb-0">
+              <div className="bg-black/50 backdrop-blur-md rounded-2xl px-5 py-5 sm:px-7 sm:py-6 max-w-[22rem]">
+                <h1 className="text-2xl sm:text-[1.7rem] font-extrabold leading-snug tracking-tight text-white">
+                  Ready to refresh your wardrobe?
+                </h1>
+                <p className="mt-2.5 text-[0.835rem] leading-relaxed text-white/90">
+                  Give your clothes a second life and earn from what you no longer wear.
+                </p>
+                <Link
+                  href="/sell"
+                  className="mt-5 flex items-center justify-center rounded-lg bg-primary-500 px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-600"
+                >
+                  Sell now
+                </Link>
+                <Link
+                  href="/explore"
+                  className="mt-2.5 block text-center text-[0.8rem] font-medium text-white/80 hover:text-white transition"
+                >
+                  Explore items
+                </Link>
               </div>
             </div>
           </div>

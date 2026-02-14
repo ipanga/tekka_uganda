@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, FormEvent, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/Button';
@@ -48,7 +49,9 @@ export default function LoginPage() {
         <div className="rounded-lg bg-white p-8 shadow-md dark:bg-gray-800">
           {/* Logo */}
           <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Tekka.ug Admin</h1>
+            <Image src="/images/tekka_logo.svg" alt="Tekka" height={40} width={120} className="mx-auto dark:hidden" priority />
+            <Image src="/images/tekka_logo_white.svg" alt="Tekka" height={40} width={120} className="mx-auto hidden dark:block" priority />
+            <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">Admin</p>
             <p className="mt-2 text-gray-600 dark:text-gray-400">Sign in to your account</p>
           </div>
 

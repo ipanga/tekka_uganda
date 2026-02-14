@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../../../core/widgets/tekka_logo.dart';
 import '../../../../router/app_router.dart';
 import '../../../../shared/widgets/listing_card.dart';
 import '../../../listing/application/listing_provider.dart';
@@ -75,13 +76,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: Text(
-          'Tekka.ug',
-          style: AppTypography.titleLarge.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        title: const TekkaLogo(height: 28),
         actions: const [_NotificationButton()],
       ),
       body: RefreshIndicator(
