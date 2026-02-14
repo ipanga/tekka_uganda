@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { Logo } from '@/components/ui/Logo';
 import { useState, useEffect, Fragment } from 'react';
 import { Menu, MenuButton, MenuItems, MenuItem, Transition } from '@headlessui/react';
 import {
@@ -104,7 +105,7 @@ export function Header() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center">
-            <span className="text-2xl font-bold text-primary-500 dark:text-primary-300">Tekka.ug</span>
+            <Logo variant="auto" height={28} />
           </Link>
 
           {/* Search Bar - Desktop */}

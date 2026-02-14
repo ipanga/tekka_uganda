@@ -1,0 +1,54 @@
+<svg width="960" height="720" viewBox="0 0 960 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="960" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF7ED"/>
+      <stop offset="1" stop-color="#FFEDD5"/>
+    </linearGradient>
+    <linearGradient id="rack" x1="96" y1="92" x2="864" y2="92" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#C2410C"/>
+      <stop offset="1" stop-color="#EA580C"/>
+    </linearGradient>
+    <linearGradient id="cardA" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F97316"/>
+      <stop offset="1" stop-color="#EA580C"/>
+    </linearGradient>
+    <linearGradient id="cardB" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FDBA74"/>
+      <stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+    <linearGradient id="cardC" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#FB923C"/>
+      <stop offset="1" stop-color="#C2410C"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="960" height="720" rx="36" fill="url(#bg)"/>
+
+  <circle cx="148" cy="154" r="66" fill="#FED7AA"/>
+  <circle cx="815" cy="122" r="56" fill="#FDBA74" fill-opacity="0.7"/>
+  <circle cx="858" cy="602" r="74" fill="#FB923C" fill-opacity="0.35"/>
+
+  <rect x="108" y="86" width="744" height="16" rx="8" fill="url(#rack)"/>
+  <rect x="120" y="102" width="8" height="404" rx="4" fill="#C2410C" fill-opacity="0.6"/>
+  <rect x="832" y="102" width="8" height="404" rx="4" fill="#C2410C" fill-opacity="0.6"/>
+
+  <g>
+    <path d="M235 138C253 138 268 153 268 171V208H320V171C320 153 335 138 353 138C372 138 387 153 387 171V260C387 283 377 305 359 321L338 339V486C338 500 327 512 312 512H276C261 512 250 500 250 486V339L229 321C211 305 201 283 201 260V171C201 153 216 138 235 138Z" fill="url(#cardA)"/>
+    <rect x="250" y="362" width="88" height="20" rx="10" fill="#FFF7ED" fill-opacity="0.38"/>
+  </g>
+
+  <g>
+    <path d="M462 150C475 150 486 161 486 174V198H550V174C550 161 561 150 574 150C587 150 598 161 598 174V287C598 306 591 324 577 338L550 366V498C550 511 540 522 527 522H509C496 522 486 511 486 498V366L459 338C445 324 438 306 438 287V174C438 161 449 150 462 150Z" fill="url(#cardB)"/>
+    <rect x="486" y="382" width="64" height="18" rx="9" fill="#7C2D12" fill-opacity="0.25"/>
+  </g>
+
+  <g>
+    <path d="M675 134C692 134 706 148 706 165V207H753V165C753 148 767 134 784 134C801 134 815 148 815 165V248C815 274 804 299 785 316L762 336V488C762 501 751 512 738 512H721C708 512 697 501 697 488V336L674 316C655 299 644 274 644 248V165C644 148 658 134 675 134Z" fill="url(#cardC)"/>
+    <rect x="697" y="356" width="65" height="18" rx="9" fill="#FFF7ED" fill-opacity="0.34"/>
+  </g>
+
+  <rect x="204" y="560" width="552" height="84" rx="18" fill="#FFFFFF" fill-opacity="0.72"/>
+  <rect x="238" y="590" width="260" height="16" rx="8" fill="#FDBA74"/>
+  <rect x="520" y="590" width="126" height="16" rx="8" fill="#F97316"/>
+  <rect x="659" y="590" width="63" height="16" rx="8" fill="#C2410C"/>
+</svg>

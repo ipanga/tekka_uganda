@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   HomeIcon,
@@ -50,7 +51,8 @@ export function Sidebar({ onClose }: SidebarProps) {
     <div className="flex h-full w-64 flex-col bg-gray-900">
       {/* Logo */}
       <div className="flex h-16 items-center justify-center border-b border-gray-800">
-        <span className="text-2xl font-bold text-white">Tekka.ug Admin</span>
+        <Image src="/images/tekka_logo_white.svg" alt="Tekka" height={24} width={72} priority />
+            <span className="ml-2 text-sm font-medium text-gray-400">Admin</span>
       </div>
 
       {/* Navigation */}

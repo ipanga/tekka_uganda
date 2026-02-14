@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { authManager } from '@/lib/auth';
 import { Button } from '@/components/ui/Button';
+import { Logo } from '@/components/ui/Logo';
 
 export default function LoginPage() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -104,8 +105,8 @@ export default function LoginPage() {
         <div className="rounded-2xl bg-white dark:bg-gray-800 p-8 shadow-lg">
           {/* Logo */}
           <div className="mb-8 text-center">
-            <Link href="/" className="text-3xl font-bold text-primary-500 dark:text-primary-300">
-              Tekka
+            <Link href="/">
+              <Logo variant="auto" height={40} />
             </Link>
             <p className="mt-2 text-gray-600 dark:text-gray-300">Welcome back!</p>
           </div>
