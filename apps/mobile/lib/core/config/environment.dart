@@ -5,11 +5,14 @@ enum Environment { dev, staging, prod }
 /// Defaults to prod for safety.
 class EnvironmentConfig {
   static Environment _current = Environment.prod;
+  static bool _initialized = false;
 
   static Environment get current => _current;
 
-  /// Called once from the main entry point.
+  /// Called once from the main entry point. First call wins.
   static void init(Environment env) {
+    if (_initialized) return;
+    _initialized = true;
     _current = env;
   }
 

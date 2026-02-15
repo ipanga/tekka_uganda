@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 
 /// Tekka Design System - Color Tokens
 ///
-/// Ecommerce-first orange identity tuned for CTA clarity and readable dark mode.
+/// Ecommerce-first orange identity tuned for CTA clarity.
+/// Light mode only.
 abstract class AppColors {
   AppColors._();
 
@@ -57,20 +58,6 @@ abstract class AppColors {
   static const Color outline = Color(0xFFE2E8F0);
   static const Color outlineVariant = Color(0xFFF1F5F9);
 
-  // Dark mode surfaces
-  static const Color darkBackground = Color(0xFF0F141B);
-  static const Color darkSurface = Color(0xFF151C24);
-  static const Color darkSurfaceVariant = Color(0xFF1D2631);
-  static const Color darkOnSurface = Color(0xFFF8FAFC);
-  static const Color darkOnSurfaceVariant = Color(0xFF9CAAB9);
-  static const Color darkOutline = Color(0xFF2A3745);
-  static const Color darkOutlineVariant = Color(0xFF25313D);
-
-  // Dark mode brand tuning for contrast
-  static const Color darkPrimary = Color(0xFFFBA35C);
-  static const Color darkPrimaryContainer = Color(0xFF5E2A11);
-  static const Color darkOnPrimaryContainer = Color(0xFFFFEDD5);
-
   // Accent
   static const Color gold = Color(0xFFF59E0B);
   static const Color goldDark = Color(0xFFB45309);
@@ -118,36 +105,5 @@ abstract class AppColors {
     onInverseSurface: white,
     inversePrimary: primaryLight,
     surfaceContainerHighest: surfaceElevated,
-  );
-
-  static ColorScheme get darkColorScheme => const ColorScheme(
-    brightness: Brightness.dark,
-    primary: darkPrimary,
-    onPrimary: Color(0xFF431407),
-    primaryContainer: darkPrimaryContainer,
-    onPrimaryContainer: darkOnPrimaryContainer,
-    secondary: Color(0xFFA8B4C3),
-    onSecondary: Color(0xFF0F172A),
-    secondaryContainer: Color(0xFF2B3744),
-    onSecondaryContainer: Color(0xFFE3EAF3),
-    tertiary: Color(0xFFFBBF24),
-    onTertiary: Color(0xFF451A03),
-    tertiaryContainer: Color(0xFF5D3B13),
-    onTertiaryContainer: Color(0xFFFDE68A),
-    error: Color(0xFFF87171),
-    onError: Color(0xFF450A0A),
-    errorContainer: Color(0xFF7F1D1D),
-    onErrorContainer: Color(0xFFFECACA),
-    surface: darkSurface,
-    onSurface: darkOnSurface,
-    onSurfaceVariant: darkOnSurfaceVariant,
-    outline: darkOutline,
-    outlineVariant: darkOutlineVariant,
-    shadow: Color(0x52000000),
-    scrim: Color(0x73000000),
-    inverseSurface: Color(0xFFF8FAFC),
-    onInverseSurface: Color(0xFF111827),
-    inversePrimary: primary,
-    surfaceContainerHighest: darkSurfaceVariant,
   );
 }
