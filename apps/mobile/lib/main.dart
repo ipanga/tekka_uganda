@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'core/config/app_config.dart';
+import 'core/config/environment.dart';
 import 'core/theme/theme.dart';
 import 'features/profile/application/theme_provider.dart';
 import 'router/app_router.dart';
 import 'shared/widgets/app_lock_wrapper.dart';
 
 void main() async {
+  EnvironmentConfig.init(Environment.prod);
   WidgetsFlutterBinding.ensureInitialized();
 
   // Set preferred orientations
@@ -30,7 +33,7 @@ class TekkaApp extends ConsumerWidget {
 
     return AppLockWrapper(
       child: MaterialApp.router(
-        title: 'Tekka',
+        title: AppConfig.appName,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.light,
         darkTheme: AppTheme.dark,
