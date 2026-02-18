@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/app_config.dart';
 import '../errors/app_exception.dart';
@@ -26,11 +27,7 @@ class ApiClient {
     );
 
     _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: _onRequest,
-        onResponse: _onResponse,
-        onError: _onError,
-      ),
+      InterceptorsWrapper(onRequest: _onRequest, onResponse: _onResponse),
     );
   }
 
@@ -38,10 +35,14 @@ class ApiClient {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Add auth token if available
-    final token = await _storage.read(key: _tokenKey);
-    if (token != null) {
-      options.headers['Authorization'] = 'Bearer $token';
+    // Add auth token if available (with safety for secure storage failures)
+    try {
+      final token = await _storage.read(key: _tokenKey);
+      if (token != null) {
+        options.headers['Authorization'] = 'Bearer $token';
+      }
+    } catch (e) {
+      debugPrint('ApiClient: Failed to read auth token: $e');
     }
     handler.next(options);
   }
@@ -50,18 +51,7 @@ class ApiClient {
     handler.next(response);
   }
 
-  void _onError(DioException error, ErrorInterceptorHandler handler) {
-    final exception = _handleError(error);
-    handler.reject(
-      DioException(
-        requestOptions: error.requestOptions,
-        error: exception,
-        response: error.response,
-        type: error.type,
-      ),
-    );
-  }
-
+  /// Map DioException to ApiException
   ApiException _handleError(DioException error) {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
@@ -177,18 +167,22 @@ class ApiClient {
     dynamic data,
     Map<String, dynamic>? queryParameters,
   }) async {
-    final response = await _dio.post<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: Options(
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-        },
-      ),
-    );
-    return response.data as T;
+    try {
+      final response = await _dio.post<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: Options(
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+      return response.data as T;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
   }
 
   /// GET request
@@ -197,12 +191,16 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final response = await _dio.get<T>(
-      path,
-      queryParameters: queryParameters,
-      options: options,
-    );
-    return response.data as T;
+    try {
+      final response = await _dio.get<T>(
+        path,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return response.data as T;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
   }
 
   /// POST request
@@ -212,13 +210,17 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final response = await _dio.post<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-    );
-    return response.data as T;
+    try {
+      final response = await _dio.post<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return response.data as T;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
   }
 
   /// PUT request
@@ -228,13 +230,17 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final response = await _dio.put<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-    );
-    return response.data as T;
+    try {
+      final response = await _dio.put<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return response.data as T;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
   }
 
   /// DELETE request
@@ -244,13 +250,17 @@ class ApiClient {
     Map<String, dynamic>? queryParameters,
     Options? options,
   }) async {
-    final response = await _dio.delete<T>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-    );
-    return response.data as T;
+    try {
+      final response = await _dio.delete<T>(
+        path,
+        data: data,
+        queryParameters: queryParameters,
+        options: options,
+      );
+      return response.data as T;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
   }
 
   /// Upload file with multipart form data
@@ -261,21 +271,25 @@ class ApiClient {
     Map<String, dynamic>? additionalFields,
     void Function(int, int)? onSendProgress,
   }) async {
-    final formData = FormData.fromMap({
-      fileField: await MultipartFile.fromFile(filePath),
-      ...?additionalFields,
-    });
+    try {
+      final formData = FormData.fromMap({
+        fileField: await MultipartFile.fromFile(filePath),
+        ...?additionalFields,
+      });
 
-    final response = await _dio.post<T>(
-      path,
-      data: formData,
-      onSendProgress: onSendProgress,
-      options: Options(
-        sendTimeout: AppConfig.imageUploadTimeout,
-        receiveTimeout: AppConfig.imageUploadTimeout,
-      ),
-    );
-    return response.data as T;
+      final response = await _dio.post<T>(
+        path,
+        data: formData,
+        onSendProgress: onSendProgress,
+        options: Options(
+          sendTimeout: AppConfig.imageUploadTimeout,
+          receiveTimeout: AppConfig.imageUploadTimeout,
+        ),
+      );
+      return response.data as T;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
   }
 
   /// Upload multiple files
@@ -286,21 +300,28 @@ class ApiClient {
     Map<String, dynamic>? additionalFields,
     void Function(int, int)? onSendProgress,
   }) async {
-    final files = await Future.wait(
-      filePaths.map((path) => MultipartFile.fromFile(path)),
-    );
+    try {
+      final files = await Future.wait(
+        filePaths.map((path) => MultipartFile.fromFile(path)),
+      );
 
-    final formData = FormData.fromMap({fileField: files, ...?additionalFields});
+      final formData = FormData.fromMap({
+        fileField: files,
+        ...?additionalFields,
+      });
 
-    final response = await _dio.post<T>(
-      path,
-      data: formData,
-      onSendProgress: onSendProgress,
-      options: Options(
-        sendTimeout: AppConfig.imageUploadTimeout,
-        receiveTimeout: AppConfig.imageUploadTimeout,
-      ),
-    );
-    return response.data as T;
+      final response = await _dio.post<T>(
+        path,
+        data: formData,
+        onSendProgress: onSendProgress,
+        options: Options(
+          sendTimeout: AppConfig.imageUploadTimeout,
+          receiveTimeout: AppConfig.imageUploadTimeout,
+        ),
+      );
+      return response.data as T;
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
   }
 }

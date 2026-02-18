@@ -1,4 +1,3 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/repository_providers.dart';
@@ -92,11 +91,9 @@ final accountDeletionRepositoryProvider =
 class AccountDeletionNotifier extends StateNotifier<AccountDeletionStatus> {
   final Ref _ref;
   final AccountDeletionApiRepository _repository;
-  final FirebaseAuth _auth;
 
   AccountDeletionNotifier(this._ref, this._repository)
-    : _auth = FirebaseAuth.instance,
-      super(const AccountDeletionStatus()) {
+    : super(const AccountDeletionStatus()) {
     _checkScheduledDeletion();
   }
 
@@ -186,9 +183,8 @@ class AccountDeletionNotifier extends StateNotifier<AccountDeletionStatus> {
 
     try {
       final user = _ref.read(currentUserProvider);
-      final firebaseUser = _auth.currentUser;
 
-      if (user == null || firebaseUser == null) {
+      if (user == null) {
         state = state.copyWith(
           state: AccountDeletionState.error,
           errorMessage: 'Not authenticated',
@@ -199,19 +195,11 @@ class AccountDeletionNotifier extends StateNotifier<AccountDeletionStatus> {
       // 1. Delete all user data via API
       await _repository.deleteAccountImmediately();
 
-      // 2. Delete Firebase Auth user
+      // 2. Sign out (clears JWT tokens and local state)
       try {
-        await firebaseUser.delete();
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'requires-recent-login') {
-          state = state.copyWith(
-            state: AccountDeletionState.error,
-            errorMessage: 'Please sign out and sign back in, then try again.',
-            requiresReauth: true,
-          );
-          return false;
-        }
-        rethrow;
+        await _ref.read(authNotifierProvider.notifier).signOut();
+      } catch (_) {
+        // Sign out best-effort — account is already deleted on backend
       }
 
       state = state.copyWith(state: AccountDeletionState.deleted);

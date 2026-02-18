@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../../../core/errors/app_exception.dart';
+import '../../../../core/providers/repository_providers.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../router/app_router.dart';
 import '../../../auth/application/auth_provider.dart';
@@ -185,6 +187,50 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                           const SizedBox(height: AppSpacing.space3),
                         ],
 
+                        // Draft info banner
+                        if (listing.status == ListingStatus.draft &&
+                            isOwner) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryContainer,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 20,
+                                  color: AppColors.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'This listing is saved as a draft and is not visible to others.',
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      _handleOwnerAction('publish', listing),
+                                  style: TextButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                    ),
+                                    minimumSize: Size.zero,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                  ),
+                                  child: const Text('Publish Now'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.space3),
+                        ],
+
                         // Price
                         Text(
                           listing.formattedPrice,
@@ -338,10 +384,37 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                                     listing.sellerName,
                                     style: AppTypography.labelLarge,
                                   ),
-                                  Text(
-                                    'Member since ${listing.createdAt.year}',
-                                    style: AppTypography.bodySmall,
-                                  ),
+                                  if (listing.sellerReviewCount > 0) ...[
+                                    const SizedBox(height: 2),
+                                    Row(
+                                      children: [
+                                        ...List.generate(5, (index) {
+                                          return Icon(
+                                            index < listing.sellerRating.round()
+                                                ? Icons.star
+                                                : Icons.star_border,
+                                            size: 14,
+                                            color: AppColors.warning,
+                                          );
+                                        }),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${listing.sellerRating.toStringAsFixed(1)} (${listing.sellerReviewCount} ${listing.sellerReviewCount == 1 ? 'review' : 'reviews'})',
+                                          style: AppTypography.bodySmall
+                                              .copyWith(
+                                                color:
+                                                    AppColors.onSurfaceVariant,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ] else
+                                    Text(
+                                      'No reviews yet',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.onSurfaceVariant,
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
@@ -589,15 +662,26 @@ Download Tekka to browse more fashion items!
           ),
         );
         if (confirm == true) {
-          await ref
-              .read(listingActionsProvider(listing.id).notifier)
-              .publishDraft();
-          ref.invalidate(listingProvider(listing.id));
+          try {
+            final repository = ref.read(listingApiRepositoryProvider);
+            await repository.publishDraft(listing.id);
+            ref.invalidate(listingProvider(listing.id));
 
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Listing submitted for review!')),
-            );
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Listing submitted for review!')),
+              );
+            }
+          } catch (e) {
+            if (mounted) {
+              final errorStr = e is AppException ? e.message : e.toString();
+              final errorMsg = errorStr.contains('must have')
+                  ? 'Please complete all required fields before publishing.'
+                  : errorStr;
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(errorMsg)));
+            }
           }
         }
         break;

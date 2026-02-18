@@ -33,20 +33,21 @@ class Review {
     final listing = json['listing'] as Map<String, dynamic>?;
 
     return Review(
-      id: json['id'] as String,
-      reviewerId: reviewer?['id'] ?? json['reviewerId'] as String,
+      id: json['id'] as String? ?? '',
+      reviewerId: (reviewer?['id'] ?? json['reviewerId']) as String? ?? '',
       reviewerName:
-          reviewer?['displayName'] ??
-          json['reviewerName'] as String? ??
+          (reviewer?['displayName'] ?? json['reviewerName']) as String? ??
           'Unknown',
       reviewerPhotoUrl:
-          reviewer?['photoUrl'] ?? json['reviewerPhotoUrl'] as String?,
-      revieweeId: json['revieweeId'] as String,
-      listingId: listing?['id'] ?? json['listingId'] as String?,
-      listingTitle: listing?['title'] ?? json['listingTitle'] as String?,
-      rating: json['rating'] as int,
+          (reviewer?['photoUrl'] ?? json['reviewerPhotoUrl']) as String?,
+      revieweeId: json['revieweeId'] as String? ?? '',
+      listingId: (listing?['id'] ?? json['listingId']) as String?,
+      listingTitle: (listing?['title'] ?? json['listingTitle']) as String?,
+      rating: json['rating'] as int? ?? 0,
       comment: json['comment'] as String?,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'] as String)
+          : DateTime.now(),
       type: _parseReviewType(json['type'] as String?),
     );
   }

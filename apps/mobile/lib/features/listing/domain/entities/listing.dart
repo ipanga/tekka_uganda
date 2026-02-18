@@ -123,6 +123,8 @@ class Listing {
   final String sellerName;
   final String? sellerPhotoUrl;
   final bool? sellerIsVerified;
+  final double sellerRating;
+  final int sellerReviewCount;
   final String title;
   final String description;
   final int price; // In UGX
@@ -163,6 +165,8 @@ class Listing {
     required this.sellerName,
     this.sellerPhotoUrl,
     this.sellerIsVerified,
+    this.sellerRating = 0.0,
+    this.sellerReviewCount = 0,
     required this.title,
     required this.description,
     required this.price,
@@ -204,6 +208,8 @@ class Listing {
     String? sellerName,
     String? sellerPhotoUrl,
     bool? sellerIsVerified,
+    double? sellerRating,
+    int? sellerReviewCount,
     String? title,
     String? description,
     int? price,
@@ -242,6 +248,8 @@ class Listing {
       sellerName: sellerName ?? this.sellerName,
       sellerPhotoUrl: sellerPhotoUrl ?? this.sellerPhotoUrl,
       sellerIsVerified: sellerIsVerified ?? this.sellerIsVerified,
+      sellerRating: sellerRating ?? this.sellerRating,
+      sellerReviewCount: sellerReviewCount ?? this.sellerReviewCount,
       title: title ?? this.title,
       description: description ?? this.description,
       price: price ?? this.price,
@@ -320,6 +328,8 @@ class Listing {
         seller?['displayName'] ?? json['sellerName'] ?? 'Unknown';
     final sellerPhotoUrl = seller?['photoUrl'] ?? json['sellerPhotoUrl'];
     final sellerIsVerified = seller?['isVerified'] ?? json['sellerIsVerified'];
+    final sellerRating = (seller?['rating'] as num?)?.toDouble() ?? 0.0;
+    final sellerReviewCount = seller?['reviewCount'] as int? ?? 0;
 
     // Handle category - new system has categoryData, legacy has category string
     final categoryData = json['categoryData'] as Map<String, dynamic>?;
@@ -335,6 +345,8 @@ class Listing {
       sellerName: sellerName as String,
       sellerPhotoUrl: sellerPhotoUrl as String?,
       sellerIsVerified: sellerIsVerified as bool?,
+      sellerRating: sellerRating,
+      sellerReviewCount: sellerReviewCount,
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
       price: json['price'] as int? ?? 0,

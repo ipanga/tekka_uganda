@@ -32,6 +32,19 @@ abstract class ReviewRepository {
     required ReviewType type,
   });
 
+  /// Update an existing review
+  Future<Review> updateReview({
+    required String reviewId,
+    int? rating,
+    String? comment,
+  });
+
+  /// Get existing review by current user for a specific reviewee
+  Future<Review?> getExistingReview({
+    required String reviewerId,
+    required String revieweeId,
+  });
+
   /// Get user's rating summary
   Future<UserRating> getUserRating(String userId);
 

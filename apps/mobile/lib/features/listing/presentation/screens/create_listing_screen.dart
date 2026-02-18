@@ -466,6 +466,40 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                       : const Text('Publish'),
                 ),
               ),
+            ] else if (!isEditMode && _currentStep == _totalSteps - 1) ...[
+              // Create mode at review step: dual buttons
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: state.isLoading
+                      ? null
+                      : () => _saveDraft(notifier),
+                  child: state.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Save as Draft'),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.space3),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: state.isLoading || !_canProceed()
+                      ? null
+                      : () => _publishListing(notifier),
+                  child: state.isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Text('Publish Listing'),
+                ),
+              ),
             ] else
               Expanded(
                 child: ElevatedButton(
@@ -489,7 +523,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                         )
                       : Text(
                           _currentStep == _totalSteps - 1
-                              ? (isEditMode ? 'Save Changes' : 'Publish')
+                              ? 'Save Changes'
                               : 'Continue',
                         ),
                 ),
@@ -524,11 +558,12 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   }
 
   Future<void> _saveDraft(CreateListingNotifierV2 notifier) async {
-    await notifier.submitListing(isDraft: true);
-    if (mounted) {
+    final listing = await notifier.submitListing(isDraft: true);
+    if (mounted && listing != null) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Draft saved')));
+      context.pop();
     }
   }
 

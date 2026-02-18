@@ -94,29 +94,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 padding: AppSpacing.screenHorizontal,
                 child: Container(
                   height: AppSpacing.searchBarHeight,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: AppColors.gray100,
                     borderRadius: AppSpacing.searchBarRadius,
-                    border: Border.all(color: AppColors.outline),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.search, color: AppColors.onSurfaceVariant),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: 14),
+                      Icon(
+                        Icons.search_rounded,
+                        color: AppColors.onSurfaceVariant,
+                        size: 22,
+                      ),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: TextField(
                           controller: _searchController,
                           decoration: InputDecoration(
                             hintText: 'Search fashion items...',
-                            hintStyle: AppTypography.bodyLarge.copyWith(
-                              color: AppColors.onSurfaceVariant,
+                            hintStyle: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.gray400,
                             ),
                             border: InputBorder.none,
                             isDense: true,
                             contentPadding: EdgeInsets.zero,
                           ),
-                          style: AppTypography.bodyLarge,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.onSurface,
+                          ),
                           textInputAction: TextInputAction.search,
                           onSubmitted: (value) {
                             setState(() {
@@ -133,12 +138,22 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               _searchQuery = null;
                             });
                           },
-                          child: Icon(
-                            Icons.clear,
-                            color: AppColors.onSurfaceVariant,
-                            size: 20,
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 8),
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: AppColors.gray300,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              Icons.close_rounded,
+                              color: AppColors.surface,
+                              size: 14,
+                            ),
                           ),
-                        ),
+                        )
+                      else
+                        const SizedBox(width: 14),
                     ],
                   ),
                 ),

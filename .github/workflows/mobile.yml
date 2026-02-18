@@ -88,7 +88,7 @@ jobs:
           fail_ci_if_error: false
 
   build-android:
-    name: Build Android
+    name: Build Android (Dev)
     runs-on: ubuntu-latest
     needs: [test]
     steps:
@@ -118,19 +118,19 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Build APK (debug)
+      - name: Build APK (dev debug)
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: flutter build apk --debug
+        run: flutter build apk --debug --flavor dev -t lib/main_dev.dart
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-debug-apk
-          path: ${{ env.WORKING_DIRECTORY }}/build/app/outputs/flutter-apk/app-debug.apk
+          name: android-dev-debug-apk
+          path: ${{ env.WORKING_DIRECTORY }}/build/app/outputs/flutter-apk/app-dev-debug.apk
           retention-days: 7
 
   build-android-release:
-    name: Build Android Release
+    name: Build Android Release (Prod)
     runs-on: ubuntu-latest
     needs: [test]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -161,21 +161,21 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Build App Bundle
+      - name: Build App Bundle (prod release)
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: flutter build appbundle --release --no-tree-shake-icons || flutter build apk --release
+        run: flutter build appbundle --release --flavor prod -t lib/main.dart --no-tree-shake-icons || flutter build apk --release --flavor prod -t lib/main.dart
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: android-release
+          name: android-prod-release
           path: |
-            ${{ env.WORKING_DIRECTORY }}/build/app/outputs/bundle/release/*.aab
-            ${{ env.WORKING_DIRECTORY }}/build/app/outputs/flutter-apk/app-release.apk
+            ${{ env.WORKING_DIRECTORY }}/build/app/outputs/bundle/prodRelease/*.aab
+            ${{ env.WORKING_DIRECTORY }}/build/app/outputs/flutter-apk/app-prod-release.apk
           retention-days: 30
 
   build-ios:
-    name: Build iOS
+    name: Build iOS (Dev)
     runs-on: macos-latest
     needs: [test]
     steps:
@@ -198,19 +198,19 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Build iOS (no codesign)
+      - name: Build iOS (dev debug, no codesign)
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: flutter build ios --no-codesign --debug
+        run: flutter build ios --no-codesign --debug -t lib/main_dev.dart
 
       - name: Upload iOS build
         uses: actions/upload-artifact@v4
         with:
-          name: ios-debug-build
+          name: ios-dev-debug-build
           path: ${{ env.WORKING_DIRECTORY }}/build/ios/iphoneos
           retention-days: 7
 
   build-ios-release:
-    name: Build iOS Release
+    name: Build iOS Release (Prod)
     runs-on: macos-latest
     needs: [test]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -234,13 +234,13 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: dart run build_runner build --delete-conflicting-outputs
 
-      - name: Build iOS Release (no codesign)
+      - name: Build iOS Release (prod, no codesign)
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: flutter build ios --no-codesign --release
+        run: flutter build ios --no-codesign --release -t lib/main.dart
 
       - name: Upload iOS release build
         uses: actions/upload-artifact@v4
         with:
-          name: ios-release-build
+          name: ios-prod-release-build
           path: ${{ env.WORKING_DIRECTORY }}/build/ios/iphoneos
           retention-days: 30

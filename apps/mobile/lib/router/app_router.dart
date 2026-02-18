@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/config/environment.dart';
 import '../features/auth/application/auth_provider.dart';
 import '../features/auth/presentation/screens/phone_input_screen.dart';
 import '../features/auth/presentation/screens/otp_verification_screen.dart';
@@ -115,7 +116,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: AppRoutes.home,
-    debugLogDiagnostics: true,
+    debugLogDiagnostics: !EnvironmentConfig.isProd,
     redirect: (context, state) {
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isSplash = state.matchedLocation == AppRoutes.splash;
@@ -366,9 +367,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return CreateReviewScreen(
             revieweeId: params['revieweeId'] as String,
             revieweeName: params['revieweeName'] as String,
-            listingId: params['listingId'] as String,
-            listingTitle: params['listingTitle'] as String,
-            reviewType: params['reviewType'] as ReviewType,
+            listingId: params['listingId'] as String?,
+            listingTitle: params['listingTitle'] as String?,
+            reviewType:
+                params['reviewType'] as ReviewType? ?? ReviewType.seller,
+            existingReview: params['existingReview'] as Review?,
           );
         },
       ),

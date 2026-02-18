@@ -1,27 +1,16 @@
 import 'dart:io' show Platform;
 
-/// App configuration for different environments
-enum Environment { dev, staging, prod }
+import 'environment.dart';
 
+/// App configuration — environment-aware
 class AppConfig {
-  static Environment _environment = Environment.dev;
-
-  static Environment get environment => _environment;
-
-  static void setEnvironment(Environment env) {
-    _environment = env;
-  }
-
   /// API Base URL
   static String get apiBaseUrl {
-    switch (_environment) {
+    switch (EnvironmentConfig.current) {
       case Environment.dev:
-        // Android emulator uses 10.0.2.2 to reach the host machine,
-        // iOS simulator uses 127.0.0.1
         final host = Platform.isAndroid ? '10.0.2.2' : '127.0.0.1';
         return 'http://$host:4000/api/v1';
       case Environment.staging:
-        return 'https://staging-api.tekka.ug/api/v1';
       case Environment.prod:
         return 'https://api.tekka.ug/api/v1';
     }
@@ -32,11 +21,21 @@ class AppConfig {
   static String get cloudinaryUploadPreset => 'tekka_listings';
 
   /// Feature flags
-  static bool get enableAnalytics => _environment == Environment.prod;
-  static bool get enableCrashlytics => _environment == Environment.prod;
+  static bool get enableAnalytics => EnvironmentConfig.isProd;
+  static bool get enableCrashlytics => EnvironmentConfig.isProd;
 
-  /// App info
-  static const String appName = 'Tekka';
+  /// App display name
+  static String get appName {
+    switch (EnvironmentConfig.current) {
+      case Environment.dev:
+        return 'Tekka Dev';
+      case Environment.staging:
+        return 'Tekka Staging';
+      case Environment.prod:
+        return 'Tekka';
+    }
+  }
+
   static const String appVersion = '1.0.0';
 
   /// Timeouts

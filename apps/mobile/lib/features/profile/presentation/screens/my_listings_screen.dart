@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/errors/app_exception.dart';
+import '../../../../core/providers/repository_providers.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../router/app_router.dart';
 import '../../../auth/application/auth_provider.dart';
@@ -24,7 +26,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -36,22 +38,57 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    final listingsAsync = ref.watch(userListingsProvider(user?.uid ?? ''));
+    final userId = user?.uid ?? '';
+    final listingsAsync = ref.watch(userListingsProvider(userId));
 
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('My Listings'),
-        bottom: TabBar(
-          controller: _tabController,
-          isScrollable: true,
-          tabs: const [
-            Tab(text: 'All'),
-            Tab(text: 'Active'),
-            Tab(text: 'Under Review'),
-            Tab(text: 'Sold'),
-          ],
-        ),
+        bottom:
+            listingsAsync.whenOrNull(
+              data: (listings) {
+                final activeCt = listings
+                    .where((l) => l.status == ListingStatus.active)
+                    .length;
+                final draftCt = listings
+                    .where((l) => l.status == ListingStatus.draft)
+                    .length;
+                final reviewCt = listings
+                    .where(
+                      (l) =>
+                          l.status == ListingStatus.pending ||
+                          l.status == ListingStatus.rejected,
+                    )
+                    .length;
+                final soldCt = listings
+                    .where((l) => l.status == ListingStatus.sold)
+                    .length;
+
+                return TabBar(
+                  controller: _tabController,
+                  isScrollable: true,
+                  tabs: [
+                    Tab(text: 'All (${listings.length})'),
+                    Tab(text: 'Active ($activeCt)'),
+                    Tab(text: 'Drafts ($draftCt)'),
+                    Tab(text: 'Under Review ($reviewCt)'),
+                    Tab(text: 'Sold ($soldCt)'),
+                  ],
+                );
+              },
+            ) ??
+            TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabs: const [
+                Tab(text: 'All'),
+                Tab(text: 'Active'),
+                Tab(text: 'Drafts'),
+                Tab(text: 'Under Review'),
+                Tab(text: 'Sold'),
+              ],
+            ),
       ),
       body: listingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -64,8 +101,7 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
               Text('Failed to load listings', style: AppTypography.bodyLarge),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
-                onPressed: () =>
-                    ref.invalidate(userListingsProvider(user?.uid ?? '')),
+                onPressed: () => ref.invalidate(userListingsProvider(userId)),
                 child: const Text('Retry'),
               ),
             ],
@@ -75,7 +111,9 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
           final activeListings = listings
               .where((l) => l.status == ListingStatus.active)
               .toList();
-          // Include both pending and rejected listings in "Under Review" tab
+          final draftListings = listings
+              .where((l) => l.status == ListingStatus.draft)
+              .toList();
           final underReviewListings = listings
               .where(
                 (l) =>
@@ -95,24 +133,36 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
                 emptyMessage: 'No listings yet',
                 emptyAction: 'Create your first listing',
                 onEmptyAction: () => context.push(AppRoutes.createListing),
+                onRefresh: () => ref.invalidate(userListingsProvider(userId)),
               ),
               _ListingsGrid(
                 listings: activeListings,
                 emptyMessage: 'No active listings',
                 emptyAction: 'Create a new listing',
                 onEmptyAction: () => context.push(AppRoutes.createListing),
+                onRefresh: () => ref.invalidate(userListingsProvider(userId)),
+              ),
+              _ListingsGrid(
+                listings: draftListings,
+                emptyMessage: 'No drafts',
+                emptyAction: 'Create a listing',
+                onEmptyAction: () => context.push(AppRoutes.createListing),
+                onRefresh: () => ref.invalidate(userListingsProvider(userId)),
+                showDraftActions: true,
               ),
               _ListingsGrid(
                 listings: underReviewListings,
                 emptyMessage: 'No listings under review',
                 emptyAction: null,
                 onEmptyAction: null,
+                onRefresh: () => ref.invalidate(userListingsProvider(userId)),
               ),
               _ListingsGrid(
                 listings: soldListings,
                 emptyMessage: 'No sold listings yet',
                 emptyAction: null,
                 onEmptyAction: null,
+                onRefresh: () => ref.invalidate(userListingsProvider(userId)),
               ),
             ],
           );
@@ -133,12 +183,16 @@ class _ListingsGrid extends StatelessWidget {
     required this.emptyMessage,
     this.emptyAction,
     this.onEmptyAction,
+    this.onRefresh,
+    this.showDraftActions = false,
   });
 
   final List<Listing> listings;
   final String emptyMessage;
   final String? emptyAction;
   final VoidCallback? onEmptyAction;
+  final VoidCallback? onRefresh;
+  final bool showDraftActions;
 
   @override
   Widget build(BuildContext context) {
@@ -150,7 +204,9 @@ class _ListingsGrid extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(
-                Icons.inventory_2_outlined,
+                showDraftActions
+                    ? Icons.edit_note_outlined
+                    : Icons.inventory_2_outlined,
                 size: 64,
                 color: AppColors.onSurfaceVariant,
               ),
@@ -171,32 +227,36 @@ class _ListingsGrid extends StatelessWidget {
 
     return RefreshIndicator(
       onRefresh: () async {
-        // Parent will handle refresh via provider invalidation
+        onRefresh?.call();
       },
       child: GridView.builder(
         padding: AppSpacing.screenPadding,
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
-          childAspectRatio: 0.75,
+          childAspectRatio: 0.65,
           crossAxisSpacing: AppSpacing.space3,
           mainAxisSpacing: AppSpacing.space3,
         ),
         itemCount: listings.length,
         itemBuilder: (context, index) {
-          return _ListingCard(listing: listings[index]);
+          return _ListingCard(
+            listing: listings[index],
+            showDraftActions: showDraftActions,
+          );
         },
       ),
     );
   }
 }
 
-class _ListingCard extends StatelessWidget {
-  const _ListingCard({required this.listing});
+class _ListingCard extends ConsumerWidget {
+  const _ListingCard({required this.listing, this.showDraftActions = false});
 
   final Listing listing;
+  final bool showDraftActions;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
       onTap: () {
         context.push(AppRoutes.listingDetail.replaceFirst(':id', listing.id));
@@ -295,8 +355,12 @@ class _ListingCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    listing.title,
-                    style: AppTypography.labelMedium,
+                    listing.title.isNotEmpty ? listing.title : 'Untitled Draft',
+                    style: AppTypography.labelMedium.copyWith(
+                      fontStyle: listing.title.isEmpty
+                          ? FontStyle.italic
+                          : FontStyle.normal,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -314,6 +378,48 @@ class _ListingCard extends StatelessWidget {
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
+                  // Draft inline actions
+                  if (showDraftActions &&
+                      listing.status == ListingStatus.draft) ...[
+                    const SizedBox(height: AppSpacing.space2),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SizedBox(
+                            height: 32,
+                            child: OutlinedButton(
+                              onPressed: () => context.push(
+                                AppRoutes.editListing.replaceFirst(
+                                  ':id',
+                                  listing.id,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                textStyle: AppTypography.labelSmall,
+                              ),
+                              child: const Text('Edit'),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.space2),
+                        Expanded(
+                          child: SizedBox(
+                            height: 32,
+                            child: FilledButton(
+                              onPressed: () =>
+                                  _publishDraft(context, ref, listing),
+                              style: FilledButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                textStyle: AppTypography.labelSmall,
+                              ),
+                              child: const Text('Publish'),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -321,6 +427,58 @@ class _ListingCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _publishDraft(
+    BuildContext context,
+    WidgetRef ref,
+    Listing listing,
+  ) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Publish Listing'),
+        content: const Text(
+          'Publish this listing? It will be submitted for review before going live.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Publish'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true && context.mounted) {
+      try {
+        final repository = ref.read(listingApiRepositoryProvider);
+        await repository.publishDraft(listing.id);
+
+        final user = ref.read(currentUserProvider);
+        ref.invalidate(userListingsProvider(user?.uid ?? ''));
+
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Listing submitted for review!')),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          final errorStr = e is AppException ? e.message : e.toString();
+          final errorMsg = errorStr.contains('must have')
+              ? 'Please complete all required fields before publishing.'
+              : errorStr;
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(errorMsg)));
+        }
+      }
+    }
   }
 }
 

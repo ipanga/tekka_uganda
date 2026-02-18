@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/services/image_service_provider.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../router/app_router.dart';
@@ -104,9 +105,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         _isUploadingImage = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('$e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e is AppException
+                  ? e.message
+                  : 'Something went wrong. Try again.',
+            ),
+          ),
+        );
       }
     }
   }

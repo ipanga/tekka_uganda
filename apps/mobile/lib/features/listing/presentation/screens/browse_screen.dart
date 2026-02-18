@@ -114,37 +114,88 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
           // Search bar
           Padding(
             padding: AppSpacing.screenPadding,
-            child: TextField(
-              controller: _searchController,
-              focusNode: _searchFocusNode,
-              decoration: InputDecoration(
-                hintText: 'Search fashion items...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_searchController.text.isNotEmpty)
-                      IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: () {
-                          _searchController.clear();
-                          setState(() {});
-                        },
-                      ),
-                    IconButton(
-                      icon: const Icon(Icons.tune),
-                      onPressed: () => _showFilterSheet(categoryState),
-                    ),
-                  ],
-                ),
+            child: Container(
+              height: AppSpacing.searchBarHeight,
+              decoration: BoxDecoration(
+                color: AppColors.gray100,
+                borderRadius: AppSpacing.searchBarRadius,
               ),
-              textInputAction: TextInputAction.search,
-              onSubmitted: (_) => setState(() {}),
-              onChanged: (_) {
-                Future.delayed(const Duration(milliseconds: 500), () {
-                  if (mounted) setState(() {});
-                });
-              },
+              child: Row(
+                children: [
+                  const SizedBox(width: 14),
+                  Icon(
+                    Icons.search_rounded,
+                    color: AppColors.onSurfaceVariant,
+                    size: 22,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      focusNode: _searchFocusNode,
+                      decoration: InputDecoration(
+                        hintText: 'Search fashion items...',
+                        hintStyle: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.gray400,
+                        ),
+                        border: InputBorder.none,
+                        isDense: true,
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.onSurface,
+                      ),
+                      textInputAction: TextInputAction.search,
+                      onSubmitted: (_) => setState(() {}),
+                      onChanged: (_) {
+                        Future.delayed(const Duration(milliseconds: 500), () {
+                          if (mounted) setState(() {});
+                        });
+                      },
+                    ),
+                  ),
+                  if (_searchController.text.isNotEmpty)
+                    GestureDetector(
+                      onTap: () {
+                        _searchController.clear();
+                        setState(() {});
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: AppColors.gray300,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.close_rounded,
+                          color: AppColors.surface,
+                          size: 14,
+                        ),
+                      ),
+                    ),
+                  const SizedBox(width: 4),
+                  GestureDetector(
+                    onTap: () => _showFilterSheet(categoryState),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: _hasActiveFilters
+                            ? AppColors.primary.withValues(alpha: 0.1)
+                            : Colors.transparent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.tune_rounded,
+                        color: _hasActiveFilters
+                            ? AppColors.primary
+                            : AppColors.onSurfaceVariant,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                ],
+              ),
             ),
           ),
 

@@ -46,9 +46,24 @@ class UserProfileScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text('Error loading profile: $e')),
         data: (user) {
           if (user == null) {
-            return Scaffold(
-              appBar: AppBar(),
-              body: const Center(child: Text('User not found')),
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(
+                    Icons.person_off_outlined,
+                    size: 64,
+                    color: AppColors.onSurfaceVariant,
+                  ),
+                  const SizedBox(height: AppSpacing.space4),
+                  Text('User not found', style: AppTypography.titleMedium),
+                  const SizedBox(height: AppSpacing.space4),
+                  OutlinedButton(
+                    onPressed: () => context.pop(),
+                    child: const Text('Go Back'),
+                  ),
+                ],
+              ),
             );
           }
 
@@ -829,6 +844,11 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
     final isLoggedIn = currentUser != null;
+    final existingReviewAsync = isLoggedIn
+        ? ref.watch(existingReviewProvider(widget.userId))
+        : null;
+
+    final hasExistingReview = existingReviewAsync?.valueOrNull != null;
 
     return Row(
       children: [
@@ -873,10 +893,15 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
         Expanded(
           child: OutlinedButton.icon(
             onPressed: isLoggedIn
-                ? () => _handleReview(context)
+                ? () => _handleReview(context, existingReviewAsync?.valueOrNull)
                 : () => _showLoginRequired(context),
-            icon: const Icon(Icons.rate_review_outlined, size: 18),
-            label: const Text('Review'),
+            icon: Icon(
+              hasExistingReview
+                  ? Icons.edit_outlined
+                  : Icons.rate_review_outlined,
+              size: 18,
+            ),
+            label: Text(hasExistingReview ? 'Edit Review' : 'Review'),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 12),
             ),
@@ -887,7 +912,6 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
   }
 
   void _handleMessage(BuildContext context) {
-    // Show a message that they should tap on a listing to start a chat
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
@@ -898,14 +922,25 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
     );
   }
 
-  void _handleReview(BuildContext context) {
-    context.push(
+  Future<void> _handleReview(
+    BuildContext context,
+    Review? existingReview,
+  ) async {
+    final result = await context.push<bool>(
       AppRoutes.createReview,
       extra: {
         'revieweeId': widget.userId,
         'revieweeName': widget.user.displayName ?? 'User',
+        if (existingReview != null) 'existingReview': existingReview,
       },
     );
+
+    if (result == true) {
+      // Refresh reviews, rating, and existing review state
+      ref.invalidate(userReviewsProvider(widget.userId));
+      ref.invalidate(userRatingProvider(widget.userId));
+      ref.invalidate(existingReviewProvider(widget.userId));
+    }
   }
 
   void _showLoginRequired(BuildContext context) {

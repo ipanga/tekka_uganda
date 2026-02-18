@@ -129,7 +129,7 @@ class AppUser {
     return AppUser(
       uid: json['id'] as String,
       firebaseUid: json['firebaseUid'] as String?,
-      phoneNumber: json['phoneNumber'] as String,
+      phoneNumber: json['phoneNumber'] as String? ?? '',
       email: json['email'] as String?,
       emailVerified: json['isEmailVerified'] as bool? ?? false,
       displayName: json['displayName'] as String?,

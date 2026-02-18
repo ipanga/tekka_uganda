@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/widgets/tekka_logo.dart';
 import '../../../../core/constants/app_constants.dart';
@@ -51,9 +52,12 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
       }
     } catch (e) {
       if (mounted) {
+        final message = e is AppException
+            ? e.message
+            : 'Something went wrong. Try again.';
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('$e')));
+        ).showSnackBar(SnackBar(content: Text(message)));
       }
     }
   }

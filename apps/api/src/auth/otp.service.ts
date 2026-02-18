@@ -1,6 +1,7 @@
 import {
   Injectable,
   BadRequestException,
+  Logger,
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
@@ -41,11 +42,13 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
   private otpRequestCount: Map<string, { count: number; resetAt: Date }> =
     new Map();
 
+  private readonly logger = new Logger(OtpService.name);
+
   constructor(
     private configService: ConfigService,
     private thinkXCloudService: ThinkXCloudService,
   ) {
-    console.log('OTP Service initialized with ThinkX Cloud provider.');
+    this.logger.log('OTP Service initialized with ThinkX Cloud provider.');
   }
 
   onModuleInit() {
@@ -54,8 +57,8 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
       () => this.cleanupExpiredOTPs(),
       this.CLEANUP_INTERVAL_MINUTES * 60 * 1000,
     );
-    console.log(
-      `[OTP] Cleanup scheduler started (every ${this.CLEANUP_INTERVAL_MINUTES} minutes)`,
+    this.logger.log(
+      `Cleanup scheduler started (every ${this.CLEANUP_INTERVAL_MINUTES} minutes)`,
     );
   }
 
@@ -64,7 +67,7 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
     if (this.cleanupInterval) {
       clearInterval(this.cleanupInterval);
       this.cleanupInterval = null;
-      console.log('[OTP] Cleanup scheduler stopped');
+      this.logger.log('Cleanup scheduler stopped');
     }
   }
 
@@ -121,7 +124,7 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
       Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000,
     );
 
-    console.log(`[OTP] Initiating OTP delivery to ${phoneNumber}`);
+    this.logger.log(`Initiating OTP delivery to ${phoneNumber}`);
 
     // Store OTP
     this.otpStore.set(phoneNumber, {
@@ -137,7 +140,7 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
 
     // Send via ThinkX Cloud
     if (isSmsConfigured) {
-      console.log(`[OTP] Attempting SMS delivery to ${phoneNumber}...`);
+      this.logger.log(`Attempting SMS delivery to ${phoneNumber}...`);
 
       try {
         const smsResult = await this.thinkXCloudService.sendOTP(
@@ -147,8 +150,8 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
         );
 
         if (smsResult.success) {
-          console.log(
-            `[OTP] ✓ SMS delivery successful to ${phoneNumber}, messageRef: ${smsResult.messageReference}`,
+          this.logger.log(
+            `SMS delivery successful to ${phoneNumber}`,
           );
 
           return {
@@ -158,14 +161,14 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
           };
         }
 
-        console.error(
-          `[OTP] SMS delivery failed for ${phoneNumber}: ${smsResult.error}`,
+        this.logger.error(
+          `SMS delivery failed for ${phoneNumber}: ${smsResult.error}`,
         );
 
         // Fall back to mock mode in development
         if (isDevelopment) {
-          console.log(
-            `[OTP] [MOCK] Development mode - OTP sent to ${phoneNumber} (expires at ${expiresAt.toISOString()})`,
+          this.logger.debug(
+            `[MOCK] OTP stored for ${phoneNumber} (expires at ${expiresAt.toISOString()})`,
           );
           return {
             success: true,
@@ -182,8 +185,8 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
       } catch (error: any) {
         // If SMS fails and we're in development, use mock mode
         if (isDevelopment) {
-          console.log(
-            `[OTP] [MOCK] Development mode - OTP sent to ${phoneNumber} (expires at ${expiresAt.toISOString()})`,
+          this.logger.debug(
+            `[MOCK] OTP stored for ${phoneNumber} (expires at ${expiresAt.toISOString()})`,
           );
           return {
             success: true,
@@ -203,8 +206,8 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
 
     // SMS not configured - use mock mode in development
     if (isDevelopment) {
-      console.log(
-        `[OTP] [MOCK] Development mode - OTP ${otp} for ${phoneNumber} (expires at ${expiresAt.toISOString()})`,
+      this.logger.debug(
+        `[MOCK] OTP stored for ${phoneNumber} (expires at ${expiresAt.toISOString()})`,
       );
       return {
         success: true,
@@ -230,26 +233,26 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
 
     // Development/testing mode - always accept "123456" as valid code
     if (isDevelopment && code === '123456') {
-      console.log(`[OTP] [DEV] Accepting test OTP code for ${phoneNumber}`);
+      this.logger.debug(`[DEV] Accepting test OTP code for ${phoneNumber}`);
       this.otpStore.delete(phoneNumber);
       return { valid: true };
     }
 
     if (!storedOtp) {
-      console.log(`[OTP] No OTP found for ${phoneNumber}`);
+      this.logger.warn(`No OTP found for ${phoneNumber}`);
       return { valid: false };
     }
 
     // Check if OTP has expired
     if (new Date() > storedOtp.expiresAt) {
-      console.log(`[OTP] OTP expired for ${phoneNumber}`);
+      this.logger.warn(`OTP expired for ${phoneNumber}`);
       this.otpStore.delete(phoneNumber);
       return { valid: false };
     }
 
     // Check max attempts
     if (storedOtp.attempts >= this.MAX_VERIFICATION_ATTEMPTS) {
-      console.log(`[OTP] Max verification attempts exceeded for ${phoneNumber}`);
+      this.logger.warn(`Max verification attempts exceeded for ${phoneNumber}`);
       this.otpStore.delete(phoneNumber);
       return { valid: false };
     }
@@ -259,13 +262,13 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
 
     // Verify the code
     if (storedOtp.code === code) {
-      console.log(`[OTP] ✓ OTP verified successfully for ${phoneNumber}`);
+      this.logger.log(`OTP verified successfully for ${phoneNumber}`);
       this.otpStore.delete(phoneNumber);
       return { valid: true };
     }
 
-    console.log(
-      `[OTP] Invalid OTP for ${phoneNumber}. Attempt ${storedOtp.attempts}/${this.MAX_VERIFICATION_ATTEMPTS}`,
+    this.logger.warn(
+      `Invalid OTP for ${phoneNumber}. Attempt ${storedOtp.attempts}/${this.MAX_VERIFICATION_ATTEMPTS}`,
     );
     return { valid: false };
   }
@@ -295,8 +298,8 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
     }
 
     if (otpsCleaned > 0 || rateLimitsCleaned > 0) {
-      console.log(
-        `[OTP] Cleanup: removed ${otpsCleaned} expired OTPs, ${rateLimitsCleaned} expired rate limits`,
+      this.logger.log(
+        `Cleanup: removed ${otpsCleaned} expired OTPs, ${rateLimitsCleaned} expired rate limits`,
       );
     }
   }

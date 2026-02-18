@@ -95,9 +95,10 @@ export default function ReviewsPage() {
     setDeleteLoading(true);
     try {
       await api.deleteReview(deleteTarget.id);
+      // Instantly remove from UI without refetch
+      setReviews((prev) => prev.filter((r) => r.id !== deleteTarget.id));
       setDeleteTarget(null);
       setSelectedReview(null);
-      loadReviews();
     } catch (error) {
       console.error('Failed to delete review:', error);
     } finally {

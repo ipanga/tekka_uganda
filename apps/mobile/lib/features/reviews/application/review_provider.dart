@@ -48,6 +48,21 @@ final userRatingStreamProvider = StreamProvider.family<UserRating, String>((
   return repository.getUserRatingStream(userId);
 });
 
+/// Get existing review by current user for a specific reviewee
+final existingReviewProvider = FutureProvider.family<Review?, String>((
+  ref,
+  revieweeId,
+) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) return null;
+
+  final repository = ref.watch(reviewRepositoryProvider);
+  return repository.getExistingReview(
+    reviewerId: user.uid,
+    revieweeId: revieweeId,
+  );
+});
+
 /// Check if current user can review another user for a listing
 final canReviewProvider = FutureProvider.family<bool, CanReviewParams>((
   ref,
@@ -129,6 +144,29 @@ class CreateReviewNotifier extends StateNotifier<CreateReviewState> {
         rating: state.rating,
         comment: state.comment.isEmpty ? null : state.comment,
         type: type,
+      );
+
+      state = state.copyWith(isLoading: false, isSubmitted: true);
+      return true;
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      return false;
+    }
+  }
+
+  Future<bool> update({required String reviewId}) async {
+    if (state.rating == 0) {
+      state = state.copyWith(error: 'Please select a rating');
+      return false;
+    }
+
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      await _repository.updateReview(
+        reviewId: reviewId,
+        rating: state.rating,
+        comment: state.comment.isEmpty ? null : state.comment,
       );
 
       state = state.copyWith(isLoading: false, isSubmitted: true);

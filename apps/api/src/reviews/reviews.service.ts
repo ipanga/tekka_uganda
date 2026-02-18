@@ -45,18 +45,19 @@ export class ReviewsService {
         throw new NotFoundException('Listing not found');
       }
 
-      // Check if already reviewed this specific listing
-      const existingListingReview = await this.prisma.review.findUnique({
+      // Check if already reviewed this seller (any review for this reviewee)
+      const existingSellerReview = await this.prisma.review.findFirst({
         where: {
-          reviewerId_listingId: {
-            reviewerId,
-            listingId: dto.listingId,
-          },
+          reviewerId,
+          revieweeId: dto.revieweeId,
         },
       });
 
-      if (existingListingReview) {
-        throw new ConflictException('You have already reviewed this listing');
+      if (existingSellerReview) {
+        throw new ConflictException({
+          message: 'You have already reviewed this seller',
+          existingReviewId: existingSellerReview.id,
+        });
       }
 
       // Determine review type based on listing ownership
@@ -76,7 +77,10 @@ export class ReviewsService {
       });
 
       if (existingSellerReview) {
-        throw new ConflictException('You have already reviewed this seller');
+        throw new ConflictException({
+          message: 'You have already reviewed this seller',
+          existingReviewId: existingSellerReview.id,
+        });
       }
 
       // Find the most recent listing from this seller to use as reference
