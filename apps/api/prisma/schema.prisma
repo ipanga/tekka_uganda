@@ -130,6 +130,7 @@ model FcmToken {
 
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("fcm_tokens")
 }
 
@@ -321,6 +322,7 @@ model Listing {
   @@index([sellerId])
   @@index([categoryId])
   @@index([cityId])
+  @@index([divisionId])
   @@index([status])
   @@index([createdAt])
   @@map("listings")
@@ -572,6 +574,7 @@ model Review {
 
   @@unique([reviewerId, listingId])
   @@index([revieweeId])
+  @@index([reviewerId])
   @@map("reviews")
 }
 

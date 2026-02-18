@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
 interface ThinkXSendResult {
@@ -23,6 +23,7 @@ interface ThinkXApiResponse {
  */
 @Injectable()
 export class ThinkXCloudService {
+  private readonly logger = new Logger(ThinkXCloudService.name);
   private readonly baseUrl = 'https://sms.thinkxcloud.com/api';
   private readonly apiKey: string;
   private _isConfigured: boolean = false;
@@ -32,14 +33,14 @@ export class ThinkXCloudService {
 
     // Check if credentials are configured
     if (!this.apiKey || this.apiKey === 'your_thinkxcloud_api_key') {
-      console.warn(
+      this.logger.warn(
         'ThinkX Cloud credentials not configured. SMS OTP will be unavailable.',
       );
       return;
     }
 
     this._isConfigured = true;
-    console.log('ThinkX Cloud SMS service initialized successfully.');
+    this.logger.log('ThinkX Cloud SMS service initialized successfully.');
   }
 
   /**
@@ -61,8 +62,8 @@ export class ThinkXCloudService {
     expiryMinutes: number,
   ): Promise<ThinkXSendResult> {
     if (!this._isConfigured) {
-      console.log(
-        `[MOCK] SMS OTP ${otp} would be sent to ${phoneNumber} (ThinkX Cloud not configured)`,
+      this.logger.debug(
+        `[MOCK] SMS would be sent to ${phoneNumber} (ThinkX Cloud not configured)`,
       );
       return { success: false, error: 'ThinkX Cloud not configured' };
     }
@@ -87,7 +88,7 @@ export class ThinkXCloudService {
         message: message,
       };
 
-      console.log(`[ThinkX] Sending OTP to ${phoneNumber}...`);
+      this.logger.log(`Sending OTP to ${phoneNumber}...`);
 
       const response = await fetch(`${this.baseUrl}/send-message`, {
         method: 'POST',
@@ -98,11 +99,10 @@ export class ThinkXCloudService {
       });
 
       const result: ThinkXApiResponse = await response.json();
-      console.log(`[ThinkX] Response:`, JSON.stringify(result, null, 2));
 
       if (result.response === 'OK' && result.data?.message_reference) {
-        console.log(
-          `[ThinkX] OTP sent successfully to ${phoneNumber}, messageRef: ${result.data.message_reference}`,
+        this.logger.log(
+          `OTP sent successfully to ${phoneNumber}`,
         );
         return {
           success: true,
@@ -110,13 +110,13 @@ export class ThinkXCloudService {
         };
       }
 
-      console.error(`[ThinkX] Delivery failed: ${result.message || 'Unknown error'}`);
+      this.logger.error(`Delivery failed: ${result.message || 'Unknown error'}`);
       return {
         success: false,
         error: result.message || 'SMS delivery failed',
       };
     } catch (error: any) {
-      console.error('[ThinkX] sendOTP error:', error?.message || error);
+      this.logger.error('sendOTP error:', error?.message || error);
       return { success: false, error: error?.message || 'Request failed' };
     }
   }
