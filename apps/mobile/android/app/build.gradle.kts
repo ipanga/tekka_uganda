@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tekka.tekka"
+    namespace = "com.tootiye.tekka"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.tekka.tekka"
+        applicationId = "com.tootiye.tekka"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

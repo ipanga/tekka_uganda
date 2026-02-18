@@ -1,4 +1,4 @@
-package com.tekka.tekka
+package com.tootiye.tekka
 
 import io.flutter.embedding.android.FlutterActivity
 
