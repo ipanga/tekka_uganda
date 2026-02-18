@@ -282,21 +282,25 @@ export function Header() {
           </button>
         </div>
 
+        {/* Mobile Search Bar - Always visible */}
+        <div className="md:hidden pb-3">
+          <form onSubmit={handleSearch}>
+            <div className="relative">
+              <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for fashion items..."
+                className="w-full pl-10 pr-4 py-2.5 bg-gray-100 text-gray-900 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:bg-white focus:border focus:border-primary-300 placeholder-gray-400 text-sm"
+              />
+            </div>
+          </form>
+        </div>
+
         {/* Mobile menu */}
         {isMenuOpen && (
           <div className="md:hidden py-4 space-y-4">
-            <form onSubmit={handleSearch}>
-              <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 bg-white text-gray-900 rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 placeholder-gray-400"
-                />
-              </div>
-            </form>
             <nav className="flex flex-col space-y-3">
               {isAuthenticated ? (
                 <>
