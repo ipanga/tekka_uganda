@@ -302,11 +302,8 @@ class ListingApiRepository {
   }
 
   /// Publish a draft listing (DRAFT → PENDING)
-  Future<Listing> publishDraft(String id) async {
-    final response = await _apiClient.post<Map<String, dynamic>>(
-      '/listings/$id/publish',
-    );
-    return Listing.fromJson(response);
+  Future<void> publishDraft(String id) async {
+    await _apiClient.post<Map<String, dynamic>>('/listings/$id/publish');
   }
 
   /// Archive a listing
