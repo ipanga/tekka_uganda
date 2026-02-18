@@ -111,6 +111,45 @@ class ReviewApiRepository implements ReviewRepository {
   }
 
   @override
+  Future<Review> updateReview({
+    required String reviewId,
+    int? rating,
+    String? comment,
+  }) async {
+    final response = await _apiClient.put<Map<String, dynamic>>(
+      '/reviews/$reviewId',
+      data: {
+        if (rating != null) 'rating': rating,
+        if (comment != null) 'comment': comment,
+      },
+    );
+    return Review.fromJson(response);
+  }
+
+  @override
+  Future<Review?> getExistingReview({
+    required String reviewerId,
+    required String revieweeId,
+  }) async {
+    try {
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        '/reviews/user/$reviewerId',
+        queryParameters: {'type': 'given'},
+      );
+      final reviews = response['reviews'] as List<dynamic>? ?? [];
+      for (final r in reviews) {
+        final review = r as Map<String, dynamic>;
+        if (review['revieweeId'] == revieweeId) {
+          return Review.fromJson(review);
+        }
+      }
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  @override
   Future<UserRating> getUserRating(String userId) async {
     try {
       final response = await _apiClient.get<Map<String, dynamic>>(

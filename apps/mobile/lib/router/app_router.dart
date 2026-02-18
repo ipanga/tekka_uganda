@@ -367,9 +367,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return CreateReviewScreen(
             revieweeId: params['revieweeId'] as String,
             revieweeName: params['revieweeName'] as String,
-            listingId: params['listingId'] as String,
-            listingTitle: params['listingTitle'] as String,
-            reviewType: params['reviewType'] as ReviewType,
+            listingId: params['listingId'] as String?,
+            listingTitle: params['listingTitle'] as String?,
+            reviewType:
+                params['reviewType'] as ReviewType? ?? ReviewType.seller,
+            existingReview: params['existingReview'] as Review?,
           );
         },
       ),

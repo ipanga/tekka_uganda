@@ -216,6 +216,11 @@ class JwtAuthRepository implements AuthRepository {
     try {
       return await _userApiRepository.getPublicProfile(userId);
     } catch (e) {
+      assert(() {
+        // ignore: avoid_print
+        print('getUserById($userId) failed: $e');
+        return true;
+      }());
       return null;
     }
   }

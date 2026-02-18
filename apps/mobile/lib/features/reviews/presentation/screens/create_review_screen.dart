@@ -6,21 +6,23 @@ import '../../../../core/theme/theme.dart';
 import '../../application/review_provider.dart';
 import '../../domain/entities/review.dart';
 
-/// Screen to create a new review
+/// Screen to create or edit a review
 class CreateReviewScreen extends ConsumerStatefulWidget {
   final String revieweeId;
   final String revieweeName;
-  final String listingId;
-  final String listingTitle;
+  final String? listingId;
+  final String? listingTitle;
   final ReviewType reviewType;
+  final Review? existingReview;
 
   const CreateReviewScreen({
     super.key,
     required this.revieweeId,
     required this.revieweeName,
-    required this.listingId,
-    required this.listingTitle,
-    required this.reviewType,
+    this.listingId,
+    this.listingTitle,
+    this.reviewType = ReviewType.seller,
+    this.existingReview,
   });
 
   @override
@@ -30,6 +32,17 @@ class CreateReviewScreen extends ConsumerStatefulWidget {
 class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
   final _commentController = TextEditingController();
   int _selectedRating = 0;
+
+  bool get _isEditMode => widget.existingReview != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isEditMode) {
+      _selectedRating = widget.existingReview!.rating;
+      _commentController.text = widget.existingReview!.comment ?? '';
+    }
+  }
 
   @override
   void dispose() {
@@ -42,16 +55,27 @@ class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
     notifier.setRating(_selectedRating);
     notifier.setComment(_commentController.text.trim());
 
-    final success = await notifier.submit(
-      revieweeId: widget.revieweeId,
-      listingId: widget.listingId,
-      listingTitle: widget.listingTitle,
-      type: widget.reviewType,
-    );
+    final bool success;
+    if (_isEditMode) {
+      success = await notifier.update(reviewId: widget.existingReview!.id);
+    } else {
+      success = await notifier.submit(
+        revieweeId: widget.revieweeId,
+        listingId: widget.listingId,
+        listingTitle: widget.listingTitle,
+        type: widget.reviewType,
+      );
+    }
 
     if (success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Review submitted successfully')),
+        SnackBar(
+          content: Text(
+            _isEditMode
+                ? 'Review updated successfully'
+                : 'Review submitted successfully',
+          ),
+        ),
       );
       context.pop(true);
     }
@@ -71,7 +95,7 @@ class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Write Review')),
+      appBar: AppBar(title: Text(_isEditMode ? 'Edit Review' : 'Write Review')),
       body: SingleChildScrollView(
         padding: AppSpacing.screenPadding,
         child: Column(
@@ -95,28 +119,30 @@ class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(widget.revieweeName, style: AppTypography.titleLarge),
-                  const SizedBox(height: AppSpacing.space2),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.local_offer_outlined,
-                        size: 16,
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          widget.listingTitle,
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                  if (widget.listingTitle != null) ...[
+                    const SizedBox(height: AppSpacing.space2),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.local_offer_outlined,
+                          size: 16,
+                          color: AppColors.onSurfaceVariant,
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            widget.listingTitle!,
+                            style: AppTypography.bodyMedium.copyWith(
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.space2),
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -227,7 +253,7 @@ class _CreateReviewScreenState extends ConsumerState<CreateReviewScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Submit Review'),
+                  : Text(_isEditMode ? 'Update Review' : 'Submit Review'),
             ),
 
             const SizedBox(height: AppSpacing.space4),
