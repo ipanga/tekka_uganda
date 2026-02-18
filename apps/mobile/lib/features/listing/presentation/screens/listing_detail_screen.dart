@@ -384,10 +384,37 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                                     listing.sellerName,
                                     style: AppTypography.labelLarge,
                                   ),
-                                  Text(
-                                    'Member since ${listing.createdAt.year}',
-                                    style: AppTypography.bodySmall,
-                                  ),
+                                  if (listing.sellerReviewCount > 0) ...[
+                                    const SizedBox(height: 2),
+                                    Row(
+                                      children: [
+                                        ...List.generate(5, (index) {
+                                          return Icon(
+                                            index < listing.sellerRating.round()
+                                                ? Icons.star
+                                                : Icons.star_border,
+                                            size: 14,
+                                            color: AppColors.warning,
+                                          );
+                                        }),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          '${listing.sellerRating.toStringAsFixed(1)} (${listing.sellerReviewCount} ${listing.sellerReviewCount == 1 ? 'review' : 'reviews'})',
+                                          style: AppTypography.bodySmall
+                                              .copyWith(
+                                                color:
+                                                    AppColors.onSurfaceVariant,
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ] else
+                                    Text(
+                                      'No reviews yet',
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: AppColors.onSurfaceVariant,
+                                      ),
+                                    ),
                                 ],
                               ),
                             ),
