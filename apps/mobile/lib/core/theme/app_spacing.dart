@@ -219,7 +219,7 @@ abstract class AppSpacing {
   static const double listingGridGap = space4;
 
   /// Listing card aspect ratio (width / height) for grids
-  static const double listingCardAspectRatio = 0.68;
+  static const double listingCardAspectRatio = 0.67;
 
   /// Admin queue grid columns (desktop)
   static const int adminQueueColumns = 4;
