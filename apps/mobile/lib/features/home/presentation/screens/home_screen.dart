@@ -180,8 +180,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               final category = mainCategories[index];
                               return _MainCategoryCard(
                                 name: category.name,
-                                isSelected:
-                                    _selectedCategoryId == category.id,
+                                isSelected: _selectedCategoryId == category.id,
                                 onTap: () {
                                   setState(() {
                                     _selectedCategoryId =
@@ -241,23 +240,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           children: [
                             Expanded(
                               child: Text(
-                                _searchQuery != null &&
-                                        _searchQuery!.isNotEmpty
+                                _searchQuery != null && _searchQuery!.isNotEmpty
                                     ? 'Results for "$_searchQuery"'
                                     : _selectedCategoryId != null
                                     ? mainCategories
                                               .where(
                                                 (c) =>
-                                                    c.id ==
-                                                    _selectedCategoryId,
+                                                    c.id == _selectedCategoryId,
                                               )
                                               .firstOrNull
                                               ?.name ??
                                           allSubcategories
                                               .where(
                                                 (c) =>
-                                                    c.id ==
-                                                    _selectedCategoryId,
+                                                    c.id == _selectedCategoryId,
                                               )
                                               .firstOrNull
                                               ?.name ??
@@ -298,8 +294,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   SliverPadding(
                     padding: AppSpacing.screenHorizontal,
                     sliver: SliverGrid(
-                      gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         mainAxisSpacing: 16,
                         crossAxisSpacing: 16,
@@ -316,10 +311,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: AppSpacing.screenHorizontal,
-                      child: _buildErrorState(
-                        paginatedState.error!,
-                        filter,
-                      ),
+                      child: _buildErrorState(paginatedState.error!, filter),
                     ),
                   )
                 else if (paginatedState.listings.isEmpty)
@@ -333,26 +325,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   SliverPadding(
                     padding: AppSpacing.screenHorizontal,
                     sliver: SliverGrid(
-                      gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         mainAxisSpacing: 16,
                         crossAxisSpacing: 16,
                         childAspectRatio: AppSpacing.listingCardAspectRatio,
                       ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final listing = paginatedState.listings[index];
-                          return ListingCard(
-                            listing: listing,
-                            onTap: () => context.push(
-                              AppRoutes.listingDetail
-                                  .replaceFirst(':id', listing.id),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final listing = paginatedState.listings[index];
+                        return ListingCard(
+                          listing: listing,
+                          onTap: () => context.push(
+                            AppRoutes.listingDetail.replaceFirst(
+                              ':id',
+                              listing.id,
                             ),
-                          );
-                        },
-                        childCount: paginatedState.listings.length,
-                      ),
+                          ),
+                        );
+                      }, childCount: paginatedState.listings.length),
                     ),
                   ),
 
@@ -370,22 +360,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               ),
                             )
                           : !paginatedState.hasMore &&
-                                  paginatedState.listings.isNotEmpty
-                              ? Text(
-                                  'You\'ve seen all listings',
-                                  style: AppTypography.bodySmall.copyWith(
-                                    color: AppColors.onSurfaceVariant,
-                                  ),
-                                )
-                              : const SizedBox.shrink(),
+                                paginatedState.listings.isNotEmpty
+                          ? Text(
+                              'You\'ve seen all listings',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            )
+                          : const SizedBox.shrink(),
                     ),
                   ),
                 ),
 
                 // Bottom spacing for tab bar
-                const SliverToBoxAdapter(
-                  child: SizedBox(height: 80),
-                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 80)),
               ],
             ),
           ),
@@ -472,7 +460,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
   }
-
 }
 
 /// Combined header delegate: collapsible logo bar + always-pinned search bar.
