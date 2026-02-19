@@ -200,7 +200,7 @@ jobs:
 
       - name: Build iOS (dev debug, no codesign)
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: flutter build ios --no-codesign --debug -t lib/main_dev.dart
+        run: flutter build ios --no-codesign --debug --flavor dev -t lib/main_dev.dart
 
       - name: Upload iOS build
         uses: actions/upload-artifact@v4
@@ -236,7 +236,7 @@ jobs:
 
       - name: Build iOS Release (prod, no codesign)
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: flutter build ios --no-codesign --release -t lib/main.dart
+        run: flutter build ios --no-codesign --release --flavor prod -t lib/main.dart
 
       - name: Upload iOS release build
         uses: actions/upload-artifact@v4
