@@ -950,7 +950,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
         action: SnackBarAction(
           label: 'Sign In',
           onPressed: () {
-            context.go(AppRoutes.phoneInput);
+            context.push(AppRoutes.phoneInput);
           },
         ),
       ),
