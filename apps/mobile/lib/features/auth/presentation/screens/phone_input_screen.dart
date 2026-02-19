@@ -66,6 +66,8 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authNotifierProvider);
 
+    final canGoBack = context.canPop();
+
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
@@ -76,7 +78,30 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: AppSpacing.space10),
+                const SizedBox(height: AppSpacing.space2),
+
+                // Back / close button
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    onPressed: () {
+                      if (canGoBack) {
+                        context.pop();
+                      } else {
+                        context.go(AppRoutes.home);
+                      }
+                    },
+                    icon: Icon(
+                      canGoBack
+                          ? Icons.arrow_back_rounded
+                          : Icons.close_rounded,
+                      color: AppColors.onSurface,
+                    ),
+                    tooltip: canGoBack ? 'Back' : 'Continue browsing',
+                  ),
+                ),
+
+                const SizedBox(height: AppSpacing.space4),
 
                 // Logo
                 const Center(child: TekkaLogo(height: 48)),

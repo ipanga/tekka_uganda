@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/theme.dart';
+import '../../features/auth/application/auth_provider.dart';
 import '../../features/chat/application/chat_provider.dart';
 import '../../router/app_router.dart';
 
@@ -35,23 +36,29 @@ class _BottomNavBar extends ConsumerWidget {
     return 0;
   }
 
-  void _onItemTapped(BuildContext context, int index) {
+  void _onItemTapped(BuildContext context, WidgetRef ref, int index) {
+    // Home is always accessible (guest browsing)
+    if (index == 0) {
+      context.go(AppRoutes.home);
+      return;
+    }
+
+    // All other tabs require authentication
+    final user = ref.read(currentUserProvider);
+    if (user == null) {
+      context.push(AppRoutes.phoneInput);
+      return;
+    }
+
     switch (index) {
-      case 0:
-        context.go(AppRoutes.home);
-        break;
       case 1:
         context.go(AppRoutes.saved);
-        break;
       case 2:
         context.push(AppRoutes.createListing);
-        break;
       case 3:
         context.go(AppRoutes.chatList);
-        break;
       case 4:
         context.go(AppRoutes.profile);
-        break;
     }
   }
 
@@ -76,22 +83,22 @@ class _BottomNavBar extends ConsumerWidget {
                 activeIcon: Icons.home,
                 label: 'Home',
                 isActive: currentIndex == 0,
-                onTap: () => _onItemTapped(context, 0),
+                onTap: () => _onItemTapped(context, ref, 0),
               ),
               _NavItem(
                 icon: Icons.favorite_border,
                 activeIcon: Icons.favorite,
                 label: 'Saved',
                 isActive: currentIndex == 1,
-                onTap: () => _onItemTapped(context, 1),
+                onTap: () => _onItemTapped(context, ref, 1),
               ),
-              _SellButton(onTap: () => _onItemTapped(context, 2)),
+              _SellButton(onTap: () => _onItemTapped(context, ref, 2)),
               _NavItem(
                 icon: Icons.chat_bubble_outline,
                 activeIcon: Icons.chat_bubble,
                 label: 'Chat',
                 isActive: currentIndex == 3,
-                onTap: () => _onItemTapped(context, 3),
+                onTap: () => _onItemTapped(context, ref, 3),
                 badge: unreadCount,
               ),
               _NavItem(
@@ -99,7 +106,7 @@ class _BottomNavBar extends ConsumerWidget {
                 activeIcon: Icons.person,
                 label: 'Profile',
                 isActive: currentIndex == 4,
-                onTap: () => _onItemTapped(context, 4),
+                onTap: () => _onItemTapped(context, ref, 4),
               ),
             ],
           ),

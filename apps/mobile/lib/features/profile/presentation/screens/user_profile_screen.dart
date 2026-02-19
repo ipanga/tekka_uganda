@@ -412,11 +412,11 @@ class UserProfileScreen extends ConsumerWidget {
                     padding: AppSpacing.screenPadding,
                     sliver: SliverGrid(
                       gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
+                          SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisCount: 2,
                             mainAxisSpacing: AppSpacing.space3,
                             crossAxisSpacing: AppSpacing.space3,
-                            childAspectRatio: 0.62,
+                            childAspectRatio: AppSpacing.listingCardAspectRatio,
                           ),
                       delegate: SliverChildBuilderDelegate((context, index) {
                         final listing = activeListings[index];
@@ -950,7 +950,7 @@ class _ActionButtonsState extends ConsumerState<_ActionButtons> {
         action: SnackBarAction(
           label: 'Sign In',
           onPressed: () {
-            context.go(AppRoutes.phoneInput);
+            context.push(AppRoutes.phoneInput);
           },
         ),
       ),

@@ -60,6 +60,187 @@ final listingsFeedProvider =
       return listings;
     });
 
+// ============================================
+// PAGINATED LISTINGS FEED (for infinite scroll)
+// ============================================
+
+/// State for paginated listings feed
+class PaginatedListingsState {
+  final List<Listing> listings;
+  final int currentPage;
+  final bool hasMore;
+  final bool isLoadingMore;
+  final bool isInitialLoading;
+  final String? error;
+
+  const PaginatedListingsState({
+    this.listings = const [],
+    this.currentPage = 0,
+    this.hasMore = true,
+    this.isLoadingMore = false,
+    this.isInitialLoading = true,
+    this.error,
+  });
+
+  PaginatedListingsState copyWith({
+    List<Listing>? listings,
+    int? currentPage,
+    bool? hasMore,
+    bool? isLoadingMore,
+    bool? isInitialLoading,
+    String? error,
+  }) {
+    return PaginatedListingsState(
+      listings: listings ?? this.listings,
+      currentPage: currentPage ?? this.currentPage,
+      hasMore: hasMore ?? this.hasMore,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      isInitialLoading: isInitialLoading ?? this.isInitialLoading,
+      error: error,
+    );
+  }
+}
+
+/// Notifier that manages paginated listing fetches for infinite scroll
+class PaginatedListingsNotifier extends StateNotifier<PaginatedListingsState> {
+  final ListingApiRepository _repository;
+  final ListingsFilter _baseFilter;
+  final Future<Set<String>> Function() _getBlockedIds;
+
+  static const int _pageSize = 24;
+
+  PaginatedListingsNotifier(
+    this._repository,
+    this._baseFilter,
+    this._getBlockedIds,
+  ) : super(const PaginatedListingsState());
+
+  /// Fetch the first page (called on init)
+  Future<void> loadInitial() async {
+    state = const PaginatedListingsState(); // reset
+    try {
+      final result = await _repository.search(
+        query: _baseFilter.searchQuery,
+        category: _baseFilter.category,
+        categoryId: _baseFilter.categoryId,
+        condition: _baseFilter.condition,
+        occasion: _baseFilter.occasion,
+        minPrice: _baseFilter.minPrice,
+        maxPrice: _baseFilter.maxPrice,
+        location: _baseFilter.location,
+        cityId: _baseFilter.cityId,
+        divisionId: _baseFilter.divisionId,
+        sortBy: _baseFilter.sortBy,
+        sortOrder: _baseFilter.sortOrder,
+        page: 1,
+        limit: _pageSize,
+      );
+
+      final filtered = await _filterBlocked(result.listings);
+
+      state = PaginatedListingsState(
+        listings: filtered,
+        currentPage: 1,
+        hasMore: result.hasMore,
+        isLoadingMore: false,
+        isInitialLoading: false,
+      );
+    } catch (e) {
+      state = PaginatedListingsState(
+        isInitialLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  /// Fetch the next page (called when scrolling near bottom)
+  Future<void> loadMore() async {
+    if (state.isLoadingMore || !state.hasMore || state.isInitialLoading) return;
+
+    state = state.copyWith(isLoadingMore: true);
+    final nextPage = state.currentPage + 1;
+
+    try {
+      final result = await _repository.search(
+        query: _baseFilter.searchQuery,
+        category: _baseFilter.category,
+        categoryId: _baseFilter.categoryId,
+        condition: _baseFilter.condition,
+        occasion: _baseFilter.occasion,
+        minPrice: _baseFilter.minPrice,
+        maxPrice: _baseFilter.maxPrice,
+        location: _baseFilter.location,
+        cityId: _baseFilter.cityId,
+        divisionId: _baseFilter.divisionId,
+        sortBy: _baseFilter.sortBy,
+        sortOrder: _baseFilter.sortOrder,
+        page: nextPage,
+        limit: _pageSize,
+      );
+
+      final filtered = await _filterBlocked(result.listings);
+
+      // Deduplicate against existing listings
+      final existingIds = state.listings.map((l) => l.id).toSet();
+      final newListings =
+          filtered.where((l) => !existingIds.contains(l.id)).toList();
+
+      state = state.copyWith(
+        listings: [...state.listings, ...newListings],
+        currentPage: nextPage,
+        hasMore: result.hasMore,
+        isLoadingMore: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoadingMore: false, error: e.toString());
+    }
+  }
+
+  /// Refresh from page 1 (pull-to-refresh)
+  Future<void> refresh() async {
+    await loadInitial();
+  }
+
+  Future<List<Listing>> _filterBlocked(List<Listing> listings) async {
+    try {
+      final blockedIds = await _getBlockedIds();
+      if (blockedIds.isNotEmpty) {
+        return listings
+            .where((l) => !blockedIds.contains(l.sellerId))
+            .toList();
+      }
+    } catch (_) {}
+    return listings;
+  }
+}
+
+/// Paginated listings provider for infinite scroll
+final paginatedListingsProvider = StateNotifierProvider.family<
+    PaginatedListingsNotifier, PaginatedListingsState, ListingsFilter>(
+  (ref, filter) {
+    final repository = ref.watch(listingApiRepositoryProvider);
+    final currentUser = ref.watch(currentUserProvider);
+
+    Future<Set<String>> getBlockedIds() async {
+      if (currentUser == null) return {};
+      try {
+        final blocked = await ref.read(blockedUsersProvider.future);
+        return blocked.map((u) => u.uid).toSet();
+      } catch (_) {
+        return {};
+      }
+    }
+
+    final notifier = PaginatedListingsNotifier(
+      repository,
+      filter,
+      getBlockedIds,
+    );
+    notifier.loadInitial();
+    return notifier;
+  },
+);
+
 /// Single listing provider
 final listingProvider = FutureProvider.family<Listing?, String>((
   ref,

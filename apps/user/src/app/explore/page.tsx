@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ListingCard } from '@/components/listings/ListingCard';
-import { FunnelIcon, Squares2X2Icon, ListBulletIcon, MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { FunnelIcon, Squares2X2Icon, ListBulletIcon, MagnifyingGlassIcon, XMarkIcon, ArrowUpIcon } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
 import type { Listing, PaginatedResponse, Category, City } from '@/types';
+
+const PAGE_SIZE = 24;
 
 const conditions = [
   { label: 'Any Condition', value: '' },
@@ -30,6 +32,11 @@ function ExploreContent() {
   const router = useRouter();
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement>(null);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categories, setCategories] = useState<Category[]>([]);
   const [cities, setCities] = useState<City[]>([]);
@@ -85,31 +92,57 @@ function ExploreContent() {
     if (urlDivisionId !== divisionId) setDivisionId(urlDivisionId);
   }, [searchParams]);
 
-  const fetchListings = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (searchQuery.trim()) params.append('search', searchQuery.trim());
-      if (categoryId) params.append('categoryId', categoryId);
-      if (condition) params.append('condition', condition);
-      if (minPrice) params.append('minPrice', minPrice);
-      if (maxPrice) params.append('maxPrice', maxPrice);
-      if (cityId) params.append('cityId', cityId);
-      if (divisionId) params.append('divisionId', divisionId);
-      params.append('status', 'ACTIVE');
-      const [sortField, sortOrder] = sort.split(':');
-      params.append('sortBy', sortField);
-      params.append('sortOrder', sortOrder);
+  // Build query params from current filter state
+  const buildParams = useCallback((pageNum: number) => {
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.append('search', searchQuery.trim());
+    if (categoryId) params.append('categoryId', categoryId);
+    if (condition) params.append('condition', condition);
+    if (minPrice) params.append('minPrice', minPrice);
+    if (maxPrice) params.append('maxPrice', maxPrice);
+    if (cityId) params.append('cityId', cityId);
+    if (divisionId) params.append('divisionId', divisionId);
+    params.append('status', 'ACTIVE');
+    const [sortField, sortOrder] = sort.split(':');
+    params.append('sortBy', sortField);
+    params.append('sortOrder', sortOrder);
+    params.append('page', String(pageNum));
+    params.append('limit', String(PAGE_SIZE));
+    return params;
+  }, [searchQuery, categoryId, condition, minPrice, maxPrice, cityId, divisionId, sort]);
 
-      const response = await api.get<PaginatedResponse<Listing> & { listings?: Listing[] }>(`/listings?${params}`);
-      setListings(response?.data || response?.listings || []);
+  const fetchListings = useCallback(async (pageNum: number, append: boolean) => {
+    if (!append) setLoading(true);
+    else setLoadingMore(true);
+
+    try {
+      const params = buildParams(pageNum);
+      const response = await api.get<PaginatedResponse<Listing> & { listings?: Listing[]; pagination?: { page: number; limit: number; total: number; totalPages: number } }>(`/listings?${params}`);
+      const newListings = response?.data || response?.listings || [];
+      const pagination = response?.pagination;
+      const totalPages = pagination?.totalPages ?? response?.totalPages ?? 1;
+
+      if (append) {
+        // Deduplicate
+        setListings(prev => {
+          const existingIds = new Set(prev.map(l => l.id));
+          const unique = newListings.filter((l: Listing) => !existingIds.has(l.id));
+          return [...prev, ...unique];
+        });
+      } else {
+        setListings(newListings);
+      }
+
+      setPage(pageNum);
+      setHasMore(pageNum < totalPages);
     } catch (error) {
       console.error('Failed to fetch listings:', error);
-      setListings([]);
+      if (!append) setListings([]);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  }, [searchQuery, categoryId, condition, minPrice, maxPrice, cityId, divisionId, sort]);
+  }, [buildParams]);
 
   // Build flat list of categories for display (main + subcategories)
   const categoryOptions = categories.flatMap(cat => [
@@ -124,12 +157,48 @@ function ExploreContent() {
   // Count active filters (excluding search and sort)
   const activeFilterCount = [categoryId, condition, minPrice, maxPrice, cityId, divisionId].filter(Boolean).length;
 
+  // Fetch page 1 when filters change (with debounce for search)
   useEffect(() => {
+    setPage(1);
+    setHasMore(true);
     const debounce = setTimeout(() => {
-      fetchListings();
+      fetchListings(1, false);
     }, searchQuery ? 300 : 0);
     return () => clearTimeout(debounce);
-  }, [fetchListings]);
+  }, [searchQuery, categoryId, condition, minPrice, maxPrice, cityId, divisionId, sort]);
+
+  // IntersectionObserver for infinite scroll
+  useEffect(() => {
+    if (!hasMore || loadingMore || loading) return;
+
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          fetchListings(page + 1, true);
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, loading, page, fetchListings]);
+
+  // Scroll-to-top visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 600);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const updateUrl = useCallback(() => {
     const params = new URLSearchParams();
@@ -445,22 +514,52 @@ function ExploreContent() {
               )}
             </div>
           ) : (
-            <div
-              className={
-                viewMode === 'grid'
-                  ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
-                  : 'space-y-4'
-              }
-            >
-              {listings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
+            <>
+              <div
+                className={
+                  viewMode === 'grid'
+                    ? 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
+                    : 'space-y-4'
+                }
+              >
+                {listings.map((listing) => (
+                  <ListingCard key={listing.id} listing={listing} />
+                ))}
+              </div>
+
+              {/* Bottom loading indicator */}
+              {loadingMore && (
+                <div className="flex items-center justify-center py-8">
+                  <div className="h-6 w-6 animate-spin rounded-full border-3 border-primary-500 border-t-transparent" />
+                </div>
+              )}
+
+              {/* End of results */}
+              {!hasMore && listings.length > 0 && (
+                <p className="text-center text-gray-400 text-sm py-8">
+                  You&apos;ve seen all listings
+                </p>
+              )}
+
+              {/* Infinite scroll sentinel */}
+              {hasMore && !loadingMore && <div ref={sentinelRef} className="h-1" />}
+            </>
           )}
         </div>
       </main>
 
       <Footer />
+
+      {/* Scroll-to-top button */}
+      <button
+        onClick={scrollToTop}
+        aria-label="Scroll to top"
+        className={`fixed bottom-6 right-6 p-3 rounded-full bg-white text-gray-700 shadow-lg border border-gray-200 transition-all duration-200 hover:bg-gray-50 hover:shadow-xl z-50 ${
+          showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
+      >
+        <ArrowUpIcon className="h-5 w-5" />
+      </button>
     </div>
   );
 }
