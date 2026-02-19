@@ -75,233 +75,203 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const TekkaLogo(height: 28),
-        actions: const [_NotificationButton()],
-      ),
       body: RefreshIndicator(
         onRefresh: () async {
           ref.invalidate(listingsFeedProvider(filter));
         },
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 100),
+        child: CustomScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Search bar
-              Padding(
-                padding: AppSpacing.screenHorizontal,
-                child: Container(
-                  height: AppSpacing.searchBarHeight,
-                  decoration: BoxDecoration(
-                    color: AppColors.gray100,
-                    borderRadius: AppSpacing.searchBarRadius,
-                  ),
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 14),
-                      Icon(
-                        Icons.search_rounded,
-                        color: AppColors.onSurfaceVariant,
-                        size: 22,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: TextField(
-                          controller: _searchController,
-                          decoration: InputDecoration(
-                            hintText: 'Search fashion items...',
-                            hintStyle: AppTypography.bodyMedium.copyWith(
-                              color: AppColors.gray400,
-                            ),
-                            border: InputBorder.none,
-                            isDense: true,
-                            contentPadding: EdgeInsets.zero,
-                          ),
-                          style: AppTypography.bodyMedium.copyWith(
-                            color: AppColors.onSurface,
-                          ),
-                          textInputAction: TextInputAction.search,
-                          onSubmitted: (value) {
-                            setState(() {
-                              _searchQuery = value.isEmpty ? null : value;
-                            });
-                          },
-                        ),
-                      ),
-                      if (_searchController.text.isNotEmpty)
-                        GestureDetector(
-                          onTap: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchQuery = null;
-                            });
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.only(right: 8),
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: AppColors.gray300,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.close_rounded,
-                              color: AppColors.surface,
-                              size: 14,
-                            ),
-                          ),
-                        )
-                      else
-                        const SizedBox(width: 14),
-                    ],
-                  ),
-                ),
+          slivers: [
+            // Collapsible logo + notification bar
+            SliverAppBar(
+              floating: true,
+              snap: true,
+              pinned: false,
+              title: const TekkaLogo(height: 28),
+              actions: const [_NotificationButton()],
+              backgroundColor: AppColors.background,
+              surfaceTintColor: Colors.transparent,
+              toolbarHeight: kToolbarHeight,
+            ),
+
+            // Pinned search bar - always visible
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _StickySearchBarDelegate(
+                searchController: _searchController,
+                onSubmitted: (value) {
+                  setState(() {
+                    _searchQuery = value.isEmpty ? null : value;
+                  });
+                },
+                onClear: () {
+                  _searchController.clear();
+                  setState(() {
+                    _searchQuery = null;
+                  });
+                },
+                hasText: _searchController.text.isNotEmpty,
               ),
+            ),
 
-              const SizedBox(height: AppSpacing.space5),
+            // Categories + subcategories + listings
+            SliverToBoxAdapter(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: AppSpacing.space5),
 
-              // Main Categories from database
-              Padding(
-                padding: AppSpacing.screenHorizontal,
-                child: Text('Categories', style: AppTypography.titleSmall),
-              ),
-
-              const SizedBox(height: AppSpacing.space3),
-
-              // Main category chips (level 1) - horizontal scroll
-              if (categoryState.isLoading)
-                const SizedBox(
-                  height: 44,
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (mainCategories.isEmpty)
-                const SizedBox(height: 44)
-              else
-                SizedBox(
-                  height: 44,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
+                  // Main Categories from database
+                  Padding(
                     padding: AppSpacing.screenHorizontal,
-                    itemCount: mainCategories.length,
-                    itemBuilder: (context, index) {
-                      final category = mainCategories[index];
-                      return _MainCategoryCard(
-                        name: category.name,
-                        isSelected: _selectedCategoryId == category.id,
-                        onTap: () {
-                          setState(() {
-                            _selectedCategoryId =
-                                _selectedCategoryId == category.id
-                                ? null
-                                : category.id;
-                          });
-                        },
-                      );
-                    },
+                    child: Text('Categories', style: AppTypography.titleSmall),
                   ),
-                ),
 
-              // Subcategories - shown when a main category is selected
-              if (_selectedCategoryId != null) ...[
-                const SizedBox(height: AppSpacing.space3),
-                Builder(
-                  builder: (context) {
-                    final selectedMain = mainCategories
-                        .where((c) => c.id == _selectedCategoryId)
-                        .firstOrNull;
-                    if (selectedMain == null) return const SizedBox.shrink();
-                    final subs = selectedMain.activeChildren;
-                    if (subs.isEmpty) return const SizedBox.shrink();
-                    return SizedBox(
-                      height: 40,
+                  const SizedBox(height: AppSpacing.space3),
+
+                  // Main category chips (level 1) - horizontal scroll
+                  if (categoryState.isLoading)
+                    const SizedBox(
+                      height: 44,
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (mainCategories.isEmpty)
+                    const SizedBox(height: 44)
+                  else
+                    SizedBox(
+                      height: 44,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         padding: AppSpacing.screenHorizontal,
-                        itemCount: subs.length,
+                        itemCount: mainCategories.length,
                         itemBuilder: (context, index) {
-                          final subcategory = subs[index];
-                          return _SubcategoryChip(
-                            label: subcategory.name,
+                          final category = mainCategories[index];
+                          return _MainCategoryCard(
+                            name: category.name,
+                            isSelected: _selectedCategoryId == category.id,
                             onTap: () {
                               setState(() {
-                                _selectedCategoryId = subcategory.id;
+                                _selectedCategoryId =
+                                    _selectedCategoryId == category.id
+                                    ? null
+                                    : category.id;
                               });
                             },
                           );
                         },
                       ),
-                    );
-                  },
-                ),
-              ],
-
-              const SizedBox(height: AppSpacing.space5),
-
-              // Listings header
-              Padding(
-                padding: AppSpacing.screenHorizontal,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        _searchQuery != null && _searchQuery!.isNotEmpty
-                            ? 'Results for "$_searchQuery"'
-                            : _selectedCategoryId != null
-                            ? mainCategories
-                                      .where((c) => c.id == _selectedCategoryId)
-                                      .firstOrNull
-                                      ?.name ??
-                                  allSubcategories
-                                      .where((c) => c.id == _selectedCategoryId)
-                                      .firstOrNull
-                                      ?.name ??
-                                  'Recent Listings'
-                            : 'Recent Listings',
-                        style: AppTypography.titleSmall,
-                        overflow: TextOverflow.ellipsis,
-                      ),
                     ),
-                    if (hasFilters)
-                      GestureDetector(
-                        onTap: () {
-                          _searchController.clear();
-                          setState(() {
-                            _selectedCategoryId = null;
-                            _searchQuery = null;
-                          });
-                        },
-                        child: Text(
-                          'Clear filters',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w500,
+
+                  // Subcategories - shown when a main category is selected
+                  if (_selectedCategoryId != null) ...[
+                    const SizedBox(height: AppSpacing.space3),
+                    Builder(
+                      builder: (context) {
+                        final selectedMain = mainCategories
+                            .where((c) => c.id == _selectedCategoryId)
+                            .firstOrNull;
+                        if (selectedMain == null) {
+                          return const SizedBox.shrink();
+                        }
+                        final subs = selectedMain.activeChildren;
+                        if (subs.isEmpty) return const SizedBox.shrink();
+                        return SizedBox(
+                          height: 40,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            padding: AppSpacing.screenHorizontal,
+                            itemCount: subs.length,
+                            itemBuilder: (context, index) {
+                              final subcategory = subs[index];
+                              return _SubcategoryChip(
+                                label: subcategory.name,
+                                onTap: () {
+                                  setState(() {
+                                    _selectedCategoryId = subcategory.id;
+                                  });
+                                },
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+
+                  const SizedBox(height: AppSpacing.space5),
+
+                  // Listings header
+                  Padding(
+                    padding: AppSpacing.screenHorizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _searchQuery != null && _searchQuery!.isNotEmpty
+                                ? 'Results for "$_searchQuery"'
+                                : _selectedCategoryId != null
+                                ? mainCategories
+                                          .where(
+                                            (c) => c.id == _selectedCategoryId,
+                                          )
+                                          .firstOrNull
+                                          ?.name ??
+                                      allSubcategories
+                                          .where(
+                                            (c) => c.id == _selectedCategoryId,
+                                          )
+                                          .firstOrNull
+                                          ?.name ??
+                                      'Recent Listings'
+                                : 'Recent Listings',
+                            style: AppTypography.titleSmall,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                      ),
-                  ],
-                ),
-              ),
+                        if (hasFilters)
+                          GestureDetector(
+                            onTap: () {
+                              _searchController.clear();
+                              setState(() {
+                                _selectedCategoryId = null;
+                                _searchQuery = null;
+                              });
+                            },
+                            child: Text(
+                              'Clear filters',
+                              style: AppTypography.bodySmall.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
 
-              const SizedBox(height: AppSpacing.space3),
+                  const SizedBox(height: AppSpacing.space3),
 
-              // Listing grid
-              Padding(
-                padding: AppSpacing.screenHorizontal,
-                child: listingsAsync.when(
-                  loading: () => _buildLoadingGrid(),
-                  error: (error, _) => _buildErrorState(error, filter),
-                  data: (listings) {
-                    if (listings.isEmpty) {
-                      return _buildEmptyState();
-                    }
-                    return _buildListingGrid(listings);
-                  },
-                ),
+                  // Listing grid
+                  Padding(
+                    padding: AppSpacing.screenHorizontal,
+                    child: listingsAsync.when(
+                      loading: () => _buildLoadingGrid(),
+                      error: (error, _) => _buildErrorState(error, filter),
+                      data: (listings) {
+                        if (listings.isEmpty) {
+                          return _buildEmptyState();
+                        }
+                        return _buildListingGrid(listings);
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 100),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -393,6 +363,117 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+/// Delegate for the pinned search bar header
+class _StickySearchBarDelegate extends SliverPersistentHeaderDelegate {
+  final TextEditingController searchController;
+  final ValueChanged<String> onSubmitted;
+  final VoidCallback onClear;
+  final bool hasText;
+
+  const _StickySearchBarDelegate({
+    required this.searchController,
+    required this.onSubmitted,
+    required this.onClear,
+    required this.hasText,
+  });
+
+  static const double _height = AppSpacing.searchBarHeight + 16; // 48 + padding
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  bool shouldRebuild(covariant _StickySearchBarDelegate oldDelegate) {
+    return hasText != oldDelegate.hasText;
+  }
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: AppColors.background,
+      padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
+      child: Container(
+        height: AppSpacing.searchBarHeight,
+        decoration: BoxDecoration(
+          color: AppColors.gray100,
+          borderRadius: AppSpacing.searchBarRadius,
+          boxShadow: overlapsContent
+              ? [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.06),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const SizedBox(width: 14),
+            Icon(
+              Icons.search_rounded,
+              color: AppColors.onSurfaceVariant,
+              size: 22,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Center(
+                child: TextField(
+                  controller: searchController,
+                  decoration: InputDecoration(
+                    hintText: 'Search fashion items...',
+                    hintStyle: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.gray400,
+                    ),
+                    border: InputBorder.none,
+                    enabledBorder: InputBorder.none,
+                    focusedBorder: InputBorder.none,
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.onSurface,
+                  ),
+                  textAlignVertical: TextAlignVertical.center,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: onSubmitted,
+                ),
+              ),
+            ),
+            if (hasText)
+              GestureDetector(
+                onTap: onClear,
+                child: Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: AppColors.gray300,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.close_rounded,
+                    color: AppColors.surface,
+                    size: 14,
+                  ),
+                ),
+              )
+            else
+              const SizedBox(width: 14),
+          ],
+        ),
+      ),
     );
   }
 }
