@@ -56,9 +56,9 @@ class SavedItemsScreen extends ConsumerWidget {
             },
             child: GridView.builder(
               padding: AppSpacing.screenPadding,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 2,
-                childAspectRatio: 0.62,
+                childAspectRatio: AppSpacing.listingCardAspectRatio,
                 crossAxisSpacing: AppSpacing.space3,
                 mainAxisSpacing: AppSpacing.space3,
               ),

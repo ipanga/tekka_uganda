@@ -299,11 +299,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding: AppSpacing.screenHorizontal,
                     sliver: SliverGrid(
                       gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
+                          SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         mainAxisSpacing: 16,
                         crossAxisSpacing: 16,
-                        childAspectRatio: 0.62,
+                        childAspectRatio: AppSpacing.listingCardAspectRatio,
                       ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) => _LoadingCard(),
@@ -334,11 +334,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     padding: AppSpacing.screenHorizontal,
                     sliver: SliverGrid(
                       gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
+                          SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
                         mainAxisSpacing: 16,
                         crossAxisSpacing: 16,
-                        childAspectRatio: 0.62,
+                        childAspectRatio: AppSpacing.listingCardAspectRatio,
                       ),
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {

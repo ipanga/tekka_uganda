@@ -319,11 +319,11 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
   Widget _buildLoadingState() {
     return GridView.builder(
       padding: AppSpacing.screenPadding,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 0.62,
+        childAspectRatio: AppSpacing.listingCardAspectRatio,
       ),
       itemCount: 6,
       itemBuilder: (context, index) => _LoadingCard(),
@@ -388,11 +388,11 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
   Widget _buildResultsGrid(List<Listing> listings) {
     return GridView.builder(
       padding: AppSpacing.screenPadding,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         mainAxisSpacing: 16,
         crossAxisSpacing: 16,
-        childAspectRatio: 0.62,
+        childAspectRatio: AppSpacing.listingCardAspectRatio,
       ),
       itemCount: listings.length,
       itemBuilder: (context, index) {
