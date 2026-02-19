@@ -490,6 +490,13 @@ Download Tekka to browse more fashion items!
   }
 
   void _startChat(Listing listing) async {
+    // Require authentication to message seller
+    final currentUser = ref.read(currentUserProvider);
+    if (currentUser == null) {
+      context.push(AppRoutes.phoneInput);
+      return;
+    }
+
     // Show loading indicator
     showDialog(
       context: context,

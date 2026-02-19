@@ -53,6 +53,22 @@ import '../features/meetup/presentation/screens/safe_locations_screen.dart';
 import '../features/report/presentation/screens/report_listing_screen.dart';
 import '../shared/widgets/main_shell.dart';
 
+/// Routes accessible without authentication (guest browsing)
+const _guestRoutes = {
+  '/home',
+  '/browse',
+  '/listing', // /listing/:id
+  '/user', // /user/:userId (public profile)
+  '/reviews', // /reviews/:userId
+  '/legal', // /legal/*
+  '/profile/help',
+  '/profile/safety',
+};
+
+bool _isGuestAccessible(String location) {
+  return _guestRoutes.any((route) => location.startsWith(route));
+}
+
 /// Route paths
 abstract class AppRoutes {
   static const String splash = '/';
@@ -130,8 +146,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isAuthenticated = user != null;
       final isOnboardingComplete = user?.isOnboardingComplete ?? false;
 
-      // If not authenticated, redirect to phone input
-      if (!isAuthenticated && !isAuthRoute && !isSplash) {
+      // If not authenticated and accessing a protected route, redirect to login
+      // Guest users can browse listings, view details, and access public profiles
+      if (!isAuthenticated &&
+          !isAuthRoute &&
+          !isSplash &&
+          !_isGuestAccessible(state.matchedLocation)) {
         return AppRoutes.phoneInput;
       }
 
