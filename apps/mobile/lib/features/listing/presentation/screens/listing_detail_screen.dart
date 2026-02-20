@@ -469,7 +469,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
     );
   }
 
-  void _shareListing(Listing listing) async {
+  Future<void> _shareListing(Listing listing) async {
     final url = 'https://tekka.ug/listing/${listing.id}';
     final shareText =
         '''
@@ -482,11 +482,16 @@ $url
 ''';
 
     try {
+      final box = context.findRenderObject() as RenderBox?;
       await Share.share(
         shareText,
         subject: 'Check out this item on Tekka: ${listing.title}',
+        sharePositionOrigin: box != null
+            ? box.localToGlobal(Offset.zero) & box.size
+            : Rect.zero,
       );
     } catch (e) {
+      debugPrint('Share failed: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Unable to share right now')),

@@ -728,21 +728,12 @@ class ListingActionsNotifier extends StateNotifier<AsyncValue<void>> {
   Future<bool> toggleSave() async {
     state = const AsyncValue.loading();
     try {
-      // Check if currently saved and toggle
-      // This is simplified - in real app, check current state first
-      await _repository.save(listingId);
+      final result = await _repository.toggleFavorite(listingId);
       state = const AsyncValue.data(null);
-      return true;
-    } catch (e, _) {
-      // If save fails, try unsave (toggle behavior)
-      try {
-        await _repository.unsave(listingId);
-        state = const AsyncValue.data(null);
-        return false;
-      } catch (e2, st2) {
-        state = AsyncValue.error(e2, st2);
-        return false;
-      }
+      return result;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      rethrow;
     }
   }
 

@@ -28,6 +28,11 @@ class JwtAuthRepository implements AuthRepository {
     required UserApiRepository userApiRepository,
   }) : _apiClient = apiClient,
        _userApiRepository = userApiRepository {
+    // Wire session expiry callback — auto sign-out when token refresh fails
+    _apiClient.onSessionExpired = () {
+      _cachedUser = null;
+      _authStateController.add(null);
+    };
     // Check initial auth state
     _checkInitialAuthState();
   }
