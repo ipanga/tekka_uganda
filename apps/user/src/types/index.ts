@@ -12,6 +12,7 @@ export interface User {
   bio?: string;
   location?: string;
   isVerified: boolean;
+  isEmailVerified?: boolean;
   isOnboardingComplete?: boolean;
   showPhoneNumber?: boolean;
   createdAt: string;

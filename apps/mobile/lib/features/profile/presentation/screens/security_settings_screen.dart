@@ -61,8 +61,6 @@ class _SecuritySettingsContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(securityPreferencesNotifierProvider.notifier);
-
     return ListView(
       children: [
         const SizedBox(height: AppSpacing.space4),
@@ -94,7 +92,7 @@ class _SecuritySettingsContent extends ConsumerWidget {
             children: [
               _AppLockTile(),
               _BiometricTile(),
-              _TwoFactorTile(prefs: prefs, notifier: notifier),
+              _TwoFactorTile(prefs: prefs),
             ],
           ),
         ),
@@ -112,7 +110,7 @@ class _SecuritySettingsContent extends ConsumerWidget {
                 title: 'Login Alerts',
                 subtitle: 'Get notified of new sign-ins',
                 value: prefs.loginAlerts,
-                onChanged: (value) => notifier.setLoginAlerts(value),
+                onChanged: (value) => ref.read(securityPreferencesNotifierProvider.notifier).setLoginAlerts(value),
               ),
               _SettingsToggle(
                 icon: Icons.payment_outlined,
@@ -121,12 +119,12 @@ class _SecuritySettingsContent extends ConsumerWidget {
                     'Require confirmation for offers above ${_formatCurrency(prefs.transactionThreshold)}',
                 value: prefs.requireTransactionConfirmation,
                 onChanged: (value) =>
-                    notifier.setTransactionConfirmation(value),
+                    ref.read(securityPreferencesNotifierProvider.notifier).setTransactionConfirmation(value),
               ),
               if (prefs.requireTransactionConfirmation)
                 _ThresholdSelector(
                   currentThreshold: prefs.transactionThreshold,
-                  onChanged: (value) => notifier.setTransactionThreshold(value),
+                  onChanged: (value) => ref.read(securityPreferencesNotifierProvider.notifier).setTransactionThreshold(value),
                 ),
             ],
           ),
@@ -727,10 +725,9 @@ class _SessionTile extends ConsumerWidget {
 }
 
 class _TwoFactorTile extends ConsumerWidget {
-  const _TwoFactorTile({required this.prefs, required this.notifier});
+  const _TwoFactorTile({required this.prefs});
 
   final SecurityPreferences prefs;
-  final SecurityPreferencesNotifier notifier;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

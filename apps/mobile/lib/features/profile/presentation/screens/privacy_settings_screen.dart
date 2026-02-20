@@ -49,8 +49,6 @@ class _PrivacySettingsContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(privacyPreferencesNotifierProvider.notifier);
-
     return ListView(
       children: [
         const SizedBox(height: AppSpacing.space4),
@@ -64,7 +62,7 @@ class _PrivacySettingsContent extends ConsumerWidget {
               _VisibilitySelector(
                 currentVisibility: prefs.profileVisibility,
                 onChanged: (visibility) {
-                  notifier.setProfileVisibility(visibility);
+                  ref.read(privacyPreferencesNotifierProvider.notifier).setProfileVisibility(visibility);
                 },
               ),
             ],
@@ -84,28 +82,28 @@ class _PrivacySettingsContent extends ConsumerWidget {
                 title: 'Show Location',
                 subtitle: 'Display your location on your profile',
                 value: prefs.showLocation,
-                onChanged: (value) => notifier.setShowLocation(value),
+                onChanged: (value) => ref.read(privacyPreferencesNotifierProvider.notifier).setShowLocation(value),
               ),
               _SettingsToggle(
                 icon: Icons.phone_outlined,
                 title: 'Show Phone Number',
                 subtitle: 'Allow others to see your phone number',
                 value: prefs.showPhoneNumber,
-                onChanged: (value) => notifier.setShowPhoneNumber(value),
+                onChanged: (value) => ref.read(privacyPreferencesNotifierProvider.notifier).setShowPhoneNumber(value),
               ),
               _SettingsToggle(
                 icon: Icons.inventory_2_outlined,
                 title: 'Show Listings Count',
                 subtitle: 'Display number of items you have listed',
                 value: prefs.showListingsCount,
-                onChanged: (value) => notifier.setShowListingsCount(value),
+                onChanged: (value) => ref.read(privacyPreferencesNotifierProvider.notifier).setShowListingsCount(value),
               ),
               _SettingsToggle(
                 icon: Icons.receipt_long_outlined,
                 title: 'Show Purchase History',
                 subtitle: 'Let others see items you have purchased',
                 value: prefs.showPurchaseHistory,
-                onChanged: (value) => notifier.setShowPurchaseHistory(value),
+                onChanged: (value) => ref.read(privacyPreferencesNotifierProvider.notifier).setShowPurchaseHistory(value),
               ),
             ],
           ),
@@ -124,12 +122,12 @@ class _PrivacySettingsContent extends ConsumerWidget {
                 title: 'Show Online Status',
                 subtitle: 'Let others know when you are active',
                 value: prefs.showOnlineStatus,
-                onChanged: (value) => notifier.setShowOnlineStatus(value),
+                onChanged: (value) => ref.read(privacyPreferencesNotifierProvider.notifier).setShowOnlineStatus(value),
               ),
               _MessagePermissionSelector(
                 currentPermission: prefs.messagePermission,
                 onChanged: (permission) {
-                  notifier.setMessagePermission(permission);
+                  ref.read(privacyPreferencesNotifierProvider.notifier).setMessagePermission(permission);
                 },
               ),
             ],
@@ -149,14 +147,14 @@ class _PrivacySettingsContent extends ConsumerWidget {
                 title: 'Appear in Search',
                 subtitle: 'Allow your profile to appear in search results',
                 value: prefs.appearInSearch,
-                onChanged: (value) => notifier.setAppearInSearch(value),
+                onChanged: (value) => ref.read(privacyPreferencesNotifierProvider.notifier).setAppearInSearch(value),
               ),
               _SettingsToggle(
                 icon: Icons.share_outlined,
                 title: 'Allow Profile Sharing',
                 subtitle: 'Let others share your profile via link',
                 value: prefs.allowProfileSharing,
-                onChanged: (value) => notifier.setAllowProfileSharing(value),
+                onChanged: (value) => ref.read(privacyPreferencesNotifierProvider.notifier).setAllowProfileSharing(value),
               ),
             ],
           ),

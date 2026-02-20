@@ -6,6 +6,7 @@ import { Resend } from 'resend';
 export class EmailService {
   private resend: Resend | null = null;
   private readonly from: string;
+  private readonly isDevelopment: boolean;
   private readonly logger = new Logger(EmailService.name);
 
   constructor(private configService: ConfigService) {
@@ -13,15 +14,24 @@ export class EmailService {
     this.from =
       this.configService.get<string>('EMAIL_FROM') ||
       'Tekka <noreply@tekka.ug>';
+    this.isDevelopment =
+      this.configService.get<string>('NODE_ENV') === 'development';
 
     if (apiKey) {
       this.resend = new Resend(apiKey);
-      this.logger.log('Email service initialized with Resend');
+      this.logger.log(
+        `Email service initialized with Resend (from: ${this.from})`,
+      );
     } else {
       this.logger.warn(
         'RESEND_API_KEY not configured — emails will be logged but not sent',
       );
     }
+  }
+
+  /** Whether Resend is configured and can attempt to send */
+  isConfigured(): boolean {
+    return this.resend !== null;
   }
 
   /**
@@ -68,15 +78,25 @@ export class EmailService {
   ): Promise<boolean> {
     if (!this.resend) {
       this.logger.warn(`[NO-SEND] Would send "${subject}" to ${to}`);
-      return true;
+      // In dev without API key, treat as success so flows don't block
+      return this.isDevelopment;
     }
 
     try {
-      await this.resend.emails.send({ from: this.from, to, subject, html });
-      this.logger.log(`Email sent to ${to}: "${subject}"`);
+      const result = await this.resend.emails.send({
+        from: this.from,
+        to,
+        subject,
+        html,
+      });
+      this.logger.log(`Email sent to ${to}: "${subject}" (id: ${result.data?.id})`);
       return true;
-    } catch (error) {
-      this.logger.error(`Failed to send email to ${to}: ${error}`);
+    } catch (error: any) {
+      const errorMessage =
+        error?.message || error?.statusCode || JSON.stringify(error);
+      this.logger.error(
+        `Failed to send email to ${to}: ${errorMessage}`,
+      );
       return false;
     }
   }

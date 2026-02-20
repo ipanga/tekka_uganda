@@ -1,37 +1,64 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { useAuthStore } from '@/stores/authStore';
 
 type Step = 'email' | 'code';
 
 export default function VerifyEmailPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
-  const handleSendCode = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Pre-fill email from user profile
+  useEffect(() => {
+    if (user?.email && !email) {
+      setEmail(user.email);
+    }
+  }, [user]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
+
+  const sendCode = useCallback(async (targetEmail: string) => {
     setError(null);
     setLoading(true);
 
     try {
-      await api.sendEmailVerification(email.trim());
+      await api.sendEmailVerification(targetEmail.trim());
       setStep('code');
+      setResendCooldown(60);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to send verification code';
       setError(message);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleSendCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await sendCode(email);
+  };
+
+  const handleResendCode = async () => {
+    if (resendCooldown > 0) return;
+    await sendCode(email);
   };
 
   const handleVerifyCode = async (e: React.FormEvent) => {
@@ -105,6 +132,24 @@ export default function VerifyEmailPage() {
                 <Button type="submit" className="w-full" loading={loading}>
                   Verify Email
                 </Button>
+
+                {/* Resend code */}
+                <div className="text-center">
+                  {resendCooldown > 0 ? (
+                    <p className="text-sm text-gray-400">
+                      Resend code in {resendCooldown}s
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleResendCode}
+                      disabled={loading}
+                      className="text-sm font-medium text-primary-500 hover:text-primary-600 disabled:opacity-50"
+                    >
+                      Resend Code
+                    </button>
+                  )}
+                </div>
 
                 <button
                   type="button"
