@@ -48,6 +48,15 @@ class CompleteProfileDto {
   @IsString()
   @IsOptional()
   bio?: string;
+
+  @IsString()
+  @IsOptional()
+  email?: string;
+}
+
+class SendOtpEmailDto {
+  @IsString()
+  phone: string;
 }
 
 class AdminLoginDto {
@@ -70,6 +79,18 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid phone number' })
   async sendOtp(@Body() dto: SendOtpDto) {
     return this.authService.sendOTP(dto.phone);
+  }
+
+  @Post('send-otp-email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Re-send OTP via email (fallback)' })
+  @ApiResponse({ status: 200, description: 'OTP sent via email' })
+  @ApiResponse({
+    status: 400,
+    description: 'No active OTP or no email on file',
+  })
+  async sendOtpEmail(@Body() dto: SendOtpEmailDto) {
+    return this.authService.sendOtpViaEmail(dto.phone);
   }
 
   @Post('verify-otp')

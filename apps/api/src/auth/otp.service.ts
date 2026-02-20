@@ -150,9 +150,7 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
         );
 
         if (smsResult.success) {
-          this.logger.log(
-            `SMS delivery successful to ${phoneNumber}`,
-          );
+          this.logger.log(`SMS delivery successful to ${phoneNumber}`);
 
           return {
             success: true,
@@ -199,7 +197,8 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
         this.otpStore.delete(phoneNumber);
 
         throw new BadRequestException(
-          error?.message || 'Failed to send verification code. Please try again.',
+          error?.message ||
+            'Failed to send verification code. Please try again.',
         );
       }
     }
@@ -271,6 +270,20 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
       `Invalid OTP for ${phoneNumber}. Attempt ${storedOtp.attempts}/${this.MAX_VERIFICATION_ATTEMPTS}`,
     );
     return { valid: false };
+  }
+
+  /**
+   * Retrieve the stored OTP code for a phone number (if not expired)
+   * Used by the email fallback to re-send the same code via email
+   */
+  getStoredCode(phoneNumber: string): string | null {
+    const stored = this.otpStore.get(phoneNumber);
+    if (!stored) return null;
+    if (new Date() > stored.expiresAt) {
+      this.otpStore.delete(phoneNumber);
+      return null;
+    }
+    return stored.code;
   }
 
   /**

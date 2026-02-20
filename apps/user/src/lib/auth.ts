@@ -55,10 +55,17 @@ class AuthManager {
     }
   }
 
+  // Email fallback info from last sendOTP response
+  private _hasEmail: boolean = false;
+  private _emailHint: string | null = null;
+
+  get hasEmail(): boolean { return this._hasEmail; }
+  get emailHint(): string | null { return this._emailHint; }
+
   /**
    * Send OTP to phone number
    */
-  async sendOTP(phone: string): Promise<{ success: boolean; message: string }> {
+  async sendOTP(phone: string): Promise<{ success: boolean; message: string; hasEmail: boolean; emailHint: string | null }> {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'}/auth/send-otp`,
       {
@@ -71,6 +78,30 @@ class AuthManager {
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error(error.message || 'Failed to send OTP');
+    }
+
+    const data = await response.json();
+    this._hasEmail = data.hasEmail === true;
+    this._emailHint = data.emailHint ?? null;
+    return data;
+  }
+
+  /**
+   * Re-send OTP via email (fallback when SMS is unreliable)
+   */
+  async sendOtpViaEmail(phone: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'}/auth/send-otp-email`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Failed to send OTP via email');
     }
 
     return response.json();
@@ -106,6 +137,7 @@ class AuthManager {
     displayName: string;
     location?: string;
     bio?: string;
+    email?: string;
   }): Promise<AuthUser> {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'}/auth/complete-profile`,

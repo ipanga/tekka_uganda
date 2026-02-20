@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { User } from '@prisma/client';
 import {
   UpdateUserDto,
@@ -15,7 +16,10 @@ import {
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+  ) {}
 
   async findById(id: string): Promise<User> {
     const user = await this.prisma.user.findUnique({
@@ -745,7 +749,9 @@ export class UsersService {
       },
     });
 
-    // In production, send email via service like SendGrid
+    // Send verification email via Resend
+    await this.emailService.sendEmailVerification(email, code);
+
     return {
       sent: true,
       email,

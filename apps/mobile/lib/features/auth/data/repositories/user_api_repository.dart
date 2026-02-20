@@ -38,6 +38,7 @@ class UserApiRepository {
     required String displayName,
     required String location,
     String? photoUrl,
+    String? email,
   }) async {
     final response = await _apiClient.put<Map<String, dynamic>>(
       '/users/me',
@@ -45,6 +46,7 @@ class UserApiRepository {
         'displayName': displayName,
         'location': location,
         if (photoUrl != null) 'photoUrl': photoUrl,
+        if (email != null) 'email': email,
         'isOnboardingComplete': true,
       },
     );

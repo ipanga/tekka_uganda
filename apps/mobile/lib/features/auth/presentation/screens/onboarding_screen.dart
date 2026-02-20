@@ -23,6 +23,7 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
 
   // Location selection state (same pattern as create listing screen)
   City? _selectedCity;
@@ -43,6 +44,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
@@ -89,12 +91,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         }
       }
 
+      final email = _emailController.text.trim();
       await ref
           .read(authNotifierProvider.notifier)
           .updateProfile(
             displayName: _nameController.text.trim(),
             location: _getLocationString()!,
             photoUrl: photoUrl,
+            email: email.isNotEmpty ? email : null,
           );
 
       if (mounted) {
@@ -326,6 +330,27 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     }
                     if (value.trim().length < 2) {
                       return 'Name must be at least 2 characters';
+                    }
+                    return null;
+                  },
+                ),
+
+                const SizedBox(height: AppSpacing.space4),
+
+                // Email input (optional)
+                TextFormField(
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(
+                    labelText: 'Email (optional)',
+                    hintText: 'For account recovery & notifications',
+                  ),
+                  validator: (value) {
+                    if (value != null && value.trim().isNotEmpty) {
+                      final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
+                      if (!emailRegex.hasMatch(value.trim())) {
+                        return 'Enter a valid email address';
+                      }
                     }
                     return null;
                   },

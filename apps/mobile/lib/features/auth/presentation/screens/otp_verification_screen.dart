@@ -124,6 +124,35 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
     }
   }
 
+  Future<void> _sendOtpViaEmail() async {
+    try {
+      await ref.read(authNotifierProvider.notifier).sendOtpViaEmail();
+
+      if (mounted) {
+        final emailHint = ref.read(authNotifierProvider).emailHint;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              emailHint != null
+                  ? 'Code sent to $emailHint'
+                  : 'Code sent to your email',
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e is AppException ? e.message : 'Failed to send code via email',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _resendOtp() async {
     if (!_canResend) return;
 
@@ -256,6 +285,22 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                         ),
                       ),
               ),
+
+              // Email fallback option
+              if (authState.hasEmail) ...[
+                const SizedBox(height: AppSpacing.space2),
+                Center(
+                  child: TextButton.icon(
+                    onPressed: authState.isLoading ? null : _sendOtpViaEmail,
+                    icon: const Icon(Icons.email_outlined, size: 18),
+                    label: Text(
+                      authState.emailHint != null
+                          ? 'Send code to ${authState.emailHint}'
+                          : 'Send code via email instead',
+                    ),
+                  ),
+                ),
+              ],
 
               const Spacer(),
             ],

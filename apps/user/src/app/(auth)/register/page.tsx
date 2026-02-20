@@ -18,12 +18,13 @@ type Step = 'phone' | 'otp' | 'profile';
 function RegisterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { sendOTP, verifyOTP, completeProfile, user, error: authError } = useAuth();
+  const { sendOTP, sendOtpViaEmail, verifyOTP, completeProfile, user, error: authError, hasEmail, emailHint } = useAuth();
 
   const [step, setStep] = useState<Step>('phone');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -148,6 +149,7 @@ function RegisterContent() {
       await completeProfile({
         displayName: displayName.trim(),
         location: locationString,
+        ...(email.trim() && { email: email.trim() }),
       });
       router.push('/');
     } catch {
@@ -283,6 +285,24 @@ function RegisterContent() {
                   Verify Code
                 </Button>
 
+                {hasEmail && (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        await sendOtpViaEmail();
+                        setError(null);
+                        alert(emailHint ? `Code sent to ${emailHint}` : 'Code sent to your email');
+                      } catch {
+                        // error is shown via authError
+                      }
+                    }}
+                    className="w-full text-center text-sm text-primary-500 hover:text-primary-600"
+                  >
+                    {emailHint ? `Send code to ${emailHint}` : 'Send code via email instead'}
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setStep('phone')}
@@ -304,6 +324,15 @@ function RegisterContent() {
                   onChange={(e) => setDisplayName(e.target.value)}
                   required
                   helperText="This is how other users will see you"
+                />
+
+                <Input
+                  label="Email (optional)"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  helperText="For account recovery & notifications"
                 />
 
                 {/* Location Selection - Same pattern as product creation */}

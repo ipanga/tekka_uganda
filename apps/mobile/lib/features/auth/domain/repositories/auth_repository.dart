@@ -24,7 +24,11 @@ abstract class AuthRepository {
     required String displayName,
     required String location,
     String? photoUrl,
+    String? email,
   });
+
+  /// Re-send the current OTP via email (fallback when SMS fails)
+  Future<void> sendOtpViaEmail(String phoneNumber);
 
   /// Sign out current user
   Future<void> signOut();
