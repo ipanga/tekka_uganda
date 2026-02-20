@@ -411,13 +411,12 @@ class UserProfileScreen extends ConsumerWidget {
                   return SliverPadding(
                     padding: AppSpacing.screenPadding,
                     sliver: SliverGrid(
-                      gridDelegate:
-                          SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            mainAxisSpacing: AppSpacing.space3,
-                            crossAxisSpacing: AppSpacing.space3,
-                            childAspectRatio: AppSpacing.listingCardAspectRatio,
-                          ),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        mainAxisSpacing: AppSpacing.space3,
+                        crossAxisSpacing: AppSpacing.space3,
+                        childAspectRatio: AppSpacing.listingCardAspectRatio,
+                      ),
                       delegate: SliverChildBuilderDelegate((context, index) {
                         final listing = activeListings[index];
                         return _ListingCard(

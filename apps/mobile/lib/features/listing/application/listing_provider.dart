@@ -182,8 +182,9 @@ class PaginatedListingsNotifier extends StateNotifier<PaginatedListingsState> {
 
       // Deduplicate against existing listings
       final existingIds = state.listings.map((l) => l.id).toSet();
-      final newListings =
-          filtered.where((l) => !existingIds.contains(l.id)).toList();
+      final newListings = filtered
+          .where((l) => !existingIds.contains(l.id))
+          .toList();
 
       state = state.copyWith(
         listings: [...state.listings, ...newListings],
@@ -205,9 +206,7 @@ class PaginatedListingsNotifier extends StateNotifier<PaginatedListingsState> {
     try {
       final blockedIds = await _getBlockedIds();
       if (blockedIds.isNotEmpty) {
-        return listings
-            .where((l) => !blockedIds.contains(l.sellerId))
-            .toList();
+        return listings.where((l) => !blockedIds.contains(l.sellerId)).toList();
       }
     } catch (_) {}
     return listings;
@@ -215,31 +214,33 @@ class PaginatedListingsNotifier extends StateNotifier<PaginatedListingsState> {
 }
 
 /// Paginated listings provider for infinite scroll
-final paginatedListingsProvider = StateNotifierProvider.family<
-    PaginatedListingsNotifier, PaginatedListingsState, ListingsFilter>(
-  (ref, filter) {
-    final repository = ref.watch(listingApiRepositoryProvider);
-    final currentUser = ref.watch(currentUserProvider);
+final paginatedListingsProvider =
+    StateNotifierProvider.family<
+      PaginatedListingsNotifier,
+      PaginatedListingsState,
+      ListingsFilter
+    >((ref, filter) {
+      final repository = ref.watch(listingApiRepositoryProvider);
+      final currentUser = ref.watch(currentUserProvider);
 
-    Future<Set<String>> getBlockedIds() async {
-      if (currentUser == null) return {};
-      try {
-        final blocked = await ref.read(blockedUsersProvider.future);
-        return blocked.map((u) => u.uid).toSet();
-      } catch (_) {
-        return {};
+      Future<Set<String>> getBlockedIds() async {
+        if (currentUser == null) return {};
+        try {
+          final blocked = await ref.read(blockedUsersProvider.future);
+          return blocked.map((u) => u.uid).toSet();
+        } catch (_) {
+          return {};
+        }
       }
-    }
 
-    final notifier = PaginatedListingsNotifier(
-      repository,
-      filter,
-      getBlockedIds,
-    );
-    notifier.loadInitial();
-    return notifier;
-  },
-);
+      final notifier = PaginatedListingsNotifier(
+        repository,
+        filter,
+        getBlockedIds,
+      );
+      notifier.loadInitial();
+      return notifier;
+    });
 
 /// Single listing provider
 final listingProvider = FutureProvider.family<Listing?, String>((
