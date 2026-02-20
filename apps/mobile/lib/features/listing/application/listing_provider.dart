@@ -1004,6 +1004,7 @@ class CreateListingStateV2 {
   final String? title;
   final String? description;
   final int? price;
+  final int? originalPrice;
   final ItemCondition? condition;
   // New hierarchical category
   final String? categoryId;
@@ -1026,6 +1027,7 @@ class CreateListingStateV2 {
     this.title,
     this.description,
     this.price,
+    this.originalPrice,
     this.condition,
     this.categoryId,
     this.categoryName,
@@ -1048,6 +1050,8 @@ class CreateListingStateV2 {
     String? title,
     String? description,
     int? price,
+    int? originalPrice,
+    bool clearOriginalPrice = false,
     ItemCondition? condition,
     String? categoryId,
     String? categoryName,
@@ -1067,6 +1071,9 @@ class CreateListingStateV2 {
       title: title ?? this.title,
       description: description ?? this.description,
       price: price ?? this.price,
+      originalPrice: clearOriginalPrice
+          ? null
+          : (originalPrice ?? this.originalPrice),
       condition: condition ?? this.condition,
       categoryId: categoryId ?? this.categoryId,
       categoryName: categoryName ?? this.categoryName,
@@ -1195,6 +1202,7 @@ class CreateListingNotifierV2 extends StateNotifier<CreateListingStateV2> {
       title: listing.title,
       description: listing.description,
       price: listing.price,
+      originalPrice: listing.originalPrice,
       condition: listing.condition,
       categoryId: listing.categoryId,
       categoryName: listing.categoryName,
@@ -1209,6 +1217,9 @@ class CreateListingNotifierV2 extends StateNotifier<CreateListingStateV2> {
   void updateDescription(String value) =>
       state = state.copyWith(description: value);
   void updatePrice(int value) => state = state.copyWith(price: value);
+  void updateOriginalPrice(int? value) => state = value == null
+      ? state.copyWith(clearOriginalPrice: true)
+      : state.copyWith(originalPrice: value);
   void updateCondition(ItemCondition value) =>
       state = state.copyWith(condition: value);
 
@@ -1324,6 +1335,7 @@ class CreateListingNotifierV2 extends StateNotifier<CreateListingStateV2> {
           title: state.title ?? '',
           description: state.description ?? '',
           price: state.price ?? 0,
+          originalPrice: state.originalPrice,
           condition: state.condition ?? ItemCondition.good,
           imageUrls: imageUrls,
           categoryId: state.categoryId!,

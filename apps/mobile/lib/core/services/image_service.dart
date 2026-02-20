@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:path_provider/path_provider.dart';
@@ -13,40 +14,55 @@ class ImageService {
 
   /// Pick a single image from gallery
   Future<File?> pickImageFromGallery() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: AppConfig.maxImageWidth.toDouble(),
-      maxHeight: AppConfig.maxImageHeight.toDouble(),
-      imageQuality: AppConfig.imageQuality,
-    );
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: AppConfig.maxImageWidth.toDouble(),
+        maxHeight: AppConfig.maxImageHeight.toDouble(),
+        imageQuality: AppConfig.imageQuality,
+      );
 
-    if (image == null) return null;
-    return File(image.path);
+      if (image == null) return null;
+      return File(image.path);
+    } on PlatformException catch (e) {
+      debugPrint('Gallery access error: ${e.code} - ${e.message}');
+      return null;
+    }
   }
 
   /// Pick multiple images from gallery
   Future<List<File>> pickMultipleImages({int maxImages = 5}) async {
-    final List<XFile> images = await _picker.pickMultiImage(
-      maxWidth: AppConfig.maxImageWidth.toDouble(),
-      maxHeight: AppConfig.maxImageHeight.toDouble(),
-      imageQuality: AppConfig.imageQuality,
-      limit: maxImages,
-    );
+    try {
+      final List<XFile> images = await _picker.pickMultiImage(
+        maxWidth: AppConfig.maxImageWidth.toDouble(),
+        maxHeight: AppConfig.maxImageHeight.toDouble(),
+        imageQuality: AppConfig.imageQuality,
+        limit: maxImages,
+      );
 
-    return images.map((xfile) => File(xfile.path)).toList();
+      return images.map((xfile) => File(xfile.path)).toList();
+    } on PlatformException catch (e) {
+      debugPrint('Gallery access error: ${e.code} - ${e.message}');
+      return [];
+    }
   }
 
   /// Take a photo with camera
   Future<File?> takePhoto() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: AppConfig.maxImageWidth.toDouble(),
-      maxHeight: AppConfig.maxImageHeight.toDouble(),
-      imageQuality: AppConfig.imageQuality,
-    );
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: AppConfig.maxImageWidth.toDouble(),
+        maxHeight: AppConfig.maxImageHeight.toDouble(),
+        imageQuality: AppConfig.imageQuality,
+      );
 
-    if (image == null) return null;
-    return File(image.path);
+      if (image == null) return null;
+      return File(image.path);
+    } on PlatformException catch (e) {
+      debugPrint('Camera access error: ${e.code} - ${e.message}');
+      return null;
+    }
   }
 
   /// Compress image file

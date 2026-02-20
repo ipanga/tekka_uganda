@@ -70,6 +70,16 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
   String get _otp => _controllers.map((c) => c.text).join();
 
   void _onOtpChanged(int index, String value) {
+    // Handle auto-fill or paste: value may contain full OTP code
+    if (index == 0 && value.length == AppConstants.otpLength) {
+      for (int i = 0; i < AppConstants.otpLength; i++) {
+        _controllers[i].text = value[i];
+      }
+      _focusNodes.last.requestFocus();
+      _verifyOtp();
+      return;
+    }
+
     if (value.isNotEmpty && index < AppConstants.otpLength - 1) {
       _focusNodes[index + 1].requestFocus();
     }
@@ -181,30 +191,37 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
               const SizedBox(height: AppSpacing.space8),
 
               // OTP input fields
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(
-                  AppConstants.otpLength,
-                  (index) => SizedBox(
-                    width: 48,
-                    child: TextFormField(
-                      controller: _controllers[index],
-                      focusNode: _focusNodes[index],
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      maxLength: 1,
-                      style: AppTypography.headlineMedium,
-                      decoration: const InputDecoration(
-                        counterText: '',
-                        contentPadding: EdgeInsets.symmetric(vertical: 12),
+              AutofillGroup(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: List.generate(
+                    AppConstants.otpLength,
+                    (index) => SizedBox(
+                      width: 48,
+                      child: TextFormField(
+                        controller: _controllers[index],
+                        focusNode: _focusNodes[index],
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        maxLength: index == 0 ? AppConstants.otpLength : 1,
+                        style: AppTypography.headlineMedium,
+                        autofillHints: index == 0
+                            ? const [AutofillHints.oneTimeCode]
+                            : null,
+                        decoration: const InputDecoration(
+                          counterText: '',
+                          contentPadding: EdgeInsets.symmetric(vertical: 12),
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.digitsOnly,
+                        ],
+                        onChanged: (value) => _onOtpChanged(index, value),
+                        onEditingComplete: () {
+                          if (index < AppConstants.otpLength - 1) {
+                            _focusNodes[index + 1].requestFocus();
+                          }
+                        },
                       ),
-                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      onChanged: (value) => _onOtpChanged(index, value),
-                      onEditingComplete: () {
-                        if (index < AppConstants.otpLength - 1) {
-                          _focusNodes[index + 1].requestFocus();
-                        }
-                      },
                     ),
                   ),
                 ),

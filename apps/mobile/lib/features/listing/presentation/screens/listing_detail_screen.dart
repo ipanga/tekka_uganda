@@ -470,23 +470,29 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
   }
 
   void _shareListing(Listing listing) async {
+    final url = 'https://tekka.ug/listing/${listing.id}';
     final shareText =
         '''
 Check out "${listing.title}" on Tekka!
 
 ${listing.formattedPrice}
 ${listing.condition.displayName} condition
-Location: ${listing.displayLocation ?? 'Unknown'}
 
-${listing.description.isNotEmpty ? listing.description : 'No description provided.'}
-
-Download Tekka to browse more fashion items!
+$url
 ''';
 
-    await Share.share(
-      shareText,
-      subject: 'Check out this item on Tekka: ${listing.title}',
-    );
+    try {
+      await Share.share(
+        shareText,
+        subject: 'Check out this item on Tekka: ${listing.title}',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Unable to share right now')),
+        );
+      }
+    }
   }
 
   void _startChat(Listing listing) async {

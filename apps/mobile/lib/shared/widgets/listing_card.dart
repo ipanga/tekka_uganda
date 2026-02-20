@@ -63,10 +63,26 @@ class _ListingCardState extends ConsumerState<ListingCard> {
         await repository.unsave(widget.listing.id);
         if (mounted) setState(() => _isSaved = false);
         widget.onSaveChanged?.call(false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Removed from favorites'),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        }
       } else {
         await repository.save(widget.listing.id);
         if (mounted) setState(() => _isSaved = true);
         widget.onSaveChanged?.call(true);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Saved to favorites'),
+              duration: Duration(seconds: 1),
+            ),
+          );
+        }
       }
       // Invalidate saved listings cache
       ref.invalidate(savedListingsProvider);
