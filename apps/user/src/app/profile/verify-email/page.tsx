@@ -13,7 +13,7 @@ type Step = 'email' | 'code';
 
 export default function VerifyEmailPage() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, setUser } = useAuthStore();
   const [step, setStep] = useState<Step>('email');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -68,6 +68,9 @@ export default function VerifyEmailPage() {
 
     try {
       await api.verifyEmailCode(code);
+      // Refresh user data so isEmailVerified is up-to-date in the store
+      const updatedUser = await api.getMe();
+      setUser(updatedUser);
       router.push('/profile/edit?verified=1');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Invalid verification code';

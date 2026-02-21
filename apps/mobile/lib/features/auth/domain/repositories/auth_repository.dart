@@ -36,6 +36,9 @@ abstract class AuthRepository {
   /// Check if user has completed onboarding
   Future<bool> isOnboardingComplete();
 
+  /// Refresh current user data from the API
+  Future<AppUser?> refreshCurrentUser();
+
   /// Get user by ID (public profile)
   Future<AppUser?> getUserById(String userId);
 }
