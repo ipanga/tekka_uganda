@@ -110,7 +110,9 @@ class _SecuritySettingsContent extends ConsumerWidget {
                 title: 'Login Alerts',
                 subtitle: 'Get notified of new sign-ins',
                 value: prefs.loginAlerts,
-                onChanged: (value) => ref.read(securityPreferencesNotifierProvider.notifier).setLoginAlerts(value),
+                onChanged: (value) => ref
+                    .read(securityPreferencesNotifierProvider.notifier)
+                    .setLoginAlerts(value),
               ),
               _SettingsToggle(
                 icon: Icons.payment_outlined,
@@ -118,13 +120,16 @@ class _SecuritySettingsContent extends ConsumerWidget {
                 subtitle:
                     'Require confirmation for offers above ${_formatCurrency(prefs.transactionThreshold)}',
                 value: prefs.requireTransactionConfirmation,
-                onChanged: (value) =>
-                    ref.read(securityPreferencesNotifierProvider.notifier).setTransactionConfirmation(value),
+                onChanged: (value) => ref
+                    .read(securityPreferencesNotifierProvider.notifier)
+                    .setTransactionConfirmation(value),
               ),
               if (prefs.requireTransactionConfirmation)
                 _ThresholdSelector(
                   currentThreshold: prefs.transactionThreshold,
-                  onChanged: (value) => ref.read(securityPreferencesNotifierProvider.notifier).setTransactionThreshold(value),
+                  onChanged: (value) => ref
+                      .read(securityPreferencesNotifierProvider.notifier)
+                      .setTransactionThreshold(value),
                 ),
             ],
           ),
