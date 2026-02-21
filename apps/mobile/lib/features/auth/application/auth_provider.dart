@@ -60,9 +60,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       bool hasEmail = false;
       String? emailHint;
       if (_repository is JwtAuthRepository) {
-        final jwtRepo = _repository as JwtAuthRepository;
-        hasEmail = jwtRepo.hasEmail;
-        emailHint = jwtRepo.emailHint;
+        hasEmail = _repository.hasEmail;
+        emailHint = _repository.emailHint;
       }
 
       state = state.copyWith(
