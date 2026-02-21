@@ -36,8 +36,13 @@ import {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
+/** Callback invoked when token refresh succeeds — set by AuthManager */
+type TokenRefreshFn = () => Promise<string | null>;
+
 class ApiClient {
   private token: string | null = null;
+  private _refreshPromise: Promise<string | null> | null = null;
+  private _onTokenRefresh: TokenRefreshFn | null = null;
 
   setToken(token: string) {
     this.token = token;
@@ -51,9 +56,15 @@ class ApiClient {
     return !!this.token;
   }
 
+  /** Register a callback that refreshes tokens and returns the new access token (or null on failure) */
+  setTokenRefreshHandler(handler: TokenRefreshFn) {
+    this._onTokenRefresh = handler;
+  }
+
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    _isRetry = false,
   ): Promise<T> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -69,6 +80,14 @@ class ApiClient {
       headers,
     });
 
+    // On 401, attempt silent token refresh and retry once
+    if (response.status === 401 && !_isRetry && this._onTokenRefresh) {
+      const newToken = await this._tryRefresh();
+      if (newToken) {
+        return this.request<T>(endpoint, options, true);
+      }
+    }
+
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error(error.message || 'API request failed');
@@ -80,6 +99,17 @@ class ApiClient {
     }
 
     return response.json();
+  }
+
+  /** Coalesce concurrent refresh calls into a single request */
+  private async _tryRefresh(): Promise<string | null> {
+    if (!this._onTokenRefresh) return null;
+    if (!this._refreshPromise) {
+      this._refreshPromise = this._onTokenRefresh().finally(() => {
+        this._refreshPromise = null;
+      });
+    }
+    return this._refreshPromise;
   }
 
   private buildQueryString(params: object): string {

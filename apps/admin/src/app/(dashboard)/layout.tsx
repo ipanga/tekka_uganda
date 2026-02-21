@@ -11,7 +11,7 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshToken, signOut } = useAuth();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -20,6 +20,35 @@ export default function DashboardLayout({
       router.push('/login');
     }
   }, [user, loading, router]);
+
+  // Token refresh on visibility change + multi-tab logout sync
+  useEffect(() => {
+    if (!user) return;
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refreshToken();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // Periodic refresh (every 50 minutes)
+    const interval = setInterval(refreshToken, 50 * 60 * 1000);
+
+    // Multi-tab logout sync
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'admin_access_token' && e.newValue === null) {
+        signOut();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibility);
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [user, refreshToken, signOut]);
 
   if (loading) {
     return (

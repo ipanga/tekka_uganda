@@ -79,8 +79,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
     // Refresh token every 50 minutes (tokens expire after 1 hour)
     const interval = setInterval(refreshToken, 50 * 60 * 1000);
 
-    return () => clearInterval(interval);
-  }, [isAuthenticated]);
+    // Refresh when user returns to a backgrounded tab
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        refreshToken();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    // Multi-tab logout sync: if another tab clears tokens, log out here too
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === 'tekka_access_token' && e.newValue === null) {
+        setUser(null);
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibility);
+      window.removeEventListener('storage', handleStorage);
+    };
+  }, [isAuthenticated, setUser]);
 
   const value: AuthContextType = {
     user,

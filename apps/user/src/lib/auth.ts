@@ -33,6 +33,12 @@ class AuthManager {
   constructor() {
     // Try to initialize on construction (client-side only)
     this.ensureInitialized();
+
+    // Wire up silent 401 refresh in the API client
+    api.setTokenRefreshHandler(async () => {
+      const result = await this.refreshTokens();
+      return result?.accessToken ?? null;
+    });
   }
 
   /**
@@ -181,7 +187,11 @@ class AuthManager {
       );
 
       if (!response.ok) {
-        this.clearTokens();
+        // Only clear tokens on definitive auth rejection (401/403)
+        // Network errors or 5xx should NOT wipe the session
+        if (response.status === 401 || response.status === 403) {
+          this.clearTokens();
+        }
         return null;
       }
 
@@ -189,7 +199,7 @@ class AuthManager {
       this.setTokens(data);
       return data;
     } catch {
-      this.clearTokens();
+      // Network error (offline, DNS, etc.) — keep tokens, don't logout
       return null;
     }
   }
