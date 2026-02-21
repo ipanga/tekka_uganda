@@ -8,7 +8,6 @@ import {
   ArrowLeftIcon,
   PaperAirplaneIcon,
   EllipsisVerticalIcon,
-  MapPinIcon,
 } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
 import { authManager } from '@/lib/auth';
@@ -245,24 +244,6 @@ export default function ChatDetailPage() {
                 >
                   {message.type === 'TEXT' && <p>{message.content}</p>}
 
-                  {message.type === 'IMAGE' && message.metadata?.imageUrl && (
-                    <div className="relative w-48 h-48 rounded-lg overflow-hidden">
-                      <Image
-                        src={message.metadata.imageUrl}
-                        alt="Shared image"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  )}
-
-                  {message.type === 'MEETUP' && message.metadata?.meetup && (
-                    <div className="flex items-center gap-2">
-                      <MapPinIcon className="w-5 h-5" />
-                      <span>Meetup proposal</span>
-                    </div>
-                  )}
-
                   {message.type === 'SYSTEM' && (
                     <p className="italic">{message.content}</p>
                   )}
@@ -286,16 +267,6 @@ export default function ChatDetailPage() {
       {/* Message Input */}
       <footer className="sticky bottom-0 bg-white border-t border-gray-200">
         <div className="max-w-3xl mx-auto px-4 py-3">
-          {/* Quick Actions */}
-          {listing && (
-            <div className="flex gap-2 mb-3">
-              <Button variant="outline" size="sm">
-                <MapPinIcon className="w-4 h-4 mr-1" />
-                Schedule Meetup
-              </Button>
-            </div>
-          )}
-
           <form onSubmit={handleSend} className="flex items-center gap-2">
             <input
               type="text"

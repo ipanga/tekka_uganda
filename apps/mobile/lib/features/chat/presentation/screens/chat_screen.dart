@@ -3,13 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/services/image_service_provider.dart' as services;
 import '../../../../core/theme/theme.dart';
 import '../../../../router/app_router.dart';
 import '../../../auth/application/auth_provider.dart';
 import '../../../listing/application/listing_provider.dart';
 import '../../../listing/domain/entities/listing.dart';
-import '../../../meetup/presentation/widgets/schedule_meetup_sheet.dart';
 import '../../../reviews/application/review_provider.dart';
 import '../../../reviews/domain/entities/review.dart';
 import '../../application/chat_provider.dart';
@@ -253,16 +251,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               else
                 _MessageInput(
                   controller: _messageController,
-                  isSending:
-                      chatActions.isSending || chatActions.isUploadingImage,
+                  isSending: chatActions.isSending,
                   onSend: _sendMessage,
                   onTyping: () {
                     ref
                         .read(chatActionsProvider(widget.chatId).notifier)
                         .setTyping(true);
                   },
-                  onSuggestMeetup: () => _suggestMeetup(chat),
-                  onSendPhoto: _sendPhoto,
                 ),
             ],
           ),
@@ -336,130 +331,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         );
       }
     });
-  }
-
-  Future<void> _suggestMeetup(Chat chat) async {
-    final user = ref.read(currentUserProvider);
-    if (user == null) return;
-
-    final meetup = await showScheduleMeetupSheet(
-      context,
-      chatId: chat.id,
-      listingId: chat.listingId,
-      buyerId: chat.buyerId,
-      sellerId: chat.sellerId,
-    );
-
-    if (meetup != null) {
-      // Send a meetup message to the chat
-      final message =
-          'Meetup proposed at ${meetup.location.name} on ${meetup.formattedDate} at ${meetup.formattedTime}';
-      ref
-          .read(chatActionsProvider(widget.chatId).notifier)
-          .sendMessage(
-            message,
-            type: MessageType.meetup,
-            meetupData: meetup.toMap(),
-          );
-
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Meetup proposal sent!')));
-      }
-    }
-  }
-
-  Future<void> _sendPhoto() async {
-    final imageService = ref.read(services.imageServiceProvider);
-    final storageService = ref.read(services.storageServiceProvider);
-
-    // Show picker options
-    final source = await showModalBottomSheet<String>(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(AppSpacing.space4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.camera_alt),
-              title: const Text('Take Photo'),
-              onTap: () => Navigator.pop(context, 'camera'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.photo_library),
-              title: const Text('Choose from Gallery'),
-              onTap: () => Navigator.pop(context, 'gallery'),
-            ),
-          ],
-        ),
-      ),
-    );
-
-    if (source == null) return;
-
-    // Pick image
-    final imageFile = source == 'camera'
-        ? await imageService.takePhoto()
-        : await imageService.pickImageFromGallery();
-
-    if (imageFile == null) return;
-
-    // Compress image
-    final compressedFile = await imageService.compressImage(imageFile);
-    if (compressedFile == null) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to process image')),
-        );
-      }
-      return;
-    }
-
-    // Upload image
-    ref
-        .read(chatActionsProvider(widget.chatId).notifier)
-        .setUploadingImage(true);
-
-    try {
-      final imageUrl = await storageService.uploadChatImage(
-        imageFile: compressedFile,
-        chatId: widget.chatId,
-      );
-
-      if (imageUrl == null) {
-        throw Exception('Failed to upload image');
-      }
-
-      // Send image message
-      ref
-          .read(chatActionsProvider(widget.chatId).notifier)
-          .sendMessage('', type: MessageType.image, imageUrl: imageUrl);
-
-      // Scroll to bottom
-      Future.delayed(const Duration(milliseconds: 100), () {
-        if (_scrollController.hasClients) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to send image: $e')));
-      }
-    } finally {
-      ref
-          .read(chatActionsProvider(widget.chatId).notifier)
-          .setUploadingImage(false);
-      // Clean up temp file
-      imageService.cleanupTempFiles([compressedFile]);
-    }
   }
 
   void _handleMenuAction(String action, Chat chat, String otherUserId) async {
@@ -1115,16 +986,12 @@ class _MessageInput extends StatelessWidget {
     required this.isSending,
     required this.onSend,
     required this.onTyping,
-    required this.onSuggestMeetup,
-    required this.onSendPhoto,
   });
 
   final TextEditingController controller;
   final bool isSending;
   final VoidCallback onSend;
   final VoidCallback onTyping;
-  final VoidCallback onSuggestMeetup;
-  final VoidCallback onSendPhoto;
 
   @override
   Widget build(BuildContext context) {
@@ -1137,11 +1004,6 @@ class _MessageInput extends StatelessWidget {
       child: SafeArea(
         child: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.add_circle_outline),
-              color: AppColors.onSurfaceVariant,
-              onPressed: () => _showAttachmentOptions(context),
-            ),
             Expanded(
               child: TextField(
                 controller: controller,
@@ -1168,52 +1030,6 @@ class _MessageInput extends StatelessWidget {
                   : const Icon(Icons.send),
               color: AppColors.primary,
               onPressed: isSending ? null : onSend,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showAttachmentOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(AppSpacing.space4),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.location_on, color: AppColors.primary),
-              ),
-              title: const Text('Suggest Meetup'),
-              subtitle: const Text('Propose a safe meeting location'),
-              onTap: () {
-                Navigator.pop(context);
-                onSuggestMeetup();
-              },
-            ),
-            ListTile(
-              leading: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.photo, color: AppColors.secondary),
-              ),
-              title: const Text('Send Photo'),
-              subtitle: const Text('Share an image'),
-              onTap: () {
-                Navigator.pop(context);
-                onSendPhoto();
-              },
             ),
           ],
         ),

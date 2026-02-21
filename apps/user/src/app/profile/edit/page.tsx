@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon, CameraIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
@@ -26,9 +26,12 @@ export default function EditProfilePage() {
   const [selectedCityId, setSelectedCityId] = useState('');
   const [selectedDivisionId, setSelectedDivisionId] = useState('');
   const [email, setEmail] = useState('');
+  const [photoUrl, setPhotoUrl] = useState<string | undefined>(undefined);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Location data
   const [cities, setCities] = useState<City[]>([]);
@@ -78,6 +81,7 @@ export default function EditProfilePage() {
       setDisplayName(user.displayName || '');
       setBio(user.bio || '');
       setEmail(user.email || '');
+      setPhotoUrl(user.photoUrl || undefined);
 
       // Parse existing location to set city and division
       // Location format is "City" or "City - Division"
@@ -115,6 +119,23 @@ export default function EditProfilePage() {
     return city.name;
   };
 
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingPhoto(true);
+    setError(null);
+    try {
+      const { url } = await api.uploadImage(file);
+      setPhotoUrl(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to upload photo');
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -128,6 +149,7 @@ export default function EditProfilePage() {
         bio: bio.trim() || undefined,
         location: locationString,
         email: email.trim() || undefined,
+        photoUrl,
       });
 
       setUser(updatedUser);
@@ -181,16 +203,29 @@ export default function EditProfilePage() {
                 <div className="flex flex-col items-center">
                   <div className="relative">
                     <Avatar
-                      src={user.photoUrl}
+                      src={photoUrl || user.photoUrl}
                       name={displayName || user.displayName}
                       size="xl"
                     />
                     <button
                       type="button"
-                      className="absolute bottom-0 right-0 p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingPhoto}
+                      className="absolute bottom-0 right-0 p-2 bg-primary-500 text-white rounded-full hover:bg-primary-600 transition-colors disabled:opacity-50"
                     >
-                      <CameraIcon className="w-4 h-4" />
+                      {uploadingPhoto ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <CameraIcon className="w-4 h-4" />
+                      )}
                     </button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                    />
                   </div>
                   <p className="text-sm text-gray-500 mt-2">Click to change photo</p>
                 </div>

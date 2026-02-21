@@ -11,6 +11,7 @@ import '../../../../router/app_router.dart';
 import '../../../auth/application/auth_provider.dart';
 import '../../../chat/application/chat_provider.dart';
 import '../../../chat/domain/entities/chat.dart';
+import '../../../profile/application/profile_provider.dart';
 import '../../application/listing_provider.dart';
 import '../../domain/entities/listing.dart';
 
@@ -1098,6 +1099,8 @@ class _FavoriteButton extends ConsumerWidget {
 
     ref.invalidate(isFavoritedProvider(listingId));
     ref.invalidate(listingProvider(listingId));
+    ref.invalidate(savedListingsProvider);
+    ref.invalidate(myFavoritesProvider);
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
