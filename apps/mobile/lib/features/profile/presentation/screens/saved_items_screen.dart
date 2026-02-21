@@ -39,7 +39,7 @@ class SavedItemsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
-                onPressed: () => ref.invalidate(myFavoritesProvider),
+                onPressed: () => ref.invalidate(savedListingsProvider),
                 child: const Text('Retry'),
               ),
             ],
@@ -52,7 +52,7 @@ class SavedItemsScreen extends ConsumerWidget {
 
           return RefreshIndicator(
             onRefresh: () async {
-              ref.invalidate(myFavoritesProvider);
+              ref.invalidate(savedListingsProvider);
             },
             child: GridView.builder(
               padding: AppSpacing.screenPadding,
@@ -68,7 +68,7 @@ class SavedItemsScreen extends ConsumerWidget {
                   listing: favorites[index],
                   userId: user?.uid ?? '',
                   onRemoved: () {
-                    ref.invalidate(myFavoritesProvider);
+                    ref.invalidate(savedListingsProvider);
                   },
                 );
               },
