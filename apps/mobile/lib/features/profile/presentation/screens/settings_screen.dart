@@ -41,11 +41,6 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => context.push('/profile/edit'),
                 ),
                 _SettingsTile(
-                  icon: Icons.block_outlined,
-                  title: 'Blocked Users',
-                  onTap: () => context.push(AppRoutes.blockedUsers),
-                ),
-                _SettingsTile(
                   icon: Icons.lock_outline,
                   title: 'Privacy',
                   onTap: () => context.push(AppRoutes.privacySettings),

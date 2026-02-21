@@ -285,21 +285,6 @@ class ProfileScreen extends ConsumerWidget {
                     onTap: () => context.push(AppRoutes.sellerAnalytics),
                   ),
                   _MenuItem(
-                    icon: Icons.saved_search,
-                    title: 'Saved Searches',
-                    onTap: () => context.push(AppRoutes.savedSearches),
-                  ),
-                  _MenuItem(
-                    icon: Icons.trending_down,
-                    title: 'Price Alerts',
-                    onTap: () => context.push(AppRoutes.priceAlerts),
-                  ),
-                  _MenuItem(
-                    icon: Icons.history,
-                    title: 'Purchase History',
-                    onTap: () => context.push(AppRoutes.purchaseHistory),
-                  ),
-                  _MenuItem(
                     icon: Icons.star_border,
                     title: 'Reviews',
                     onTap: () {
