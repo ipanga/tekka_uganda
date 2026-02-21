@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../../../../core/theme/theme.dart';
 import '../../../../router/app_router.dart';
 import '../../../auth/application/auth_provider.dart';
-import '../../application/rate_app_provider.dart';
-import '../../application/language_provider.dart';
 import '../../application/location_provider.dart';
-import '../widgets/rate_app_dialog.dart';
+
+/// Cached package info provider
+final _packageInfoProvider = FutureProvider<PackageInfo>((ref) async {
+  return PackageInfo.fromPlatform();
+});
 
 /// App settings screen
 class SettingsScreen extends ConsumerWidget {
@@ -17,6 +20,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    final packageInfo = ref.watch(_packageInfoProvider);
 
     return Scaffold(
       backgroundColor: colorScheme.surfaceContainerHighest,
@@ -66,7 +70,7 @@ class SettingsScreen extends ConsumerWidget {
                 _SettingsTile(
                   icon: Icons.notifications_outlined,
                   title: 'Notification Settings',
-                  onTap: () => context.push(AppRoutes.notificationSettings),
+                  enabled: false,
                 ),
               ],
             ),
@@ -78,7 +82,22 @@ class SettingsScreen extends ConsumerWidget {
           _SectionHeader(title: 'Preferences'),
           Container(
             color: colorScheme.surface,
-            child: Column(children: [_LanguageTile(), _LocationTile()]),
+            child: Column(
+              children: [
+                _SettingsTile(
+                  icon: Icons.language,
+                  title: 'Language',
+                  trailing: Text(
+                    'English',
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  enabled: false,
+                ),
+                _LocationTile(),
+              ],
+            ),
           ),
 
           const SizedBox(height: AppSpacing.space4),
@@ -124,10 +143,23 @@ class SettingsScreen extends ConsumerWidget {
                 _SettingsTile(
                   icon: Icons.info_outline,
                   title: 'App Version',
-                  trailing: Text(
-                    '1.0.0',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: colorScheme.onSurfaceVariant,
+                  trailing: packageInfo.when(
+                    data: (info) => Text(
+                      '${info.version} (${info.buildNumber})',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    loading: () => const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                    error: (_, __) => Text(
+                      'Unknown',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
                   ),
                   showChevron: false,
@@ -136,7 +168,7 @@ class SettingsScreen extends ConsumerWidget {
                 _SettingsTile(
                   icon: Icons.star_outline,
                   title: 'Rate the App',
-                  onTap: () => _showRateAppDialog(context, ref),
+                  enabled: false,
                 ),
               ],
             ),
@@ -159,7 +191,7 @@ class SettingsScreen extends ConsumerWidget {
                   icon: Icons.delete_outline,
                   title: 'Delete Account',
                   isDestructive: true,
-                  onTap: () => _showDeleteAccountDialog(context),
+                  onTap: () => context.push(AppRoutes.accountDeletion),
                 ),
               ],
             ),
@@ -192,28 +224,6 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
     );
-  }
-
-  void _showDeleteAccountDialog(BuildContext context) {
-    context.push(AppRoutes.accountDeletion);
-  }
-
-  void _showRateAppDialog(BuildContext context, WidgetRef ref) {
-    final rateAppState = ref.read(rateAppProvider);
-
-    // If user has already rated, show a thank you message
-    if (rateAppState.hasRated) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Thank you for rating Tekka!'),
-          backgroundColor: AppColors.success,
-        ),
-      );
-      return;
-    }
-
-    // Show the rate app bottom sheet
-    RateAppBottomSheet.show(context);
   }
 }
 
@@ -252,6 +262,7 @@ class _SettingsTile extends StatelessWidget {
     this.onTap,
     this.isDestructive = false,
     this.showChevron = true,
+    this.enabled = true,
   });
 
   final IconData icon;
@@ -260,55 +271,60 @@ class _SettingsTile extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isDestructive;
   final bool showChevron;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final effectiveOpacity = enabled ? 1.0 : 0.45;
 
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isDestructive ? colorScheme.error : colorScheme.onSurfaceVariant,
-      ),
-      title: Text(
-        title,
-        style: AppTypography.bodyLarge.copyWith(
-          color: isDestructive ? colorScheme.error : colorScheme.onSurface,
+    return Opacity(
+      opacity: effectiveOpacity,
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: isDestructive
+              ? colorScheme.error
+              : colorScheme.onSurfaceVariant,
         ),
-      ),
-      trailing:
-          trailing ??
-          (showChevron && onTap != null
-              ? Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant)
-              : null),
-      onTap: onTap,
-    );
-  }
-}
-
-class _LanguageTile extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final languageState = ref.watch(languageProvider);
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return ListTile(
-      leading: Icon(Icons.language, color: colorScheme.onSurfaceVariant),
-      title: Text('Language', style: AppTypography.bodyLarge),
-      trailing: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            languageState.selectedLanguage.displayName,
-            style: AppTypography.bodyMedium.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
+        title: Text(
+          title,
+          style: AppTypography.bodyLarge.copyWith(
+            color: isDestructive ? colorScheme.error : colorScheme.onSurface,
           ),
-          const SizedBox(width: 4),
-          Icon(Icons.chevron_right, color: colorScheme.onSurfaceVariant),
-        ],
+        ),
+        trailing: !enabled
+            ? Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'Coming Soon',
+                  style: AppTypography.labelSmall.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              )
+            : trailing ??
+                (showChevron && onTap != null
+                    ? Icon(
+                        Icons.chevron_right,
+                        color: colorScheme.onSurfaceVariant,
+                      )
+                    : null),
+        onTap: enabled
+            ? onTap
+            : () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Feature coming soon'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              },
       ),
-      onTap: () => context.push(AppRoutes.language),
     );
   }
 }
