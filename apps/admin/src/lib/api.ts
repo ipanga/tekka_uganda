@@ -17,6 +17,7 @@ export interface AuthTokens {
 class ApiClient {
   private token: string | null = null;
   private refreshToken: string | null = null;
+  private _refreshPromise: Promise<AuthTokens | null> | null = null;
 
   constructor() {
     // Restore tokens from localStorage on init
@@ -103,7 +104,11 @@ class ApiClient {
       });
 
       if (!response.ok) {
-        this.clearToken();
+        // Only clear tokens on definitive auth rejection (401/403)
+        // Network errors or 5xx should NOT wipe the session
+        if (response.status === 401 || response.status === 403) {
+          this.clearToken();
+        }
         return null;
       }
 
@@ -112,14 +117,27 @@ class ApiClient {
       this.setStoredUser(data.user);
       return data;
     } catch {
-      this.clearToken();
+      // Network error (offline, DNS, etc.) — keep tokens, don't logout
       return null;
     }
   }
 
+  /**
+   * Coalesce concurrent refresh calls into a single request
+   */
+  private async _tryRefresh(): Promise<AuthTokens | null> {
+    if (!this._refreshPromise) {
+      this._refreshPromise = this.refreshTokens().finally(() => {
+        this._refreshPromise = null;
+      });
+    }
+    return this._refreshPromise;
+  }
+
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    _isRetry = false,
   ): Promise<T> {
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -134,6 +152,14 @@ class ApiClient {
       ...options,
       headers,
     });
+
+    // On 401, attempt silent token refresh and retry once
+    if (response.status === 401 && !_isRetry && this.refreshToken) {
+      const result = await this._tryRefresh();
+      if (result) {
+        return this.request<T>(endpoint, options, true);
+      }
+    }
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Request failed' }));

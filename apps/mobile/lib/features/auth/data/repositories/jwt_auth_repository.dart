@@ -28,6 +28,11 @@ class JwtAuthRepository implements AuthRepository {
     required UserApiRepository userApiRepository,
   }) : _apiClient = apiClient,
        _userApiRepository = userApiRepository {
+    // Wire session expiry callback — auto sign-out when token refresh fails
+    _apiClient.onSessionExpired = () {
+      _cachedUser = null;
+      _authStateController.add(null);
+    };
     // Check initial auth state
     _checkInitialAuthState();
   }
@@ -84,6 +89,16 @@ class JwtAuthRepository implements AuthRepository {
   @override
   AppUser? get currentUser => _cachedUser;
 
+  // Email fallback info from last sendOtp response
+  bool _hasEmail = false;
+  String? _emailHint;
+
+  /// Whether the user has an email on file (from last sendOtp response)
+  bool get hasEmail => _hasEmail;
+
+  /// Masked email hint (from last sendOtp response)
+  String? get emailHint => _emailHint;
+
   @override
   Future<String> sendOtp(String phoneNumber) async {
     try {
@@ -95,10 +110,14 @@ class JwtAuthRepository implements AuthRepository {
         formattedPhone = '+256$formattedPhone';
       }
 
-      await _apiClient.postWithoutAuth<Map<String, dynamic>>(
+      final response = await _apiClient.postWithoutAuth<Map<String, dynamic>>(
         '/auth/send-otp',
         data: {'phone': formattedPhone},
       );
+
+      // Capture email fallback info
+      _hasEmail = response['hasEmail'] == true;
+      _emailHint = response['emailHint'] as String?;
 
       // Store phone number for verification step
       _pendingPhoneNumber = formattedPhone;
@@ -167,12 +186,14 @@ class JwtAuthRepository implements AuthRepository {
     required String displayName,
     required String location,
     String? photoUrl,
+    String? email,
   }) async {
     try {
       _cachedUser = await _userApiRepository.completeOnboarding(
         displayName: displayName,
         location: location,
         photoUrl: photoUrl,
+        email: email,
       );
       _authStateController.add(_cachedUser);
     } catch (e) {
@@ -180,6 +201,28 @@ class JwtAuthRepository implements AuthRepository {
         throw AuthException(message: e.message, code: e.code);
       }
       throw AuthException(message: 'Failed to update profile: $e');
+    }
+  }
+
+  @override
+  Future<void> sendOtpViaEmail(String phoneNumber) async {
+    try {
+      String formattedPhone = phoneNumber.trim();
+      if (formattedPhone.startsWith('0')) {
+        formattedPhone = '+256${formattedPhone.substring(1)}';
+      } else if (!formattedPhone.startsWith('+')) {
+        formattedPhone = '+256$formattedPhone';
+      }
+
+      await _apiClient.postWithoutAuth<Map<String, dynamic>>(
+        '/auth/send-otp-email',
+        data: {'phone': formattedPhone},
+      );
+    } catch (e) {
+      if (e is ApiException) {
+        throw AuthException(message: e.message, code: e.code);
+      }
+      throw AuthException(message: 'Failed to send OTP via email: $e');
     }
   }
 

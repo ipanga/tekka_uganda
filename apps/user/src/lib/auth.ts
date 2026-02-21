@@ -33,6 +33,12 @@ class AuthManager {
   constructor() {
     // Try to initialize on construction (client-side only)
     this.ensureInitialized();
+
+    // Wire up silent 401 refresh in the API client
+    api.setTokenRefreshHandler(async () => {
+      const result = await this.refreshTokens();
+      return result?.accessToken ?? null;
+    });
   }
 
   /**
@@ -55,10 +61,17 @@ class AuthManager {
     }
   }
 
+  // Email fallback info from last sendOTP response
+  private _hasEmail: boolean = false;
+  private _emailHint: string | null = null;
+
+  get hasEmail(): boolean { return this._hasEmail; }
+  get emailHint(): string | null { return this._emailHint; }
+
   /**
    * Send OTP to phone number
    */
-  async sendOTP(phone: string): Promise<{ success: boolean; message: string }> {
+  async sendOTP(phone: string): Promise<{ success: boolean; message: string; hasEmail: boolean; emailHint: string | null }> {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'}/auth/send-otp`,
       {
@@ -71,6 +84,30 @@ class AuthManager {
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
       throw new Error(error.message || 'Failed to send OTP');
+    }
+
+    const data = await response.json();
+    this._hasEmail = data.hasEmail === true;
+    this._emailHint = data.emailHint ?? null;
+    return data;
+  }
+
+  /**
+   * Re-send OTP via email (fallback when SMS is unreliable)
+   */
+  async sendOtpViaEmail(phone: string): Promise<{ success: boolean; message: string }> {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'}/auth/send-otp-email`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      throw new Error(error.message || 'Failed to send OTP via email');
     }
 
     return response.json();
@@ -106,6 +143,7 @@ class AuthManager {
     displayName: string;
     location?: string;
     bio?: string;
+    email?: string;
   }): Promise<AuthUser> {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1'}/auth/complete-profile`,
@@ -149,7 +187,11 @@ class AuthManager {
       );
 
       if (!response.ok) {
-        this.clearTokens();
+        // Only clear tokens on definitive auth rejection (401/403)
+        // Network errors or 5xx should NOT wipe the session
+        if (response.status === 401 || response.status === 403) {
+          this.clearTokens();
+        }
         return null;
       }
 
@@ -157,7 +199,7 @@ class AuthManager {
       this.setTokens(data);
       return data;
     } catch {
-      this.clearTokens();
+      // Network error (offline, DNS, etc.) — keep tokens, don't logout
       return null;
     }
   }

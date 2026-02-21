@@ -22,11 +22,16 @@ export function useAuth() {
       if (api.isAuthenticated()) {
         const storedUser = api.getStoredUser();
         if (storedUser) {
-          // Validate the token by trying to refresh
+          // Show stored user immediately (prevents flash of login page)
+          setState({ user: storedUser, loading: false, error: null });
+          // Then try to refresh tokens in background
           const result = await api.refreshTokens();
           if (result) {
             setState({ user: result.user, loading: false, error: null });
-          } else {
+          }
+          // If refresh fails, keep storedUser — only logout on explicit 401/403
+          // (refreshTokens already handles clearing tokens on auth rejection)
+          if (!api.isAuthenticated()) {
             setState({ user: null, loading: false, error: null });
           }
         } else {

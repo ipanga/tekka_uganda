@@ -55,7 +55,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final verificationId = await _repository.sendOtp(phoneNumber);
-      state = state.copyWith(isLoading: false, verificationId: verificationId);
+
+      // Capture email fallback info from JWT repository
+      bool hasEmail = false;
+      String? emailHint;
+      if (_repository is JwtAuthRepository) {
+        hasEmail = (_repository as JwtAuthRepository).hasEmail;
+        emailHint = (_repository as JwtAuthRepository).emailHint;
+      }
+
+      state = state.copyWith(
+        isLoading: false,
+        verificationId: verificationId,
+        phoneNumber: phoneNumber,
+        hasEmail: hasEmail,
+        emailHint: emailHint,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+      rethrow;
+    }
+  }
+
+  /// Re-send OTP via email fallback
+  Future<void> sendOtpViaEmail() async {
+    final phone = state.phoneNumber;
+    if (phone == null) {
+      throw Exception('No phone number. Please request OTP first.');
+    }
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repository.sendOtpViaEmail(phone);
+      state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
       rethrow;
@@ -87,6 +118,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String displayName,
     required String location,
     String? photoUrl,
+    String? email,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -94,6 +126,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
         displayName: displayName,
         location: location,
         photoUrl: photoUrl,
+        email: email,
       );
       state = state.copyWith(isLoading: false);
     } catch (e) {
@@ -125,14 +158,34 @@ class AuthState {
   final bool isLoading;
   final String? error;
   final String? verificationId;
+  final String? phoneNumber;
+  final bool hasEmail;
+  final String? emailHint;
 
-  const AuthState({this.isLoading = false, this.error, this.verificationId});
+  const AuthState({
+    this.isLoading = false,
+    this.error,
+    this.verificationId,
+    this.phoneNumber,
+    this.hasEmail = false,
+    this.emailHint,
+  });
 
-  AuthState copyWith({bool? isLoading, String? error, String? verificationId}) {
+  AuthState copyWith({
+    bool? isLoading,
+    String? error,
+    String? verificationId,
+    String? phoneNumber,
+    bool? hasEmail,
+    String? emailHint,
+  }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
       error: error,
       verificationId: verificationId ?? this.verificationId,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      hasEmail: hasEmail ?? this.hasEmail,
+      emailHint: emailHint ?? this.emailHint,
     );
   }
 }

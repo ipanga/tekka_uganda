@@ -28,6 +28,8 @@ services:
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
       THINKXCLOUD_API_KEY: ${THINKXCLOUD_API_KEY}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      EMAIL_FROM: ${EMAIL_FROM:-Tekka <noreply@tekka.ug>}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:${USER_PORT:-3000},http://localhost:${ADMIN_PORT:-3001},http://localhost:8080}
     ports:
       - "${API_PORT:-4000}:${API_PORT:-4000}"

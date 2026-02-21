@@ -120,8 +120,9 @@ class EmailVerificationNotifier extends StateNotifier<EmailVerificationStatus> {
         email: response['email'] as String?,
       );
 
-      // Invalidate providers to refresh data
-      _ref.invalidate(currentUserProvider);
+      // Refresh user data from API so emailVerified status is up-to-date
+      final authRepository = _ref.read(authRepositoryProvider);
+      await authRepository.refreshCurrentUser();
 
       return true;
     } catch (e) {

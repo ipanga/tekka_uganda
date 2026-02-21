@@ -20,6 +20,7 @@ import { AdminModule } from './admin/admin.module';
 import { CategoriesModule } from './categories/categories.module';
 import { AttributesModule } from './attributes/attributes.module';
 import { LocationsModule } from './locations/locations.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   controllers: [AppController],
@@ -31,6 +32,7 @@ import { LocationsModule } from './locations/locations.module';
     }),
     ScheduleModule.forRoot(),
     PrismaModule,
+    EmailModule,
     AuthModule,
     UsersModule,
     ListingsModule,

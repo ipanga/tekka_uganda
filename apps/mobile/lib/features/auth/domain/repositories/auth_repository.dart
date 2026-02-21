@@ -24,13 +24,20 @@ abstract class AuthRepository {
     required String displayName,
     required String location,
     String? photoUrl,
+    String? email,
   });
+
+  /// Re-send the current OTP via email (fallback when SMS fails)
+  Future<void> sendOtpViaEmail(String phoneNumber);
 
   /// Sign out current user
   Future<void> signOut();
 
   /// Check if user has completed onboarding
   Future<bool> isOnboardingComplete();
+
+  /// Refresh current user data from the API
+  Future<AppUser?> refreshCurrentUser();
 
   /// Get user by ID (public profile)
   Future<AppUser?> getUserById(String userId);

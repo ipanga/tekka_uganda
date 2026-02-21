@@ -31,6 +31,7 @@ class CreateListingScreen extends ConsumerStatefulWidget {
 class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   final _titleController = TextEditingController();
   final _priceController = TextEditingController();
+  final _originalPriceController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _pageController = PageController();
 
@@ -91,6 +92,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       // Pre-fill text controllers
       _titleController.text = listing.title;
       _priceController.text = listing.price.toString();
+      if (listing.originalPrice != null) {
+        _originalPriceController.text = listing.originalPrice.toString();
+      }
       _descriptionController.text = listing.description;
 
       // Resolve category hierarchy from categories tree
@@ -163,6 +167,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   void dispose() {
     _titleController.dispose();
     _priceController.dispose();
+    _originalPriceController.dispose();
     _descriptionController.dispose();
     _pageController.dispose();
     super.dispose();
@@ -277,109 +282,119 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          // Progress indicator
-          _StepProgressIndicator(
-            currentStep: _currentStep,
-            totalSteps: _totalSteps,
-          ),
-
-          // Step content
-          Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                _PhotoStep(
-                  localImages: createState.selectedImages,
-                  existingImageUrls: createState.uploadedImageUrls,
-                  onAddFromGallery: notifier.pickImages,
-                  onTakePhoto: notifier.takePhoto,
-                  onRemoveLocal: notifier.removeImage,
-                  onRemoveExisting: notifier.removeUploadedImage,
-                ),
-                _CategoryStep(
-                  categories: categoryState.mainCategories,
-                  selectedMainCategory: _selectedMainCategory,
-                  selectedSubCategory: _selectedSubCategory,
-                  selectedProductType: _selectedProductType,
-                  onMainCategorySelected: (cat) {
-                    setState(() {
-                      _selectedMainCategory = cat;
-                      _selectedSubCategory = null;
-                      _selectedProductType = null;
-                    });
-                  },
-                  onSubCategorySelected: (cat) {
-                    setState(() {
-                      _selectedSubCategory = cat;
-                      _selectedProductType = null;
-                    });
-                    // If sub-category has no children, use it as final selection
-                    if (cat.activeChildren.isEmpty) {
-                      notifier.updateCategory(cat.id, cat.name);
-                    }
-                  },
-                  onProductTypeSelected: (cat) {
-                    setState(() {
-                      _selectedProductType = cat;
-                    });
-                    // Update the provider with final category
-                    notifier.updateCategory(cat.id, cat.name);
-                  },
-                ),
-                _DetailsStep(
-                  categoryId: createState.categoryId,
-                  titleController: _titleController,
-                  descriptionController: _descriptionController,
-                  condition: createState.condition,
-                  attributes: createState.attributes,
-                  onTitleChanged: notifier.updateTitle,
-                  onDescriptionChanged: notifier.updateDescription,
-                  onConditionChanged: notifier.updateCondition,
-                  onAttributeChanged: notifier.updateAttribute,
-                ),
-                _PricingLocationStep(
-                  priceController: _priceController,
-                  cities: categoryState.activeCities,
-                  selectedCity: _selectedCity,
-                  selectedDivision: _selectedDivision,
-                  onPriceChanged: (value) {
-                    final price = int.tryParse(value);
-                    if (price != null) notifier.updatePrice(price);
-                  },
-                  onCitySelected: (city) {
-                    setState(() {
-                      _selectedCity = city;
-                      _selectedDivision = null;
-                    });
-                    notifier.updateLocation(
-                      cityId: city.id,
-                      cityName: city.name,
-                    );
-                  },
-                  onDivisionSelected: (division) {
-                    setState(() => _selectedDivision = division);
-                    if (_selectedCity != null) {
-                      notifier.updateLocation(
-                        cityId: _selectedCity!.id,
-                        cityName: _selectedCity!.name,
-                        divisionId: division?.id,
-                        divisionName: division?.name,
-                      );
-                    }
-                  },
-                ),
-                _ReviewStep(
-                  state: createState,
-                  categoryPath: _getCategoryPath(),
-                  isEditMode: isEditMode,
-                ),
-              ],
+      body: GestureDetector(
+        onTap: () => FocusScope.of(context).unfocus(),
+        behavior: HitTestBehavior.translucent,
+        child: Column(
+          children: [
+            // Progress indicator
+            _StepProgressIndicator(
+              currentStep: _currentStep,
+              totalSteps: _totalSteps,
             ),
-          ),
-        ],
+
+            // Step content
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _PhotoStep(
+                    localImages: createState.selectedImages,
+                    existingImageUrls: createState.uploadedImageUrls,
+                    onAddFromGallery: notifier.pickImages,
+                    onTakePhoto: notifier.takePhoto,
+                    onRemoveLocal: notifier.removeImage,
+                    onRemoveExisting: notifier.removeUploadedImage,
+                  ),
+                  _CategoryStep(
+                    categories: categoryState.mainCategories,
+                    selectedMainCategory: _selectedMainCategory,
+                    selectedSubCategory: _selectedSubCategory,
+                    selectedProductType: _selectedProductType,
+                    onMainCategorySelected: (cat) {
+                      setState(() {
+                        _selectedMainCategory = cat;
+                        _selectedSubCategory = null;
+                        _selectedProductType = null;
+                      });
+                    },
+                    onSubCategorySelected: (cat) {
+                      setState(() {
+                        _selectedSubCategory = cat;
+                        _selectedProductType = null;
+                      });
+                      // If sub-category has no children, use it as final selection
+                      if (cat.activeChildren.isEmpty) {
+                        notifier.updateCategory(cat.id, cat.name);
+                      }
+                    },
+                    onProductTypeSelected: (cat) {
+                      setState(() {
+                        _selectedProductType = cat;
+                      });
+                      // Update the provider with final category
+                      notifier.updateCategory(cat.id, cat.name);
+                    },
+                  ),
+                  _DetailsStep(
+                    categoryId: createState.categoryId,
+                    titleController: _titleController,
+                    descriptionController: _descriptionController,
+                    condition: createState.condition,
+                    attributes: createState.attributes,
+                    onTitleChanged: notifier.updateTitle,
+                    onDescriptionChanged: notifier.updateDescription,
+                    onConditionChanged: notifier.updateCondition,
+                    onAttributeChanged: notifier.updateAttribute,
+                  ),
+                  _PricingLocationStep(
+                    priceController: _priceController,
+                    originalPriceController: _originalPriceController,
+                    currentPrice: createState.price,
+                    cities: categoryState.activeCities,
+                    selectedCity: _selectedCity,
+                    selectedDivision: _selectedDivision,
+                    onPriceChanged: (value) {
+                      final price = int.tryParse(value);
+                      if (price != null) notifier.updatePrice(price);
+                    },
+                    onOriginalPriceChanged: (value) {
+                      final price = int.tryParse(value);
+                      notifier.updateOriginalPrice(price);
+                    },
+                    onCitySelected: (city) {
+                      setState(() {
+                        _selectedCity = city;
+                        _selectedDivision = null;
+                      });
+                      notifier.updateLocation(
+                        cityId: city.id,
+                        cityName: city.name,
+                      );
+                    },
+                    onDivisionSelected: (division) {
+                      setState(() => _selectedDivision = division);
+                      if (_selectedCity != null) {
+                        notifier.updateLocation(
+                          cityId: _selectedCity!.id,
+                          cityName: _selectedCity!.name,
+                          divisionId: division?.id,
+                          divisionName: division?.name,
+                        );
+                      }
+                    },
+                  ),
+                  _ReviewStep(
+                    state: createState,
+                    categoryPath: _getCategoryPath(),
+                    isEditMode: isEditMode,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
       bottomNavigationBar: _buildBottomBar(createState, notifier),
     );
@@ -1446,19 +1461,25 @@ class _AttributeField extends StatelessWidget {
 class _PricingLocationStep extends StatelessWidget {
   const _PricingLocationStep({
     required this.priceController,
+    required this.originalPriceController,
+    required this.currentPrice,
     required this.cities,
     required this.selectedCity,
     required this.selectedDivision,
     required this.onPriceChanged,
+    required this.onOriginalPriceChanged,
     required this.onCitySelected,
     required this.onDivisionSelected,
   });
 
   final TextEditingController priceController;
+  final TextEditingController originalPriceController;
+  final int? currentPrice;
   final List<City> cities;
   final City? selectedCity;
   final Division? selectedDivision;
   final void Function(String) onPriceChanged;
+  final void Function(String) onOriginalPriceChanged;
   final void Function(City) onCitySelected;
   final void Function(Division?) onDivisionSelected;
 
@@ -1480,8 +1501,67 @@ class _PricingLocationStep extends StatelessWidget {
               prefixText: 'UGX ',
             ),
             keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             onChanged: onPriceChanged,
+          ),
+
+          const SizedBox(height: AppSpacing.space4),
+
+          // Original Price (optional)
+          TextFormField(
+            controller: originalPriceController,
+            decoration: const InputDecoration(
+              labelText: 'Original Price (optional)',
+              hintText: 'e.g., 80000',
+              prefixText: 'UGX ',
+              helperText: 'Show buyers the value they\'re getting',
+            ),
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            onChanged: onOriginalPriceChanged,
+          ),
+
+          // Discount preview
+          Builder(
+            builder: (context) {
+              final originalPrice =
+                  int.tryParse(originalPriceController.text) ?? 0;
+              final price = currentPrice ?? 0;
+              if (originalPrice > 0 && price > 0 && originalPrice > price) {
+                final discount = ((originalPrice - price) / originalPrice * 100)
+                    .round();
+                return Padding(
+                  padding: const EdgeInsets.only(top: AppSpacing.space3),
+                  child: Container(
+                    padding: AppSpacing.cardPadding,
+                    decoration: BoxDecoration(
+                      color: AppColors.successContainer,
+                      borderRadius: AppSpacing.cardRadius,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.local_offer_outlined,
+                          size: 20,
+                          color: AppColors.success,
+                        ),
+                        const SizedBox(width: AppSpacing.space2),
+                        Text(
+                          '$discount% discount — buyers love a good deal!',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.success,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
 
           const SizedBox(height: AppSpacing.space6),
@@ -1642,6 +1722,12 @@ class _ReviewStep extends StatelessWidget {
                 children: [
                   _ReviewRow(label: 'Title', value: state.title ?? '-'),
                   _ReviewRow(label: 'Price', value: 'UGX ${state.price ?? 0}'),
+                  if (state.originalPrice != null &&
+                      state.originalPrice! > (state.price ?? 0))
+                    _ReviewRow(
+                      label: 'Original Price',
+                      value: 'UGX ${state.originalPrice}',
+                    ),
                   _ReviewRow(
                     label: 'Category',
                     value: categoryPath.isNotEmpty ? categoryPath : '-',

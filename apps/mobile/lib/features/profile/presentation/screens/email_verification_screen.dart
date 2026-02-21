@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../../auth/application/auth_provider.dart';
 import '../../application/email_verification_provider.dart';
 
 /// Screen for adding and verifying email address
@@ -29,9 +30,14 @@ class _EmailVerificationScreenState
   @override
   void initState() {
     super.initState();
-    // Reset state when screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Reset state when screen opens
       ref.read(emailVerificationProvider.notifier).reset();
+      // Pre-fill email from user profile
+      final user = ref.read(currentUserProvider);
+      if (user?.email != null && user!.email!.isNotEmpty) {
+        _emailController.text = user.email!;
+      }
     });
   }
 

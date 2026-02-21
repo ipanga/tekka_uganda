@@ -249,7 +249,7 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
-  /// Get current user from API (force refresh)
+  @override
   Future<AppUser?> refreshCurrentUser() async {
     try {
       _cachedApiUser = await _userApiRepository.getMe();

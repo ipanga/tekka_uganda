@@ -48,10 +48,10 @@ export function Header() {
           api.getUnreadNotificationCount(),
           api.getUnreadChatCount(),
         ]);
-        setNotificationCount(notifCount.count);
-        // Backend returns { unreadCount } but API type expects { count }
+        const notifResponse = notifCount as { count?: number; unreadCount?: number };
+        setNotificationCount(notifResponse?.count ?? notifResponse?.unreadCount ?? 0);
         const chatResponse = chatCountData as { unreadCount?: number; count?: number };
-        setChatCount(chatResponse.unreadCount ?? chatResponse.count ?? 0);
+        setChatCount(chatResponse?.unreadCount ?? chatResponse?.count ?? 0);
       } catch (error) {
         console.error('Error loading counts:', error);
         // If we get an auth error, clear state

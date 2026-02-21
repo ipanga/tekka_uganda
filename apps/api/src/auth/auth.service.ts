@@ -6,6 +6,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { OtpService } from './otp.service';
+import { EmailService } from '../email/email.service';
 import { User } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
@@ -27,6 +28,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private otpService: OtpService,
+    private emailService: EmailService,
   ) {}
 
   /**
@@ -48,10 +50,26 @@ export class AuthService {
   }
 
   /**
+   * Mask an email address for display (e.g. "john@gmail.com" → "j***@gmail.com")
+   */
+  private maskEmail(email: string): string {
+    const [local, domain] = email.split('@');
+    if (!domain) return '***';
+    const visible = local.charAt(0);
+    return `${visible}***@${domain}`;
+  }
+
+  /**
    * Send OTP to phone number
    * Uses WhatsApp as primary channel, SMS as fallback
    */
-  async sendOTP(phone: string): Promise<{ success: boolean; message: string; channel?: string }> {
+  async sendOTP(phone: string): Promise<{
+    success: boolean;
+    message: string;
+    channel?: string;
+    hasEmail: boolean;
+    emailHint: string | null;
+  }> {
     const formattedPhone = this.formatPhoneNumber(phone);
 
     // Validate phone number format
@@ -61,15 +79,71 @@ export class AuthService {
 
     const result = await this.otpService.sendOTP(formattedPhone);
 
-    if (result.success) {
-      return {
-        success: true,
-        message: result.message || 'Verification code sent successfully',
-        channel: result.channel,
-      };
+    if (!result.success) {
+      throw new BadRequestException('Failed to send verification code');
     }
 
-    throw new BadRequestException('Failed to send verification code');
+    // Check if this phone has an associated email (for email fallback)
+    let hasEmail = false;
+    let emailHint: string | null = null;
+
+    const existingUser = await this.prisma.user.findUnique({
+      where: { phoneNumber: formattedPhone },
+      select: { email: true, isEmailVerified: true },
+    });
+
+    if (existingUser?.email) {
+      hasEmail = true;
+      emailHint = this.maskEmail(existingUser.email);
+    }
+
+    return {
+      success: true,
+      message: result.message || 'Verification code sent successfully',
+      channel: result.channel,
+      hasEmail,
+      emailHint,
+    };
+  }
+
+  /**
+   * Re-send the existing OTP code via email (fallback when SMS is unreliable)
+   */
+  async sendOtpViaEmail(
+    phone: string,
+  ): Promise<{ success: boolean; message: string; channel: string }> {
+    const formattedPhone = this.formatPhoneNumber(phone);
+
+    // Get the stored OTP (must have been sent via SMS first)
+    const code = this.otpService.getStoredCode(formattedPhone);
+    if (!code) {
+      throw new BadRequestException(
+        'No active verification code. Please request a new code via SMS first.',
+      );
+    }
+
+    // Look up user's email
+    const user = await this.prisma.user.findUnique({
+      where: { phoneNumber: formattedPhone },
+      select: { email: true },
+    });
+
+    if (!user?.email) {
+      throw new BadRequestException(
+        'No email address on file. Please add an email to your profile first.',
+      );
+    }
+
+    const sent = await this.emailService.sendOtp(user.email, code);
+    if (!sent) {
+      throw new BadRequestException('Failed to send email. Please try again.');
+    }
+
+    return {
+      success: true,
+      message: 'Verification code sent to your email',
+      channel: 'email',
+    };
   }
 
   /**
@@ -128,6 +202,7 @@ export class AuthService {
       displayName: string;
       location?: string;
       bio?: string;
+      email?: string;
     },
   ): Promise<User> {
     const user = await this.prisma.user.update({
@@ -136,6 +211,7 @@ export class AuthService {
         displayName: data.displayName,
         location: data.location,
         bio: data.bio,
+        ...(data.email && { email: data.email.toLowerCase() }),
         isOnboardingComplete: true,
       },
     });
@@ -183,7 +259,7 @@ export class AuthService {
 
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(payload, { expiresIn: '1h' }),
-      this.jwtService.signAsync(payload, { expiresIn: '7d' }),
+      this.jwtService.signAsync(payload, { expiresIn: '30d' }),
     ]);
 
     return { accessToken, refreshToken };

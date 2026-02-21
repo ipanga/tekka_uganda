@@ -105,8 +105,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final cities = categoryState.activeCities;
 
     // Initialize controllers from user data (after cities are loaded)
-    if (cities.isNotEmpty) {
-      _initFromUser();
+    // Deferred to avoid modifying provider state during build
+    if (cities.isNotEmpty && !_isInitialized) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _initFromUser();
+      });
     }
 
     // Listen for save success

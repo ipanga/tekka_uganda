@@ -1,11 +1,14 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
+import { EmailService } from '../email/email.service';
 import { User } from '@prisma/client';
 import {
   UpdateUserDto,
@@ -15,7 +18,17 @@ import {
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(UsersService.name);
+  private readonly isDevelopment: boolean;
+
+  constructor(
+    private prisma: PrismaService,
+    private emailService: EmailService,
+    private configService: ConfigService,
+  ) {
+    this.isDevelopment =
+      this.configService.get<string>('NODE_ENV') === 'development';
+  }
 
   async findById(id: string): Promise<User> {
     const user = await this.prisma.user.findUnique({
@@ -745,11 +758,40 @@ export class UsersService {
       },
     });
 
-    // In production, send email via service like SendGrid
+    // Send verification email via Resend
+    const sent = await this.emailService.sendEmailVerification(email, code);
+
+    if (!sent) {
+      // Email delivery failed
+      if (this.isDevelopment) {
+        // In dev mode, log the code so developers can still test the flow
+        this.logger.warn(
+          `[DEV] Email delivery failed. Verification code for ${email}: ${code}`,
+        );
+        return {
+          sent: true,
+          email,
+          expiresAt: expiresAt.toISOString(),
+          channel: 'mock' as const,
+          message:
+            'Email delivery failed — code logged to console (dev mode)',
+        };
+      }
+
+      // In production, clean up and throw
+      await this.prisma.emailVerification.delete({ where: { userId } });
+      throw new BadRequestException(
+        'Failed to send verification email. Please try again later.',
+      );
+    }
+
+    this.logger.log(`Verification email sent to ${email} for user ${userId}`);
+
     return {
       sent: true,
       email,
       expiresAt: expiresAt.toISOString(),
+      channel: 'email' as const,
     };
   }
 

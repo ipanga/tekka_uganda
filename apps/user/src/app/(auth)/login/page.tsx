@@ -14,7 +14,7 @@ export default function LoginPage() {
   const [step, setStep] = useState<'phone' | 'otp'>('phone');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { sendOTP, verifyOTP, user, loading: authLoading } = useAuth();
+  const { sendOTP, sendOtpViaEmail, verifyOTP, user, loading: authLoading, hasEmail, emailHint } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -197,6 +197,25 @@ export default function LoginPage() {
               >
                 Verify
               </Button>
+
+              {hasEmail && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await sendOtpViaEmail();
+                      setError('');
+                      alert(emailHint ? `Code sent to ${emailHint}` : 'Code sent to your email');
+                    } catch (err: unknown) {
+                      const message = err instanceof Error ? err.message : 'Failed to send code via email';
+                      setError(message);
+                    }
+                  }}
+                  className="w-full text-center text-sm text-primary-500 hover:text-primary-600"
+                >
+                  {emailHint ? `Send code to ${emailHint}` : 'Send code via email instead'}
+                </button>
+              )}
 
               <button
                 type="button"

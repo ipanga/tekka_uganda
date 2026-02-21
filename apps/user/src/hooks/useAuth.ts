@@ -54,12 +54,17 @@ export function useAuth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const [hasEmail, setHasEmail] = useState(false);
+  const [emailHint, setEmailHint] = useState<string | null>(null);
+
   const sendOTP = useCallback(async (phone: string) => {
     setState((prev) => ({ ...prev, loading: true, error: null }));
     try {
       // Store phone number for later verification
       setPhoneNumber(phone);
-      await authManager.sendOTP(phone);
+      const result = await authManager.sendOTP(phone);
+      setHasEmail(result.hasEmail);
+      setEmailHint(result.emailHint);
       setState((prev) => ({ ...prev, loading: false }));
       return true;
     } catch (error: unknown) {
@@ -68,6 +73,21 @@ export function useAuth() {
       throw error;
     }
   }, []);
+
+  const sendOtpViaEmail = useCallback(async () => {
+    if (!phoneNumber) {
+      throw new Error('Phone number not set. Please send OTP first.');
+    }
+    setState((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      await authManager.sendOtpViaEmail(phoneNumber);
+      setState((prev) => ({ ...prev, loading: false }));
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Failed to send code via email';
+      setState((prev) => ({ ...prev, loading: false, error: message }));
+      throw error;
+    }
+  }, [phoneNumber]);
 
   const verifyOTP = useCallback(
     async (code: string) => {
@@ -91,7 +111,7 @@ export function useAuth() {
   );
 
   const completeProfile = useCallback(
-    async (data: { displayName: string; location?: string; bio?: string }) => {
+    async (data: { displayName: string; location?: string; bio?: string; email?: string }) => {
       setState((prev) => ({ ...prev, loading: true, error: null }));
       try {
         const user = await authManager.completeProfile(data);
@@ -134,7 +154,10 @@ export function useAuth() {
     loading: state.loading,
     error: state.error,
     isAuthenticated: !!state.user,
+    hasEmail,
+    emailHint,
     sendOTP,
+    sendOtpViaEmail,
     verifyOTP,
     completeProfile,
     signOut,

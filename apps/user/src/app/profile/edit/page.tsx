@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { ArrowLeftIcon, CameraIcon } from '@heroicons/react/24/outline';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { ArrowLeftIcon, CameraIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -257,14 +258,40 @@ export default function EditProfilePage() {
                   />
                 )}
 
-                <Input
-                  label="Email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  helperText="Used for notifications and account recovery"
-                />
+                {/* Email with verification status */}
+                <div>
+                  <Input
+                    label="Email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    helperText="Used for notifications and account recovery"
+                  />
+                  {user.email && (
+                    <div className="mt-2">
+                      {user.isEmailVerified ? (
+                        <span className="inline-flex items-center gap-1 text-sm text-green-600">
+                          <CheckCircleIcon className="w-4 h-4" />
+                          Verified
+                        </span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <span className="inline-flex items-center gap-1 text-sm text-amber-600">
+                            <ExclamationTriangleIcon className="w-4 h-4" />
+                            Not verified
+                          </span>
+                          <Link
+                            href="/profile/verify-email"
+                            className="text-sm font-medium text-primary-500 hover:text-primary-600"
+                          >
+                            Verify now
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {/* Phone Number (Read-only) */}
                 <div>

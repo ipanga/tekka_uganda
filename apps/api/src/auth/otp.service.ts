@@ -51,6 +51,19 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('OTP Service initialized with ThinkX Cloud provider.');
   }
 
+  /**
+   * Check if a phone number is the app-store review test account.
+   * Controlled entirely via environment variables — returns false when disabled.
+   */
+  private isReviewAccount(phoneNumber: string): boolean {
+    const enabled =
+      this.configService.get<string>('ALLOW_REVIEW_STATIC_OTP') === 'true';
+    if (!enabled) return false;
+
+    const reviewPhone = this.configService.get<string>('REVIEW_STATIC_PHONE');
+    return phoneNumber === reviewPhone;
+  }
+
   onModuleInit() {
     // Start periodic cleanup of expired OTPs
     this.cleanupInterval = setInterval(
@@ -115,6 +128,25 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
    * @param phoneNumber - Phone number in E.164 format (+256XXXXXXXXX)
    */
   async sendOTP(phoneNumber: string): Promise<OtpSendResult> {
+    // App-store review account: store static OTP, skip SMS entirely
+    if (this.isReviewAccount(phoneNumber)) {
+      const reviewCode =
+        this.configService.get<string>('REVIEW_STATIC_OTP') || '123456';
+      this.otpStore.set(phoneNumber, {
+        code: reviewCode,
+        expiresAt: new Date(Date.now() + this.OTP_EXPIRY_MINUTES * 60 * 1000),
+        attempts: 0,
+      });
+      this.logger.warn(
+        `[REVIEW LOGIN] Static OTP stored for review account ${phoneNumber}`,
+      );
+      return {
+        success: true,
+        channel: 'mock',
+        message: 'Verification code sent via SMS',
+      };
+    }
+
     // Check rate limiting
     this.checkRateLimit(phoneNumber);
 
@@ -150,9 +182,7 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
         );
 
         if (smsResult.success) {
-          this.logger.log(
-            `SMS delivery successful to ${phoneNumber}`,
-          );
+          this.logger.log(`SMS delivery successful to ${phoneNumber}`);
 
           return {
             success: true,
@@ -199,7 +229,8 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
         this.otpStore.delete(phoneNumber);
 
         throw new BadRequestException(
-          error?.message || 'Failed to send verification code. Please try again.',
+          error?.message ||
+            'Failed to send verification code. Please try again.',
         );
       }
     }
@@ -230,6 +261,23 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
     const storedOtp = this.otpStore.get(phoneNumber);
     const isDevelopment =
       this.configService.get<string>('NODE_ENV') === 'development';
+
+    // App-store review account: accept static OTP (survives container restarts)
+    if (this.isReviewAccount(phoneNumber)) {
+      const reviewCode =
+        this.configService.get<string>('REVIEW_STATIC_OTP') || '123456';
+      if (code === reviewCode) {
+        this.logger.warn(
+          `[REVIEW LOGIN] Static OTP verified for review account ${phoneNumber}`,
+        );
+        this.otpStore.delete(phoneNumber);
+        return { valid: true };
+      }
+      this.logger.warn(
+        `[REVIEW LOGIN] Invalid code attempt for review account ${phoneNumber}`,
+      );
+      return { valid: false };
+    }
 
     // Development/testing mode - always accept "123456" as valid code
     if (isDevelopment && code === '123456') {
@@ -271,6 +319,20 @@ export class OtpService implements OnModuleInit, OnModuleDestroy {
       `Invalid OTP for ${phoneNumber}. Attempt ${storedOtp.attempts}/${this.MAX_VERIFICATION_ATTEMPTS}`,
     );
     return { valid: false };
+  }
+
+  /**
+   * Retrieve the stored OTP code for a phone number (if not expired)
+   * Used by the email fallback to re-send the same code via email
+   */
+  getStoredCode(phoneNumber: string): string | null {
+    const stored = this.otpStore.get(phoneNumber);
+    if (!stored) return null;
+    if (new Date() > stored.expiresAt) {
+      this.otpStore.delete(phoneNumber);
+      return null;
+    }
+    return stored.code;
   }
 
   /**

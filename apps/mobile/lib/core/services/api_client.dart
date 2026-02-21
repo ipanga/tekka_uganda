@@ -9,10 +9,20 @@ class ApiClient {
   late final Dio _dio;
   final FlutterSecureStorage _storage;
 
+  /// Called when token refresh fails — signals that the session is expired
+  VoidCallback? onSessionExpired;
+
   static const String _tokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
 
-  ApiClient({FlutterSecureStorage? storage})
+  /// Auth paths that should NOT trigger 401 auto-retry
+  static const _authPaths = [
+    '/auth/send-otp',
+    '/auth/verify-otp',
+    '/auth/refresh',
+  ];
+
+  ApiClient({FlutterSecureStorage? storage, this.onSessionExpired})
     : _storage = storage ?? const FlutterSecureStorage() {
     _dio = Dio(
       BaseOptions(
@@ -27,7 +37,11 @@ class ApiClient {
     );
 
     _dio.interceptors.add(
-      InterceptorsWrapper(onRequest: _onRequest, onResponse: _onResponse),
+      QueuedInterceptorsWrapper(
+        onRequest: _onRequest,
+        onResponse: _onResponse,
+        onError: _onError,
+      ),
     );
   }
 
@@ -49,6 +63,76 @@ class ApiClient {
 
   void _onResponse(Response response, ResponseInterceptorHandler handler) {
     handler.next(response);
+  }
+
+  Future<void> _onError(
+    DioException error,
+    ErrorInterceptorHandler handler,
+  ) async {
+    // Only handle 401 for non-auth endpoints
+    if (error.response?.statusCode == 401 &&
+        !_authPaths.any((p) => error.requestOptions.path.contains(p))) {
+      final refreshed = await _tryRefreshAndRetry(error, handler);
+      if (refreshed) return;
+    }
+    handler.next(error);
+  }
+
+  Future<bool> _tryRefreshAndRetry(
+    DioException error,
+    ErrorInterceptorHandler handler,
+  ) async {
+    try {
+      final refreshToken = await _storage.read(key: _refreshTokenKey);
+      if (refreshToken == null) {
+        _handleSessionExpired();
+        return false;
+      }
+
+      // Use a separate Dio instance to avoid interceptor recursion
+      final refreshDio = Dio(
+        BaseOptions(
+          baseUrl: AppConfig.apiBaseUrl,
+          connectTimeout: AppConfig.apiTimeout,
+          receiveTimeout: AppConfig.apiTimeout,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
+
+      final response = await refreshDio.post<Map<String, dynamic>>(
+        '/auth/refresh',
+        data: {'refreshToken': refreshToken},
+      );
+
+      final data = response.data!;
+      final newAccessToken = data['accessToken'] as String;
+      final newRefreshToken = data['refreshToken'] as String;
+
+      await _storage.write(key: _tokenKey, value: newAccessToken);
+      await _storage.write(key: _refreshTokenKey, value: newRefreshToken);
+
+      // Retry the original request with the new token
+      final opts = error.requestOptions;
+      opts.headers['Authorization'] = 'Bearer $newAccessToken';
+
+      final retryResponse = await _dio.fetch(opts);
+      handler.resolve(retryResponse);
+      return true;
+    } catch (e) {
+      debugPrint('Token refresh failed: $e');
+      _handleSessionExpired();
+      return false;
+    }
+  }
+
+  void _handleSessionExpired() {
+    // Clear tokens
+    _storage.delete(key: _tokenKey);
+    _storage.delete(key: _refreshTokenKey);
+    onSessionExpired?.call();
   }
 
   /// Map DioException to ApiException
