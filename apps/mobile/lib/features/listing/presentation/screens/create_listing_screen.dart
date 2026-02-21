@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/providers/repository_providers.dart';
+import '../../../auth/application/auth_provider.dart';
 import '../../application/listing_provider.dart';
 import '../../application/category_provider.dart';
 import '../../domain/entities/listing.dart';
@@ -593,10 +594,18 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       try {
         final repo = ref.read(listingApiRepositoryProvider);
         await repo.publishDraft(listing.id);
+
+        ref.invalidate(listingProvider(listing.id));
+        final user = ref.read(currentUserProvider);
+        if (user != null) {
+          ref.invalidate(userListingsProvider(user.uid));
+        }
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Listing submitted for review!')),
           );
+          context.pop();
         }
       } catch (e) {
         if (mounted) {

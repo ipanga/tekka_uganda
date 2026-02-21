@@ -459,6 +459,7 @@ class _ListingCard extends ConsumerWidget {
         final repository = ref.read(listingApiRepositoryProvider);
         await repository.publishDraft(listing.id);
 
+        ref.invalidate(listingProvider(listing.id));
         final user = ref.read(currentUserProvider);
         ref.invalidate(userListingsProvider(user?.uid ?? ''));
 

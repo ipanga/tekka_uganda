@@ -685,6 +685,10 @@ $url
             final repository = ref.read(listingApiRepositoryProvider);
             await repository.publishDraft(listing.id);
             ref.invalidate(listingProvider(listing.id));
+            final user = ref.read(currentUserProvider);
+            if (user != null) {
+              ref.invalidate(userListingsProvider(user.uid));
+            }
 
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -729,6 +733,10 @@ $url
               .read(listingActionsProvider(listing.id).notifier)
               .markAsSold();
           ref.invalidate(listingProvider(listing.id));
+          final soldUser = ref.read(currentUserProvider);
+          if (soldUser != null) {
+            ref.invalidate(userListingsProvider(soldUser.uid));
+          }
 
           if (mounted) {
             // Show review prompt
@@ -761,6 +769,10 @@ $url
           await ref
               .read(listingActionsProvider(listing.id).notifier)
               .deleteListing();
+          final deleteUser = ref.read(currentUserProvider);
+          if (deleteUser != null) {
+            ref.invalidate(userListingsProvider(deleteUser.uid));
+          }
           if (mounted) context.pop();
         }
         break;
