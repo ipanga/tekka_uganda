@@ -85,7 +85,9 @@ class SettingsScreen extends ConsumerWidget {
                   trailing: Text(
                     'English',
                     style: AppTypography.bodyMedium.copyWith(
-                      color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.5,
+                      ),
                     ),
                   ),
                   enabled: false,
@@ -303,12 +305,12 @@ class _SettingsTile extends StatelessWidget {
                 ),
               )
             : trailing ??
-                (showChevron && onTap != null
-                    ? Icon(
-                        Icons.chevron_right,
-                        color: colorScheme.onSurfaceVariant,
-                      )
-                    : null),
+                  (showChevron && onTap != null
+                      ? Icon(
+                          Icons.chevron_right,
+                          color: colorScheme.onSurfaceVariant,
+                        )
+                      : null),
         onTap: enabled
             ? onTap
             : () {

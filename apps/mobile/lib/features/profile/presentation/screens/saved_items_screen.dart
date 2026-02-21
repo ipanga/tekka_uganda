@@ -47,9 +47,9 @@ class _SavedItemsScreenState extends ConsumerState<SavedItemsScreen> {
       // Rollback on failure
       if (mounted) {
         setState(() => _removedIds.remove(listingId));
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to remove item')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Failed to remove item')));
       }
     }
   }
@@ -94,7 +94,8 @@ class _SavedItemsScreenState extends ConsumerState<SavedItemsScreen> {
               .toList();
 
           // Clear removedIds once provider data reflects removals
-          if (_removedIds.isNotEmpty && visible.length == favorites.length - _removedIds.length) {
+          if (_removedIds.isNotEmpty &&
+              visible.length == favorites.length - _removedIds.length) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) setState(() => _removedIds.clear());
             });
@@ -167,10 +168,7 @@ class _SavedItemsScreenState extends ConsumerState<SavedItemsScreen> {
 }
 
 class _FavoriteCard extends StatelessWidget {
-  const _FavoriteCard({
-    required this.listing,
-    required this.onRemove,
-  });
+  const _FavoriteCard({required this.listing, required this.onRemove});
 
   final Listing listing;
   final VoidCallback onRemove;
