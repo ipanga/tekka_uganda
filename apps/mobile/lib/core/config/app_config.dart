@@ -36,8 +36,6 @@ class AppConfig {
     }
   }
 
-  static const String appVersion = '1.0.0';
-
   /// Timeouts
   static const Duration apiTimeout = Duration(seconds: 30);
   static const Duration imageUploadTimeout = Duration(minutes: 2);
