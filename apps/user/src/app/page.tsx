@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Header } from '@/components/layout/Header';
@@ -8,32 +8,88 @@ import { CategoryNav } from '@/components/layout/CategoryNav';
 import { Footer } from '@/components/layout/Footer';
 import { ListingCard } from '@/components/listings/ListingCard';
 import { api } from '@/lib/api';
-import type { Listing, PaginatedResponse } from '@/types';
+import type { Listing } from '@/types';
+
+const PAGE_SIZE = 24;
 
 function HomeContent() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const sentinelRef = useRef<HTMLDivElement>(null);
 
+  const fetchListings = useCallback(async (pageNum: number) => {
+    const params = new URLSearchParams();
+    params.append('status', 'ACTIVE');
+    params.append('limit', String(PAGE_SIZE));
+    params.append('page', String(pageNum));
+    params.append('sortBy', 'createdAt');
+    params.append('sortOrder', 'desc');
+
+    const response = await api.get<{ listings?: Listing[]; data?: Listing[]; pagination?: { page: number; totalPages: number } }>(`/listings?${params}`);
+    const newListings = response?.listings || response?.data || [];
+    const totalPages = response?.pagination?.totalPages ?? 1;
+
+    return { newListings, totalPages };
+  }, []);
+
+  // Initial load
   useEffect(() => {
-    async function loadListings() {
+    async function loadInitial() {
       try {
-        const params = new URLSearchParams();
-        params.append('status', 'ACTIVE');
-        params.append('limit', '24');
-        params.append('sortBy', 'createdAt');
-        params.append('sortOrder', 'desc');
-
-        const response = await api.get<PaginatedResponse<Listing> & { listings?: Listing[] }>(`/listings?${params}`);
-        setListings(response?.data || response?.listings || []);
+        const { newListings, totalPages } = await fetchListings(1);
+        setListings(newListings);
+        setHasMore(1 < totalPages);
+        setPage(1);
       } catch (error) {
         console.error('Failed to fetch listings:', error);
         setListings([]);
+        setHasMore(false);
       } finally {
         setLoading(false);
       }
     }
-    loadListings();
-  }, []);
+    loadInitial();
+  }, [fetchListings]);
+
+  // Infinite scroll via IntersectionObserver
+  useEffect(() => {
+    if (loading || !hasMore) return;
+
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !loadingMore) {
+          setLoadingMore(true);
+          const nextPage = page + 1;
+          fetchListings(nextPage)
+            .then(({ newListings, totalPages }) => {
+              setListings((prev) => {
+                const existingIds = new Set(prev.map((l) => l.id));
+                const deduped = newListings.filter((l) => !existingIds.has(l.id));
+                return [...prev, ...deduped];
+              });
+              setPage(nextPage);
+              setHasMore(nextPage < totalPages);
+            })
+            .catch((err) => {
+              console.error('Failed to load more listings:', err);
+            })
+            .finally(() => {
+              setLoadingMore(false);
+            });
+        }
+      },
+      { rootMargin: '200px' },
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loading, hasMore, loadingMore, page, fetchListings]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -103,11 +159,23 @@ function HomeContent() {
                 <p className="text-gray-500">No listings found</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {listings.map((listing) => (
-                  <ListingCard key={listing.id} listing={listing} />
-                ))}
-              </div>
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {listings.map((listing) => (
+                    <ListingCard key={listing.id} listing={listing} />
+                  ))}
+                </div>
+
+                {/* Infinite scroll sentinel + loading indicator */}
+                <div ref={sentinelRef} className="flex items-center justify-center py-8">
+                  {loadingMore && (
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary-500 border-t-transparent" />
+                  )}
+                  {!hasMore && listings.length > PAGE_SIZE && (
+                    <p className="text-sm text-gray-400">You&apos;ve seen all listings</p>
+                  )}
+                </div>
+              </>
             )}
           </div>
         </section>

@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../core/providers/repository_providers.dart';
+import '../../../auth/application/auth_provider.dart';
 import '../../application/listing_provider.dart';
 import '../../application/category_provider.dart';
 import '../../domain/entities/listing.dart';
@@ -593,10 +594,18 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       try {
         final repo = ref.read(listingApiRepositoryProvider);
         await repo.publishDraft(listing.id);
+
+        ref.invalidate(listingProvider(listing.id));
+        final user = ref.read(currentUserProvider);
+        if (user != null) {
+          ref.invalidate(userListingsProvider(user.uid));
+        }
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Listing submitted for review!')),
           );
+          context.pop();
         }
       } catch (e) {
         if (mounted) {
@@ -1180,6 +1189,7 @@ class _DetailsStep extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return SingleChildScrollView(
       padding: AppSpacing.screenPadding,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1190,6 +1200,7 @@ class _DetailsStep extends ConsumerWidget {
               labelText: 'Title *',
               hintText: 'e.g., Floral Summer Dress',
             ),
+            textInputAction: TextInputAction.next,
             maxLength: AppConfig.maxTitleLength,
             onChanged: onTitleChanged,
           ),
@@ -1223,9 +1234,12 @@ class _DetailsStep extends ConsumerWidget {
               hintText: 'Describe your item...',
               alignLabelWithHint: true,
             ),
-            maxLines: 4,
+            minLines: 4,
+            maxLines: 8,
+            textInputAction: TextInputAction.done,
             maxLength: AppConfig.maxDescriptionLength,
             onChanged: onDescriptionChanged,
+            onTapOutside: (_) => FocusScope.of(context).unfocus(),
           ),
 
           const SizedBox(height: AppSpacing.space6),
@@ -1487,6 +1501,7 @@ class _PricingLocationStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: AppSpacing.screenPadding,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

@@ -18,11 +18,9 @@ import '../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../features/profile/presentation/screens/my_listings_screen.dart';
 import '../features/profile/presentation/screens/saved_items_screen.dart';
 import '../features/profile/presentation/screens/settings_screen.dart';
-import '../features/profile/presentation/screens/purchase_history_screen.dart';
 import '../features/profile/presentation/screens/user_profile_screen.dart';
 import '../features/profile/presentation/screens/help_screen.dart';
 import '../features/profile/presentation/screens/safety_tips_screen.dart';
-import '../features/profile/presentation/screens/blocked_users_screen.dart';
 import '../features/profile/presentation/screens/seller_analytics_screen.dart';
 import '../features/profile/presentation/screens/privacy_settings_screen.dart';
 import '../features/profile/presentation/screens/security_settings_screen.dart';
@@ -39,7 +37,6 @@ import '../features/profile/presentation/screens/change_pin_screen.dart';
 import '../features/profile/presentation/screens/app_lock_settings_screen.dart';
 import '../features/profile/presentation/screens/data_export_screen.dart';
 import '../features/search/presentation/screens/saved_searches_screen.dart';
-import '../features/listing/presentation/screens/price_alerts_screen.dart';
 import '../features/chat/presentation/screens/quick_reply_templates_screen.dart';
 import '../features/notifications/presentation/screens/notifications_screen.dart';
 import '../features/notifications/presentation/screens/notification_detail_screen.dart';
@@ -87,10 +84,8 @@ abstract class AppRoutes {
   static const String myListings = '/profile/listings';
 
   static const String settings = '/profile/settings';
-  static const String purchaseHistory = '/profile/purchases';
   static const String help = '/profile/help';
   static const String safetyTips = '/profile/safety';
-  static const String blockedUsers = '/profile/blocked';
   static const String sellerAnalytics = '/profile/analytics';
   static const String notificationSettings = '/profile/notifications';
   static const String privacySettings = '/profile/privacy';
@@ -105,7 +100,6 @@ abstract class AppRoutes {
   static const String appLockSettings = '/profile/app-lock';
   static const String dataExport = '/profile/data-export';
   static const String savedSearches = '/profile/saved-searches';
-  static const String priceAlerts = '/profile/price-alerts';
   static const String quickReplyTemplates = '/chat/quick-replies';
   static const String termsOfService = '/legal/terms';
   static const String privacyPolicy = '/legal/privacy';
@@ -277,20 +271,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
-        path: AppRoutes.purchaseHistory,
-        builder: (context, state) => const PurchaseHistoryScreen(),
-      ),
-      GoRoute(
         path: AppRoutes.help,
         builder: (context, state) => const HelpScreen(),
       ),
       GoRoute(
         path: AppRoutes.safetyTips,
         builder: (context, state) => const SafetyTipsScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.blockedUsers,
-        builder: (context, state) => const BlockedUsersScreen(),
       ),
       GoRoute(
         path: AppRoutes.sellerAnalytics,
@@ -347,10 +333,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.savedSearches,
         builder: (context, state) => const SavedSearchesScreen(),
-      ),
-      GoRoute(
-        path: AppRoutes.priceAlerts,
-        builder: (context, state) => const PriceAlertsScreen(),
       ),
       GoRoute(
         path: AppRoutes.quickReplyTemplates,

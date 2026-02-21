@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/errors/app_exception.dart';
 import '../../../core/providers/repository_providers.dart';
 import '../../auth/application/auth_provider.dart';
 
@@ -86,11 +87,9 @@ class EmailVerificationNotifier extends StateNotifier<EmailVerificationStatus> {
         codeSentAt: DateTime.now(),
       );
     } catch (e) {
-      String errorMessage =
-          'Failed to send verification code. Please try again.';
-      if (e.toString().contains('already linked')) {
-        errorMessage = 'This email is already linked to another account';
-      }
+      final errorMessage = e is AppException
+          ? e.message
+          : 'Failed to send verification code. Please try again.';
       state = state.copyWith(
         state: EmailVerificationState.error,
         errorMessage: errorMessage,
@@ -126,12 +125,9 @@ class EmailVerificationNotifier extends StateNotifier<EmailVerificationStatus> {
 
       return true;
     } catch (e) {
-      String errorMessage = 'Verification failed. Please try again.';
-      if (e.toString().contains('expired')) {
-        errorMessage = 'Verification code expired. Please request a new code.';
-      } else if (e.toString().contains('Invalid')) {
-        errorMessage = 'Invalid verification code. Please try again.';
-      }
+      final errorMessage = e is AppException
+          ? e.message
+          : 'Verification failed. Please try again.';
       state = state.copyWith(
         state: EmailVerificationState.error,
         errorMessage: errorMessage,

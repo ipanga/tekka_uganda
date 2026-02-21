@@ -5,18 +5,57 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/theme.dart';
 import '../../../../router/app_router.dart';
-import '../../../auth/application/auth_provider.dart';
 import '../../../listing/application/listing_provider.dart';
 import '../../../listing/domain/entities/listing.dart';
 import '../../application/profile_provider.dart';
 
 /// Saved items / Favorites screen
-class SavedItemsScreen extends ConsumerWidget {
+class SavedItemsScreen extends ConsumerStatefulWidget {
   const SavedItemsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final user = ref.watch(currentUserProvider);
+  ConsumerState<SavedItemsScreen> createState() => _SavedItemsScreenState();
+}
+
+class _SavedItemsScreenState extends ConsumerState<SavedItemsScreen> {
+  /// IDs removed optimistically — filtered out of the displayed list instantly
+  final _removedIds = <String>{};
+
+  void _onItemRemoved(String listingId, WidgetRef ref) async {
+    // Optimistic: remove from UI immediately
+    setState(() => _removedIds.add(listingId));
+
+    try {
+      await ref
+          .read(listingActionsProvider(listingId).notifier)
+          .toggleFavorite();
+
+      // Sync providers in background
+      ref.invalidate(savedListingsProvider);
+      ref.invalidate(myFavoritesProvider);
+      ref.invalidate(isFavoritedProvider(listingId));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Removed from saved items'),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+    } catch (_) {
+      // Rollback on failure
+      if (mounted) {
+        setState(() => _removedIds.remove(listingId));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to remove item')),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final favoritesAsync = ref.watch(myFavoritesProvider);
 
     return Scaffold(
@@ -39,19 +78,36 @@ class SavedItemsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.space2),
               TextButton(
-                onPressed: () => ref.invalidate(myFavoritesProvider),
+                onPressed: () {
+                  _removedIds.clear();
+                  ref.invalidate(savedListingsProvider);
+                },
                 child: const Text('Retry'),
               ),
             ],
           ),
         ),
         data: (favorites) {
-          if (favorites.isEmpty) {
+          // Filter out optimistically removed items
+          final visible = favorites
+              .where((l) => !_removedIds.contains(l.id))
+              .toList();
+
+          // Clear removedIds once provider data reflects removals
+          if (_removedIds.isNotEmpty && visible.length == favorites.length - _removedIds.length) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) setState(() => _removedIds.clear());
+            });
+          }
+
+          if (visible.isEmpty) {
             return _buildEmptyState(context);
           }
 
           return RefreshIndicator(
             onRefresh: () async {
+              _removedIds.clear();
+              ref.invalidate(savedListingsProvider);
               ref.invalidate(myFavoritesProvider);
             },
             child: GridView.builder(
@@ -62,14 +118,11 @@ class SavedItemsScreen extends ConsumerWidget {
                 crossAxisSpacing: AppSpacing.space3,
                 mainAxisSpacing: AppSpacing.space3,
               ),
-              itemCount: favorites.length,
+              itemCount: visible.length,
               itemBuilder: (context, index) {
                 return _FavoriteCard(
-                  listing: favorites[index],
-                  userId: user?.uid ?? '',
-                  onRemoved: () {
-                    ref.invalidate(myFavoritesProvider);
-                  },
+                  listing: visible[index],
+                  onRemove: () => _onItemRemoved(visible[index].id, ref),
                 );
               },
             ),
@@ -113,19 +166,17 @@ class SavedItemsScreen extends ConsumerWidget {
   }
 }
 
-class _FavoriteCard extends ConsumerWidget {
+class _FavoriteCard extends StatelessWidget {
   const _FavoriteCard({
     required this.listing,
-    required this.userId,
-    required this.onRemoved,
+    required this.onRemove,
   });
 
   final Listing listing;
-  final String userId;
-  final VoidCallback onRemoved;
+  final VoidCallback onRemove;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
         context.push(AppRoutes.listingDetail.replaceFirst(':id', listing.id));
@@ -207,7 +258,7 @@ class _FavoriteCard extends ConsumerWidget {
                     top: AppSpacing.space2,
                     right: AppSpacing.space2,
                     child: GestureDetector(
-                      onTap: () => _removeFavorite(context, ref),
+                      onTap: () => _confirmRemove(context),
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
@@ -280,7 +331,7 @@ class _FavoriteCard extends ConsumerWidget {
     );
   }
 
-  void _removeFavorite(BuildContext context, WidgetRef ref) async {
+  void _confirmRemove(BuildContext context) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -302,19 +353,7 @@ class _FavoriteCard extends ConsumerWidget {
     );
 
     if (confirmed == true) {
-      await ref
-          .read(listingActionsProvider(listing.id).notifier)
-          .toggleFavorite();
-      onRemoved();
-
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Removed from saved items'),
-            duration: Duration(seconds: 1),
-          ),
-        );
-      }
+      onRemove();
     }
   }
 }

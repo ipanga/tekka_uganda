@@ -11,6 +11,7 @@ import '../../../../router/app_router.dart';
 import '../../../auth/application/auth_provider.dart';
 import '../../../chat/application/chat_provider.dart';
 import '../../../chat/domain/entities/chat.dart';
+import '../../../profile/application/profile_provider.dart';
 import '../../application/listing_provider.dart';
 import '../../domain/entities/listing.dart';
 
@@ -684,6 +685,10 @@ $url
             final repository = ref.read(listingApiRepositoryProvider);
             await repository.publishDraft(listing.id);
             ref.invalidate(listingProvider(listing.id));
+            final user = ref.read(currentUserProvider);
+            if (user != null) {
+              ref.invalidate(userListingsProvider(user.uid));
+            }
 
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -728,6 +733,10 @@ $url
               .read(listingActionsProvider(listing.id).notifier)
               .markAsSold();
           ref.invalidate(listingProvider(listing.id));
+          final soldUser = ref.read(currentUserProvider);
+          if (soldUser != null) {
+            ref.invalidate(userListingsProvider(soldUser.uid));
+          }
 
           if (mounted) {
             // Show review prompt
@@ -760,6 +769,10 @@ $url
           await ref
               .read(listingActionsProvider(listing.id).notifier)
               .deleteListing();
+          final deleteUser = ref.read(currentUserProvider);
+          if (deleteUser != null) {
+            ref.invalidate(userListingsProvider(deleteUser.uid));
+          }
           if (mounted) context.pop();
         }
         break;
@@ -1098,6 +1111,8 @@ class _FavoriteButton extends ConsumerWidget {
 
     ref.invalidate(isFavoritedProvider(listingId));
     ref.invalidate(listingProvider(listingId));
+    ref.invalidate(savedListingsProvider);
+    ref.invalidate(myFavoritesProvider);
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

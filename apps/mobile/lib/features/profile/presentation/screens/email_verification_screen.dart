@@ -76,8 +76,21 @@ class _EmailVerificationScreenState
     await ref
         .read(emailVerificationProvider.notifier)
         .sendVerificationCode(email);
-    _startResendTimer();
-    _codeFocusNode.requestFocus();
+
+    // Only start timer and switch focus if code was sent successfully
+    final status = ref.read(emailVerificationProvider);
+    if (status.state == EmailVerificationState.codeSent) {
+      _startResendTimer();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Verification code sent! Check your email.'),
+            backgroundColor: AppColors.success,
+          ),
+        );
+        _codeFocusNode.requestFocus();
+      }
+    }
   }
 
   Future<void> _verifyCode() async {
@@ -123,7 +136,9 @@ class _EmailVerificationScreenState
           padding: AppSpacing.screenPadding,
           child:
               status.state == EmailVerificationState.codeSent ||
-                  status.state == EmailVerificationState.verifying
+                  status.state == EmailVerificationState.verifying ||
+                  (status.state == EmailVerificationState.error &&
+                      status.codeSentAt != null)
               ? _buildCodeEntry(status)
               : _buildEmailEntry(status),
         ),

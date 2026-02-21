@@ -135,7 +135,7 @@ class DataExportNotifier extends StateNotifier<DataExportState> {
       final exportData = <String, dynamic>{
         'exportDate': DateTime.now().toIso8601String(),
         'appName': 'Tekka',
-        'appVersion': '1.0.0',
+        'appVersion': '1.1.1',
         'dataTypes': state.selectedTypes.map((t) => t.name).toList(),
       };
 

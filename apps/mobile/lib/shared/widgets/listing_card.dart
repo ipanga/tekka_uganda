@@ -7,6 +7,7 @@ import '../../core/theme/theme.dart';
 import '../../features/listing/domain/entities/listing.dart';
 import '../../features/listing/application/listing_provider.dart';
 import '../../features/auth/application/auth_provider.dart';
+import '../../features/profile/application/profile_provider.dart';
 
 /// Listing card widget for displaying items in grid
 class ListingCard extends ConsumerStatefulWidget {
@@ -86,6 +87,7 @@ class _ListingCardState extends ConsumerState<ListingCard> {
       }
       // Invalidate saved listings cache
       ref.invalidate(savedListingsProvider);
+      ref.invalidate(myFavoritesProvider);
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(

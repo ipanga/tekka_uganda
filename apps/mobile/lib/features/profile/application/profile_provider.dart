@@ -62,7 +62,7 @@ final myFavoritesProvider = FutureProvider<List<Listing>>((ref) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) return [];
 
-  return ref.watch(favoriteListingsProvider(user.uid).future);
+  return ref.watch(savedListingsProvider.future);
 });
 
 /// Profile update notifier
