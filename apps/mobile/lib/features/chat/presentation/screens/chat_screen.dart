@@ -852,8 +852,8 @@ class _QuickActionsBar extends ConsumerWidget {
           ),
           const SizedBox(width: AppSpacing.space2),
           _QuickActionChip(
-            label: 'Can we meet?',
-            onTap: () => onQuickMessage('Can we arrange a meetup?', null),
+            label: 'Where are you?',
+            onTap: () => onQuickMessage('Where are you located?', null),
           ),
         ],
       ),
