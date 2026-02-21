@@ -178,6 +178,7 @@ class FirebaseAuthRepository implements AuthRepository {
     required String displayName,
     required String location,
     String? photoUrl,
+    String? email,
   }) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -196,6 +197,12 @@ class FirebaseAuthRepository implements AuthRepository {
       location: location,
       photoUrl: photoUrl,
     );
+  }
+
+  @override
+  Future<void> sendOtpViaEmail(String phoneNumber) async {
+    // Not supported in Firebase auth flow — only used by JWT auth
+    throw const AuthException(message: 'Email OTP fallback not available');
   }
 
   @override
