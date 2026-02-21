@@ -1189,6 +1189,7 @@ class _DetailsStep extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return SingleChildScrollView(
       padding: AppSpacing.screenPadding,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1199,6 +1200,7 @@ class _DetailsStep extends ConsumerWidget {
               labelText: 'Title *',
               hintText: 'e.g., Floral Summer Dress',
             ),
+            textInputAction: TextInputAction.next,
             maxLength: AppConfig.maxTitleLength,
             onChanged: onTitleChanged,
           ),
@@ -1232,9 +1234,12 @@ class _DetailsStep extends ConsumerWidget {
               hintText: 'Describe your item...',
               alignLabelWithHint: true,
             ),
-            maxLines: 4,
+            minLines: 4,
+            maxLines: 8,
+            textInputAction: TextInputAction.done,
             maxLength: AppConfig.maxDescriptionLength,
             onChanged: onDescriptionChanged,
+            onTapOutside: (_) => FocusScope.of(context).unfocus(),
           ),
 
           const SizedBox(height: AppSpacing.space6),
@@ -1496,6 +1501,7 @@ class _PricingLocationStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: AppSpacing.screenPadding,
+      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
