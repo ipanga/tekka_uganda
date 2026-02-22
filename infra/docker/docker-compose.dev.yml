@@ -31,6 +31,9 @@ services:
       RESEND_API_KEY: ${RESEND_API_KEY}
       EMAIL_FROM: ${EMAIL_FROM:-Tekka <noreply@tekka.ug>}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:${USER_PORT:-3000},http://localhost:${ADMIN_PORT:-3001},http://localhost:8080}
+      ALLOW_REVIEW_STATIC_OTP: ${ALLOW_REVIEW_STATIC_OTP:-false}
+      REVIEW_STATIC_PHONE: ${REVIEW_STATIC_PHONE:-}
+      REVIEW_STATIC_OTP: ${REVIEW_STATIC_OTP:-}
     ports:
       - "${API_PORT:-4000}:${API_PORT:-4000}"
     networks:
