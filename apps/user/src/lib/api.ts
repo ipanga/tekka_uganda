@@ -224,6 +224,10 @@ class ApiClient {
     return this.get<Listing>(`/listings/${id}`);
   }
 
+  getListingBySlug(slug: string): Promise<Listing> {
+    return this.get<Listing>(`/listings/${slug}`);
+  }
+
   createListing(data: CreateListingDto): Promise<Listing> {
     return this.post<Listing>('/listings', data);
   }

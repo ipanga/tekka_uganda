@@ -192,10 +192,19 @@ async function main() {
         continue;
       }
 
+      const slug = product.title
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .slice(0, 80) + '-' + Math.random().toString(36).slice(2, 8);
+
       await prisma.listing.create({
         data: {
           sellerId: user.id,
           title: product.title,
+          slug,
           description: product.description,
           price: product.price,
           category: product.category as any,

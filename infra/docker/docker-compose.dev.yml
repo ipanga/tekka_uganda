@@ -65,6 +65,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: ${ADMIN_PORT:-3001}
+      API_URL_INTERNAL: http://tekka-api:${API_PORT:-4000}/api/v1
     ports:
       - "${ADMIN_PORT:-3001}:${ADMIN_PORT:-3001}"
     depends_on:
@@ -93,6 +94,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: ${USER_PORT:-3000}
+      API_URL_INTERNAL: http://tekka-api:${API_PORT:-4000}/api/v1
     ports:
       - "${USER_PORT:-3000}:${USER_PORT:-3000}"
     depends_on:

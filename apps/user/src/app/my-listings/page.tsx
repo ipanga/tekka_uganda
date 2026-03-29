@@ -13,7 +13,7 @@ import {
 import { api } from '@/lib/api';
 import { authManager } from '@/lib/auth';
 import { Listing, ListingStatus, STATUS_LABELS } from '@/types';
-import { formatPrice, formatRelativeTime } from '@/lib/utils';
+import { formatPrice, formatRelativeTime, getListingHref } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/Button';
@@ -156,7 +156,7 @@ export default function MyListingsPage() {
                     <CardContent className="py-4">
                       <div className="flex gap-4">
                         {/* Image */}
-                        <Link href={`/listing/${listing.id}`} className="flex-shrink-0">
+                        <Link href={getListingHref(listing)} className="flex-shrink-0">
                           <div className="relative w-24 h-24 rounded-lg overflow-hidden">
                             {listing.imageUrls[0] ? (
                               <Image
@@ -178,7 +178,7 @@ export default function MyListingsPage() {
                           <div className="flex items-start justify-between">
                             <div>
                               <Link
-                                href={`/listing/${listing.id}`}
+                                href={getListingHref(listing)}
                                 className="font-medium text-gray-900 hover:text-primary-500 line-clamp-1"
                               >
                                 {listing.title}

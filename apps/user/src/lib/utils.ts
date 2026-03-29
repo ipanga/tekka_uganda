@@ -434,6 +434,24 @@ export function getErrorMessage(error: unknown): string {
 // URL HELPERS
 // ============================================
 
+/**
+ * Generate the frontend URL path for a listing.
+ * Uses SEO-friendly format: /listing/{categorySlug}/{listingSlug}
+ * Falls back to /listing/{id} if slug data is unavailable.
+ */
+export function getListingHref(listing: {
+  id: string;
+  slug?: string;
+  categoryData?: { slug?: string; parent?: { slug?: string; parent?: { slug?: string } } } | null;
+}): string {
+  if (!listing.slug) return `/listing/${listing.id}`;
+
+  const cat = listing.categoryData;
+  const categorySlug = cat?.slug || cat?.parent?.slug || cat?.parent?.parent?.slug || 'item';
+
+  return `/listing/${categorySlug}/${listing.slug}`;
+}
+
 export function buildQueryString(params: Record<string, string | number | boolean | undefined>): string {
   const searchParams = new URLSearchParams();
 

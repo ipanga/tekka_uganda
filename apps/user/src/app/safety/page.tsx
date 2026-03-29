@@ -4,9 +4,10 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'Safety Tips | Tekka.ug',
+  title: 'Safety Tips for Buying & Selling Clothes in Uganda',
   description:
-    'Stay safe while buying and selling on Tekka. Learn about safe meetup practices, payment safety, and how to avoid scams.',
+    'Stay safe while buying and selling second-hand clothes on Tekka. Learn about safe meetup practices, payment safety, and how to avoid scams in Uganda.',
+  alternates: { canonical: 'https://tekka.ug/safety' },
 };
 
 const safetySections = [

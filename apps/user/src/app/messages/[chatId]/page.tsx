@@ -26,7 +26,7 @@ interface MessagesApiResponse {
   data?: Message[];
   nextCursor?: string;
 }
-import { formatMessageTime, formatPrice, cn } from '@/lib/utils';
+import { formatMessageTime, formatPrice, cn, getListingHref } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import { Avatar } from '@/components/ui/Avatar';
 import { Button } from '@/components/ui/Button';
@@ -199,7 +199,7 @@ export default function ChatDetailPage() {
           {/* Listing Context */}
           {listing && (
             <Link
-              href={`/listing/${listing.id}`}
+              href={getListingHref(listing)}
               className="flex items-center gap-3 mt-3 p-2 bg-gray-50 rounded-lg hover:bg-gray-100"
             >
               <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">

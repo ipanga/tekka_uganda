@@ -471,7 +471,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
   }
 
   Future<void> _shareListing(Listing listing) async {
-    final url = 'https://tekka.ug/listing/${listing.id}';
+    final url = listing.webUrl;
     final shareText =
         '''
 Check out "${listing.title}" on Tekka!

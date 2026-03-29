@@ -273,6 +273,7 @@ model Listing {
   id              String        @id @default(cuid())
   sellerId        String        @map("seller_id")
   title           String
+  slug            String        @unique
   description     String
   price           Int           // Price in UGX (smallest unit)
   originalPrice   Int?          @map("original_price") // For tracking price drops
@@ -325,6 +326,7 @@ model Listing {
   @@index([divisionId])
   @@index([status])
   @@index([createdAt])
+  @@index([slug])
   @@map("listings")
 }
 

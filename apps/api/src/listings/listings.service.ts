@@ -25,13 +25,49 @@ export class ListingsService {
     private uploadService: UploadService,
   ) {}
 
+  /**
+   * Generate a URL-friendly slug from a title.
+   * Appends a short random suffix to ensure uniqueness.
+   */
+  private generateSlug(title: string): string {
+    const base = title
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/[^\w\s-]/g, '') // Remove non-word chars
+      .replace(/\s+/g, '-') // Spaces to hyphens
+      .replace(/-+/g, '-') // Collapse multiple hyphens
+      .replace(/^-+|-+$/g, '') // Trim leading/trailing hyphens
+      .slice(0, 80); // Limit length
+
+    // Append short random suffix for uniqueness
+    const suffix = Math.random().toString(36).slice(2, 8);
+    return `${base}-${suffix}`;
+  }
+
+  /**
+   * Ensure slug is unique in the database; append extra chars if needed.
+   */
+  private async ensureUniqueSlug(slug: string): Promise<string> {
+    const existing = await this.prisma.listing.findUnique({
+      where: { slug },
+      select: { id: true },
+    });
+    if (!existing) return slug;
+    // Collision: append more random chars
+    const extra = Math.random().toString(36).slice(2, 6);
+    return this.ensureUniqueSlug(`${slug}-${extra}`);
+  }
+
   async create(sellerId: string, dto: CreateListingDto): Promise<Listing> {
     const status = dto.isDraft ? ListingStatus.DRAFT : ListingStatus.PENDING;
+    const slug = await this.ensureUniqueSlug(this.generateSlug(dto.title));
 
     const listing = await this.prisma.listing.create({
       data: {
         sellerId,
         title: dto.title,
+        slug,
         description: dto.description,
         price: dto.price,
         originalPrice: dto.originalPrice ?? dto.price,
@@ -150,6 +186,78 @@ export class ListingsService {
     };
   }
 
+  async findBySlug(slug: string, viewerId?: string) {
+    const listing = await this.prisma.listing.findUnique({
+      where: { slug },
+      include: {
+        seller: {
+          select: {
+            id: true,
+            displayName: true,
+            photoUrl: true,
+            location: true,
+            createdAt: true,
+          },
+        },
+        categoryRef: {
+          include: {
+            parent: {
+              include: {
+                parent: true,
+              },
+            },
+          },
+        },
+        cityRef: true,
+        divisionRef: true,
+      },
+    });
+
+    if (!listing) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    // Increment view count
+    await this.prisma.listing.update({
+      where: { id: listing.id },
+      data: { viewCount: { increment: 1 } },
+    });
+
+    // Check if viewer has saved this listing
+    let isSaved = false;
+    if (viewerId) {
+      const saved = await this.prisma.savedItem.findUnique({
+        where: {
+          userId_listingId: { userId: viewerId, listingId: listing.id },
+        },
+      });
+      isSaved = !!saved;
+    }
+
+    // Get seller stats
+    const sellerStats = await this.prisma.review.aggregate({
+      where: { revieweeId: listing.sellerId },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    const listingData = listing as any;
+    const { categoryRef, cityRef, divisionRef, ...rest } = listingData;
+
+    return {
+      ...rest,
+      isSaved,
+      categoryData: categoryRef,
+      city: cityRef,
+      division: divisionRef,
+      seller: {
+        ...listingData.seller,
+        rating: sellerStats._avg.rating || 0,
+        reviewCount: sellerStats._count.rating,
+      },
+    };
+  }
+
   async update(
     id: string,
     sellerId: string,
@@ -196,10 +304,17 @@ export class ListingsService {
     const priceChanged = dto.price !== undefined && dto.price !== listing.price;
     const newPrice = dto.price ?? listing.price;
 
+    // Regenerate slug if title changed
+    const newSlug = dto.title
+      ? await this.ensureUniqueSlug(this.generateSlug(dto.title))
+      : undefined;
+
     const updated = await this.prisma.listing.update({
       where: { id },
       data: {
         ...dto,
+        // Update slug if title changed
+        slug: newSlug,
         // If price decreased, keep original for comparison
         originalPrice:
           priceChanged && newPrice < listing.price
