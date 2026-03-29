@@ -79,6 +79,7 @@ export interface Listing {
   id: string;
   sellerId: string;
   title: string;
+  slug?: string;
   description: string;
   price: number;
   originalPrice?: number;

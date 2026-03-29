@@ -3,9 +3,10 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Tekka.ug',
+  title: 'Tekka Privacy Policy',
   description:
     'Learn how Tekka collects, uses, and protects your personal data. Read our Privacy Policy for details on data handling and your rights.',
+  alternates: { canonical: 'https://tekka.ug/privacy' },
 };
 
 export default function PrivacyPage() {

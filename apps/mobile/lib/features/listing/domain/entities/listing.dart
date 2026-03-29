@@ -158,6 +158,9 @@ class Listing {
   final String? cityName; // Resolved city name for display
   final String? divisionName; // Resolved division name for display
   final String? categoryName; // Resolved category name for display
+  // SEO fields
+  final String? slug; // URL-friendly listing slug
+  final String? categorySlug; // Category slug for SEO URLs
 
   const Listing({
     required this.id,
@@ -199,6 +202,8 @@ class Listing {
     this.cityName,
     this.divisionName,
     this.categoryName,
+    this.slug,
+    this.categorySlug,
   });
 
   /// Create a copy with updated fields
@@ -241,6 +246,8 @@ class Listing {
     String? cityName,
     String? divisionName,
     String? categoryName,
+    String? slug,
+    String? categorySlug,
   }) {
     return Listing(
       id: id ?? this.id,
@@ -281,6 +288,8 @@ class Listing {
       cityName: cityName ?? this.cityName,
       divisionName: divisionName ?? this.divisionName,
       categoryName: categoryName ?? this.categoryName,
+      slug: slug ?? this.slug,
+      categorySlug: categorySlug ?? this.categorySlug,
     );
   }
 
@@ -316,6 +325,7 @@ class Listing {
       if (attributes != null) 'attributes': attributes,
       if (cityId != null) 'cityId': cityId,
       if (divisionId != null) 'divisionId': divisionId,
+      if (slug != null) 'slug': slug,
     };
   }
 
@@ -334,6 +344,17 @@ class Listing {
     // Handle category - new system has categoryData, legacy has category string
     final categoryData = json['categoryData'] as Map<String, dynamic>?;
     final categoryName = categoryData?['name'] as String?;
+
+    // Extract category slug from hierarchy (deepest available)
+    String? categorySlug = categoryData?['slug'] as String?;
+    if (categorySlug == null) {
+      final parent = categoryData?['parent'] as Map<String, dynamic>?;
+      categorySlug = parent?['slug'] as String?;
+      if (categorySlug == null) {
+        final grandparent = parent?['parent'] as Map<String, dynamic>?;
+        categorySlug = grandparent?['slug'] as String?;
+      }
+    }
 
     // Handle location - new system has city/division objects
     final cityData = json['city'] as Map<String, dynamic>?;
@@ -389,6 +410,8 @@ class Listing {
       cityName: cityData?['name'] as String?,
       divisionName: divisionData?['name'] as String?,
       categoryName: categoryName,
+      slug: json['slug'] as String?,
+      categorySlug: categorySlug,
     );
   }
 
@@ -471,6 +494,15 @@ class Listing {
     if (parts.isNotEmpty) return parts.join(', ');
     if (location != null && location!.isNotEmpty) return location;
     return null;
+  }
+
+  /// Get the SEO-friendly web URL for this listing
+  String get webUrl {
+    if (slug != null && slug!.isNotEmpty) {
+      final catSlug = categorySlug ?? 'item';
+      return 'https://tekka.ug/listing/$catSlug/$slug';
+    }
+    return 'https://tekka.ug/listing/$id';
   }
 
   /// Get formatted price

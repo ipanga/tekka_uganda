@@ -3,9 +3,10 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Tekka.ug',
+  title: 'Tekka Terms of Service',
   description:
     'Read the Terms of Service for Tekka, Uganda\'s C2C fashion marketplace. Understand your rights and responsibilities as a buyer or seller.',
+  alternates: { canonical: 'https://tekka.ug/terms' },
 };
 
 export default function TermsPage() {

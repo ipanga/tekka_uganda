@@ -9,6 +9,7 @@ import { useState } from 'react';
 import type { Listing } from '@/types';
 import { api } from '@/lib/api';
 import { authManager } from '@/lib/auth';
+import { getListingHref } from '@/lib/utils';
 
 interface ListingCardProps {
   listing: Listing;
@@ -76,7 +77,7 @@ export function ListingCard({ listing, onSaveChange, showStatus }: ListingCardPr
   return (
     <div className="group relative bg-white rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
       {/* Image Container */}
-      <Link href={`/listing/${listing.id}`} className="block aspect-[3/4] relative overflow-hidden">
+      <Link href={getListingHref(listing)} className="block aspect-[3/4] relative overflow-hidden">
         {listing.imageUrls.length > 0 ? (
           <Image
             src={listing.imageUrls[0]}
@@ -118,7 +119,7 @@ export function ListingCard({ listing, onSaveChange, showStatus }: ListingCardPr
 
       {/* Details */}
       <div className="p-3">
-        <Link href={`/listing/${listing.id}`}>
+        <Link href={getListingHref(listing)}>
           <h3 className="font-medium text-gray-900 truncate hover:text-primary-500 transition-colors">
             {listing.title}
           </h3>

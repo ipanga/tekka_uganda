@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -31,10 +31,12 @@ import { PageLoader } from '@/components/ui/Spinner';
 import { ReportModal } from '@/components/modals/ReportModal';
 import { useAuthStore } from '@/stores/authStore';
 
-export default function ListingDetailPage() {
-  const params = useParams();
+interface ListingDetailClientProps {
+  listingId: string;
+}
+
+export default function ListingDetailClient({ listingId }: ListingDetailClientProps) {
   const router = useRouter();
-  const listingId = params.id as string;
 
   const { user, isAuthenticated } = useAuthStore();
   const [listing, setListing] = useState<Listing | null>(null);

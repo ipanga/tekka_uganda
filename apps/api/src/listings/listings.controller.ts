@@ -88,13 +88,22 @@ export class ListingsController {
     return { isSaved };
   }
 
-  // Get a specific listing
-  @Get(':id')
+  // Get a specific listing (supports both ID and slug lookup)
+  @Get(':idOrSlug')
   async findOne(
-    @Param('id') id: string,
+    @Param('idOrSlug') idOrSlug: string,
     @CurrentUser() user: Prisma.User | null,
   ) {
-    return this.listingsService.findByIdWithStats(id, user?.id);
+    // CUIDs start with 'c' and are 25 chars; try slug if it doesn't look like one
+    if (/^c[a-z0-9]{24}$/.test(idOrSlug)) {
+      return this.listingsService.findByIdWithStats(idOrSlug, user?.id);
+    }
+    // Try slug first, fall back to ID
+    try {
+      return await this.listingsService.findBySlug(idOrSlug, user?.id);
+    } catch {
+      return this.listingsService.findByIdWithStats(idOrSlug, user?.id);
+    }
   }
 
   // Update a listing
