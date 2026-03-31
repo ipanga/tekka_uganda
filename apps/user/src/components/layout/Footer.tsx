@@ -16,15 +16,15 @@ export function Footer() {
             </p>
           </div>
 
-          {/* Shop */}
+          {/* Tekka */}
           <div>
-            <h3 className="text-white font-semibold mb-4">Shop</h3>
+            <h3 className="text-white font-semibold mb-4">Tekka</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/explore?search=dresses" className="hover:text-primary-300">Dresses</Link></li>
-              <li><Link href="/explore?search=tops" className="hover:text-primary-300">Tops</Link></li>
-              <li><Link href="/explore?search=traditional" className="hover:text-primary-300">Traditional Wear</Link></li>
-              <li><Link href="/explore?search=shoes" className="hover:text-primary-300">Shoes</Link></li>
-              <li><Link href="/explore?search=accessories" className="hover:text-primary-300">Accessories</Link></li>
+              <li><Link href="/about" className="hover:text-primary-300">About Us</Link></li>
+              <li><Link href="/how-to-sell" className="hover:text-primary-300">How to Sell</Link></li>
+              <li><Link href="/buy-second-hand-clothes" className="hover:text-primary-300">How to Buy</Link></li>
+              <li><Link href="/explore" className="hover:text-primary-300">Browse Clothes</Link></li>
+              <li><Link href="/sell" className="hover:text-primary-300">Sell Your Clothes</Link></li>
             </ul>
           </div>
 
@@ -32,10 +32,9 @@ export function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Support</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/help" className="hover:text-primary-300">Help Center</Link></li>
+              <li><Link href="/help" className="hover:text-primary-300">Help Centre</Link></li>
               <li><Link href="/safety" className="hover:text-primary-300">Safety Tips</Link></li>
               <li><Link href="/contact" className="hover:text-primary-300">Contact Us</Link></li>
-              <li><Link href="/faq" className="hover:text-primary-300">FAQ</Link></li>
             </ul>
           </div>
 

@@ -4,7 +4,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'Buy Second-Hand Clothes in Uganda',
+  title: 'Buy Second-Hand Clothes',
   description:
     'Shop affordable second-hand clothes in Uganda on Tekka. Find quality pre-loved dresses, tops, shoes, and accessories in Kampala and across Uganda. Save money on fashion.',
   alternates: { canonical: 'https://tekka.ug/buy-second-hand-clothes' },

@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'Tekka Cookie Policy',
+  title: 'Cookie Policy',
   description:
     'Understand how Tekka uses cookies and local storage on our website to provide a secure and personalized shopping experience.',
   alternates: { canonical: 'https://tekka.ug/cookies' },

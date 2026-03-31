@@ -230,15 +230,25 @@ export default function ListingDetailClient({ listingId }: ListingDetailClientPr
             </div>
           )}
 
-          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
+          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6 flex-wrap">
             <Link href="/" className="hover:text-gray-700">Home</Link>
-            <span>/</span>
-            <Link
-              href={listing.categoryId ? `/?categoryId=${listing.categoryId}` : '/'}
-              className="hover:text-gray-700"
-            >
-              {listing.categoryData?.name || (listing.category && CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS]) || 'Category'}
-            </Link>
+            {(() => {
+              const cat = listing.categoryData;
+              const L1 = cat?.parent?.parent || cat?.parent;
+              const L2 = cat?.parent?.parent ? cat?.parent : null;
+              const crumbs: { name: string; id: string }[] = [];
+              if (L1) crumbs.push({ name: L1.name, id: L1.id });
+              if (L2) crumbs.push({ name: L2.name, id: L2.id });
+              if (crumbs.length === 0 && cat) {
+                crumbs.push({ name: cat.name, id: cat.id });
+              }
+              return crumbs.map((c) => (
+                <span key={c.id} className="flex items-center gap-2">
+                  <span>/</span>
+                  <Link href={`/explore?categoryId=${c.id}`} className="hover:text-gray-700">{c.name}</Link>
+                </span>
+              ));
+            })()}
             <span>/</span>
             <span className="text-gray-900 truncate max-w-xs">{listing.title}</span>
           </nav>

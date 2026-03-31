@@ -157,7 +157,11 @@ class Listing {
   final String? divisionId;
   final String? cityName; // Resolved city name for display
   final String? divisionName; // Resolved division name for display
-  final String? categoryName; // Resolved category name for display
+  final String? categoryName; // Resolved category name for display (L3 or deepest)
+  final String? categoryParentName; // L2 parent category name (e.g. "Clothing")
+  final String? categoryGrandparentName; // L1 main category name (e.g. "Women")
+  final String? categoryParentId; // L2 parent category ID
+  final String? categoryGrandparentId; // L1 main category ID
   // SEO fields
   final String? slug; // URL-friendly listing slug
   final String? categorySlug; // Category slug for SEO URLs
@@ -202,6 +206,10 @@ class Listing {
     this.cityName,
     this.divisionName,
     this.categoryName,
+    this.categoryParentName,
+    this.categoryGrandparentName,
+    this.categoryParentId,
+    this.categoryGrandparentId,
     this.slug,
     this.categorySlug,
   });
@@ -246,6 +254,10 @@ class Listing {
     String? cityName,
     String? divisionName,
     String? categoryName,
+    String? categoryParentName,
+    String? categoryGrandparentName,
+    String? categoryParentId,
+    String? categoryGrandparentId,
     String? slug,
     String? categorySlug,
   }) {
@@ -288,6 +300,10 @@ class Listing {
       cityName: cityName ?? this.cityName,
       divisionName: divisionName ?? this.divisionName,
       categoryName: categoryName ?? this.categoryName,
+      categoryParentName: categoryParentName ?? this.categoryParentName,
+      categoryGrandparentName: categoryGrandparentName ?? this.categoryGrandparentName,
+      categoryParentId: categoryParentId ?? this.categoryParentId,
+      categoryGrandparentId: categoryGrandparentId ?? this.categoryGrandparentId,
       slug: slug ?? this.slug,
       categorySlug: categorySlug ?? this.categorySlug,
     );
@@ -344,15 +360,23 @@ class Listing {
     // Handle category - new system has categoryData, legacy has category string
     final categoryData = json['categoryData'] as Map<String, dynamic>?;
     final categoryName = categoryData?['name'] as String?;
+    final parentData = categoryData?['parent'] as Map<String, dynamic>?;
+    final grandparentData = parentData?['parent'] as Map<String, dynamic>?;
+
+    // Resolve L1/L2 names and IDs for breadcrumbs
+    // If 3 levels: grandparent=L1, parent=L2, categoryData=L3
+    // If 2 levels: parent=L1, categoryData=L2
+    final String? categoryParentName = parentData?['name'] as String?;
+    final String? categoryGrandparentName = grandparentData?['name'] as String?;
+    final String? categoryParentId = parentData?['id'] as String?;
+    final String? categoryGrandparentId = grandparentData?['id'] as String?;
 
     // Extract category slug from hierarchy (deepest available)
     String? categorySlug = categoryData?['slug'] as String?;
     if (categorySlug == null) {
-      final parent = categoryData?['parent'] as Map<String, dynamic>?;
-      categorySlug = parent?['slug'] as String?;
+      categorySlug = parentData?['slug'] as String?;
       if (categorySlug == null) {
-        final grandparent = parent?['parent'] as Map<String, dynamic>?;
-        categorySlug = grandparent?['slug'] as String?;
+        categorySlug = grandparentData?['slug'] as String?;
       }
     }
 
@@ -410,6 +434,10 @@ class Listing {
       cityName: cityData?['name'] as String?,
       divisionName: divisionData?['name'] as String?,
       categoryName: categoryName,
+      categoryParentName: categoryParentName,
+      categoryGrandparentName: categoryGrandparentName,
+      categoryParentId: categoryParentId,
+      categoryGrandparentId: categoryGrandparentId,
       slug: json['slug'] as String?,
       categorySlug: categorySlug,
     );

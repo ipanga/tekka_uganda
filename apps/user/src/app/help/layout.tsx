@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Help & FAQ - Buying and Selling Clothes in Uganda',
+  title: 'Help Centre & FAQ',
   description:
     'Get answers to frequently asked questions about buying and selling clothes on Tekka. Learn how to list items, make purchases, and stay safe on Uganda\'s fashion marketplace.',
   alternates: { canonical: 'https://tekka.ug/help' },
