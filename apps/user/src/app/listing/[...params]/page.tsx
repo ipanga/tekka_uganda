@@ -79,12 +79,16 @@ export default async function ListingPage({ params }: PageProps) {
   // Build JSON-LD structured data
   const productJsonLd = buildProductJsonLd(listing as any);
 
-  const categoryName = listing.categoryData?.name || 'Fashion';
-  const breadcrumbItems = [
+  const cat = listing.categoryData as any;
+  const L1 = cat?.parent?.parent || cat?.parent;
+  const L2 = cat?.parent?.parent ? cat?.parent : null;
+  const breadcrumbItems: { name: string; url: string }[] = [
     { name: 'Home', url: '/' },
-    { name: categoryName, url: listing.categoryId ? `/explore?categoryId=${listing.categoryId}` : '/explore' },
-    { name: listing.title, url: getListingUrl(listing as any) },
   ];
+  if (L1) breadcrumbItems.push({ name: L1.name, url: `/explore?categoryId=${L1.id}` });
+  if (L2) breadcrumbItems.push({ name: L2.name, url: `/explore?categoryId=${L2.id}` });
+  if (!L1 && cat) breadcrumbItems.push({ name: cat.name, url: `/explore?categoryId=${cat.id}` });
+  breadcrumbItems.push({ name: listing.title, url: getListingUrl(listing as any) });
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(breadcrumbItems);
 
   return (

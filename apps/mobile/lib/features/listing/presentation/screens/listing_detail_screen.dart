@@ -182,6 +182,10 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                       children: [
                         const SizedBox(height: AppSpacing.space4),
 
+                        // Breadcrumb navigation
+                        _Breadcrumb(listing: listing),
+                        const SizedBox(height: AppSpacing.space3),
+
                         // Status badge if not active
                         if (listing.status != ListingStatus.active) ...[
                           _StatusBadge(status: listing.status),
@@ -1173,6 +1177,74 @@ class _StatusBadge extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Breadcrumb navigation showing category hierarchy
+class _Breadcrumb extends StatelessWidget {
+  const _Breadcrumb({required this.listing});
+  final Listing listing;
+
+  @override
+  Widget build(BuildContext context) {
+    // Build crumbs: L1 (grandparent) > L2 (parent) > product title
+    // If only 2 levels: L1 (parent) > product title
+    final crumbs = <_BreadcrumbItem>[];
+
+    final gp = listing.categoryGrandparentName;
+    final gpId = listing.categoryGrandparentId;
+    final p = listing.categoryParentName;
+    final pId = listing.categoryParentId;
+
+    if (gp != null && gpId != null) {
+      crumbs.add(_BreadcrumbItem(name: gp, categoryId: gpId));
+    }
+    if (p != null && pId != null) {
+      crumbs.add(_BreadcrumbItem(name: p, categoryId: pId));
+    }
+    // Fallback: if no parent hierarchy, show the direct category
+    if (crumbs.isEmpty && listing.categoryName != null && listing.categoryId != null) {
+      crumbs.add(_BreadcrumbItem(name: listing.categoryName!, categoryId: listing.categoryId!));
+    }
+
+    if (crumbs.isEmpty) return const SizedBox.shrink();
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: [
+          for (int i = 0; i < crumbs.length; i++) ...[
+            GestureDetector(
+              onTap: () => context.push('/home?categoryId=${crumbs[i].categoryId}'),
+              child: Text(
+                crumbs[i].name,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppColors.primary,
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Icon(Icons.chevron_right, size: 14, color: AppColors.onSurfaceVariant),
+            ),
+          ],
+          Flexible(
+            child: Text(
+              listing.title,
+              style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BreadcrumbItem {
+  final String name;
+  final String categoryId;
+  const _BreadcrumbItem({required this.name, required this.categoryId});
 }
 
 class _CircularIconBackground extends StatelessWidget {

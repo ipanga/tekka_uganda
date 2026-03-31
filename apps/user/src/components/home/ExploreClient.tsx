@@ -1,13 +1,31 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { ListingCard } from '@/components/listings/ListingCard';
 import { FunnelIcon, Squares2X2Icon, ListBulletIcon, MagnifyingGlassIcon, XMarkIcon, ArrowUpIcon } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
 import type { Listing, PaginatedResponse, Category, City } from '@/types';
+
+/** Resolve selected categoryId to its hierarchy trail and the active L1 parent. */
+function resolveCategoryPath(categories: Category[], categoryId: string) {
+  if (!categoryId) return { trail: [], activeL1Id: '' };
+
+  // Direct L1 match
+  for (const L1 of categories) {
+    if (L1.id === categoryId) return { trail: [L1], activeL1Id: L1.id };
+    for (const L2 of L1.children || []) {
+      if (L2.id === categoryId) return { trail: [L1, L2], activeL1Id: L1.id };
+      for (const L3 of (L2 as any).children || []) {
+        if (L3.id === categoryId) return { trail: [L1, L2, L3], activeL1Id: L1.id };
+      }
+    }
+  }
+  return { trail: [], activeL1Id: '' };
+}
 
 const PAGE_SIZE = 24;
 
@@ -274,15 +292,41 @@ function ExploreContent() {
             </div>
           </form>
 
+          {/* Breadcrumb */}
+          {(() => {
+            const { trail } = resolveCategoryPath(categories, categoryId);
+            return (
+              <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4 flex-wrap">
+                <Link href="/" className="hover:text-gray-700">Home</Link>
+                <span>/</span>
+                {trail.length === 0 ? (
+                  <span className="text-gray-900">Explore</span>
+                ) : (
+                  <>
+                    <Link href="/explore" className="hover:text-gray-700">Explore</Link>
+                    {trail.map((cat, i) => (
+                      <span key={cat.id} className="flex items-center gap-2">
+                        <span>/</span>
+                        {i === trail.length - 1 ? (
+                          <span className="text-gray-900">{cat.name}</span>
+                        ) : (
+                          <Link href={`/explore?categoryId=${cat.id}`} className="hover:text-gray-700">{cat.name}</Link>
+                        )}
+                      </span>
+                    ))}
+                  </>
+                )}
+              </nav>
+            );
+          })()}
+
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900 mb-4 md:mb-0">
               {searchQuery
                 ? `Results for "${searchQuery}"`
                 : categoryId
-                  ? categories.find(c => c.id === categoryId)?.name ||
-                    categories.flatMap(c => c.children || []).find(s => s.id === categoryId)?.name ||
-                    'Explore'
+                  ? resolveCategoryPath(categories, categoryId).trail.at(-1)?.name || 'Explore'
                   : 'Explore'}
             </h1>
 
@@ -452,46 +496,68 @@ function ExploreContent() {
           )}
 
           {/* Category Pills - Show main categories */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            <button
-              onClick={() => setCategoryId('')}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                categoryId === ''
-                  ? 'bg-primary-500 text-white'
-                  : 'bg-white text-gray-700 hover:bg-primary-50 hover:text-primary-500 border border-gray-200'
-              }`}
-            >
-              All
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setCategoryId(cat.id)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  categoryId === cat.id
-                    ? 'bg-primary-500 text-white'
-                    : 'bg-white text-gray-700 hover:bg-primary-50 hover:text-primary-500 border border-gray-200'
-                }`}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
+          {(() => {
+            const { activeL1Id } = resolveCategoryPath(categories, categoryId);
+            const activeL1 = categories.find(c => c.id === activeL1Id);
+            return (
+              <>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <button
+                    onClick={() => setCategoryId('')}
+                    className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      categoryId === ''
+                        ? 'bg-primary-500 text-white'
+                        : 'bg-white text-gray-700 hover:bg-primary-50 hover:text-primary-500 border border-gray-200'
+                    }`}
+                  >
+                    All
+                  </button>
+                  {categories.map((cat) => (
+                    <button
+                      key={cat.id}
+                      onClick={() => setCategoryId(cat.id)}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                        activeL1Id === cat.id
+                          ? 'bg-primary-500 text-white'
+                          : 'bg-white text-gray-700 hover:bg-primary-50 hover:text-primary-500 border border-gray-200'
+                      }`}
+                    >
+                      {cat.name}
+                    </button>
+                  ))}
+                </div>
 
-          {/* Subcategory Pills - Show when a main category is selected */}
-          {categoryId && categories.find(c => c.id === categoryId)?.children && (
-            <div className="flex flex-wrap gap-2 mb-4">
-              {categories.find(c => c.id === categoryId)?.children?.map((sub) => (
-                <button
-                  key={sub.id}
-                  onClick={() => setCategoryId(sub.id)}
-                  className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 hover:bg-primary-50 hover:text-primary-500 border border-gray-200 transition-colors"
-                >
-                  {sub.name}
-                </button>
-              ))}
-            </div>
-          )}
+                {/* Subcategory Pills - Show when a main category is active */}
+                {activeL1 && activeL1.children && activeL1.children.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <button
+                      onClick={() => setCategoryId(activeL1.id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                        categoryId === activeL1.id
+                          ? 'bg-primary-100 text-primary-700 border border-primary-300'
+                          : 'bg-gray-100 text-gray-700 hover:bg-primary-50 hover:text-primary-500 border border-gray-200'
+                      }`}
+                    >
+                      All {activeL1.name}
+                    </button>
+                    {activeL1.children.map((sub) => (
+                      <button
+                        key={sub.id}
+                        onClick={() => setCategoryId(sub.id)}
+                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                          categoryId === sub.id
+                            ? 'bg-primary-100 text-primary-700 border border-primary-300'
+                            : 'bg-gray-100 text-gray-700 hover:bg-primary-50 hover:text-primary-500 border border-gray-200'
+                        }`}
+                      >
+                        {sub.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </>
+            );
+          })()}
 
 
           {/* Listings Grid */}

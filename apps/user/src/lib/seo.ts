@@ -36,16 +36,17 @@ export function buildMetadata({
   noIndex?: boolean;
 }): Metadata {
   const url = absoluteUrl(path);
-  const fullTitle = title.includes('Tekka') ? title : `${title} | Tekka Uganda`;
+  // Let the root layout template append "| Tekka Uganda" — don't duplicate it here
+  const ogTitle = title.includes('Tekka') ? title : `${title} | Tekka Uganda`;
 
   return {
-    title: fullTitle,
+    title,
     description,
     alternates: {
       canonical: url,
     },
     openGraph: {
-      title: fullTitle,
+      title: ogTitle,
       description,
       url,
       siteName: SITE_NAME,
@@ -64,7 +65,7 @@ export function buildMetadata({
     },
     twitter: {
       card: image ? 'summary_large_image' : 'summary',
-      title: fullTitle,
+      title: ogTitle,
       description,
       ...(image && { images: [image] }),
     },
