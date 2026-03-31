@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { getListingHref } from './utils';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://tekka.ug';
-const SITE_NAME = 'Tekka';
+const SITE_NAME = 'Tekka Uganda';
 
 /**
  * Generate a listing URL from its data.
@@ -36,7 +36,7 @@ export function buildMetadata({
   noIndex?: boolean;
 }): Metadata {
   const url = absoluteUrl(path);
-  const fullTitle = title.includes('Tekka') ? title : `${title} | Tekka`;
+  const fullTitle = title.includes('Tekka') ? title : `${title} | Tekka Uganda`;
 
   return {
     title: fullTitle,
@@ -150,6 +150,7 @@ export function buildWebsiteJsonLd() {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: SITE_NAME,
+    alternateName: 'Tekka',
     url: SITE_URL,
     description: 'Buy and sell second-hand clothes in Uganda. Tekka is Uganda\'s leading C2C fashion marketplace.',
     potentialAction: {
@@ -159,6 +160,33 @@ export function buildWebsiteJsonLd() {
         urlTemplate: `${SITE_URL}/explore?search={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
+    },
+  };
+}
+
+/**
+ * JSON-LD Organization schema for Google Knowledge Panel and rich results.
+ */
+export function buildOrganizationJsonLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE_NAME,
+    alternateName: 'Tekka',
+    url: SITE_URL,
+    logo: `${SITE_URL}/icon-512.png`,
+    description: 'Uganda\'s leading marketplace for buying and selling second-hand and new clothes. Affordable fashion in Kampala and across Uganda.',
+    foundingDate: '2025',
+    areaServed: {
+      '@type': 'Country',
+      name: 'Uganda',
+    },
+    sameAs: [],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      contactType: 'customer service',
+      url: `${SITE_URL}/contact`,
+      availableLanguage: 'English',
     },
   };
 }

@@ -4,9 +4,9 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'About Tekka - Uganda\'s Fashion Marketplace',
+  title: 'About Us',
   description:
-    'Tekka is Uganda\'s leading C2C marketplace for buying and selling second-hand and new clothes. Learn about our mission to make fashion affordable and sustainable in Uganda.',
+    'Tekka is Uganda\'s leading marketplace for buying and selling second-hand clothes. Learn about our mission to make fashion affordable and sustainable across Uganda.',
   alternates: { canonical: 'https://tekka.ug/about' },
 };
 

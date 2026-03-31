@@ -3,7 +3,7 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'Tekka Terms of Service',
+  title: 'Terms of Service',
   description:
     'Read the Terms of Service for Tekka, Uganda\'s C2C fashion marketplace. Understand your rights and responsibilities as a buyer or seller.',
   alternates: { canonical: 'https://tekka.ug/terms' },

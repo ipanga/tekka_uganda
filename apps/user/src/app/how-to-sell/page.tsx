@@ -4,9 +4,9 @@ import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
 export const metadata: Metadata = {
-  title: 'How to Sell Clothes Online in Uganda',
+  title: 'How to Sell',
   description:
-    'Learn how to sell your used and new clothes online in Uganda with Tekka. Step-by-step guide to listing items, pricing, taking photos, and completing sales in Kampala.',
+    'Learn how to sell your used and new clothes online in Uganda with Tekka. Step-by-step guide to listing items, pricing, taking photos, and completing sales.',
   alternates: { canonical: 'https://tekka.ug/how-to-sell' },
 };
 
