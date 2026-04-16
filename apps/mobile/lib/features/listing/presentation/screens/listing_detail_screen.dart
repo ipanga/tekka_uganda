@@ -1202,8 +1202,15 @@ class _Breadcrumb extends StatelessWidget {
       crumbs.add(_BreadcrumbItem(name: p, categoryId: pId));
     }
     // Fallback: if no parent hierarchy, show the direct category
-    if (crumbs.isEmpty && listing.categoryName != null && listing.categoryId != null) {
-      crumbs.add(_BreadcrumbItem(name: listing.categoryName!, categoryId: listing.categoryId!));
+    if (crumbs.isEmpty &&
+        listing.categoryName != null &&
+        listing.categoryId != null) {
+      crumbs.add(
+        _BreadcrumbItem(
+          name: listing.categoryName!,
+          categoryId: listing.categoryId!,
+        ),
+      );
     }
 
     if (crumbs.isEmpty) return const SizedBox.shrink();
@@ -1214,18 +1221,20 @@ class _Breadcrumb extends StatelessWidget {
         children: [
           for (int i = 0; i < crumbs.length; i++) ...[
             GestureDetector(
-              onTap: () => context.push('/home?categoryId=${crumbs[i].categoryId}'),
+              onTap: () =>
+                  context.push('/home?categoryId=${crumbs[i].categoryId}'),
               child: Text(
                 crumbs[i].name,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: AppColors.primary,
-                ),
+                style: TextStyle(fontSize: 12, color: AppColors.primary),
               ),
             ),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Icon(Icons.chevron_right, size: 14, color: AppColors.onSurfaceVariant),
+              child: Icon(
+                Icons.chevron_right,
+                size: 14,
+                color: AppColors.onSurfaceVariant,
+              ),
             ),
           ],
           Flexible(
