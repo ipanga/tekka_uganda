@@ -315,7 +315,7 @@ void main() {
         title: 'Test Listing',
         price: 50000,
         categoryId: 'cat-1',
-        condition: ItemCondition.good,
+        condition: ItemCondition.used,
       );
 
       expect(state.isValid, true);

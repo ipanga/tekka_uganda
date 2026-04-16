@@ -1327,7 +1327,7 @@ class CreateListingNotifierV2 extends StateNotifier<CreateListingStateV2> {
           description: state.description ?? '',
           price: state.price ?? 0,
           originalPrice: state.originalPrice,
-          condition: state.condition ?? ItemCondition.good,
+          condition: state.condition ?? ItemCondition.used,
           imageUrls: imageUrls,
           categoryId: state.categoryId!,
           attributes: state.attributes.isNotEmpty ? state.attributes : null,

@@ -83,7 +83,7 @@ export default function ListingsPage() {
             description: 'Beautiful white wedding dress',
             price: 1500000,
             category: 'DRESSES',
-            condition: 'LIKE_NEW',
+            condition: 'NEW',
             imageUrls: ['https://via.placeholder.com/100'],
             status: 'PENDING',
             viewCount: 45,

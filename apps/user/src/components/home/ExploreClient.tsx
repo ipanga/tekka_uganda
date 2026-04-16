@@ -32,9 +32,7 @@ const PAGE_SIZE = 24;
 const conditions = [
   { label: 'Any Condition', value: '' },
   { label: 'New', value: 'NEW' },
-  { label: 'Like New', value: 'LIKE_NEW' },
-  { label: 'Good', value: 'GOOD' },
-  { label: 'Fair', value: 'FAIR' },
+  { label: 'Used', value: 'USED' },
 ];
 
 const sortOptions = [

@@ -89,9 +89,7 @@ export function buildProductJsonLd(listing: {
 }) {
   const conditionMap: Record<string, string> = {
     NEW: 'https://schema.org/NewCondition',
-    LIKE_NEW: 'https://schema.org/UsedCondition',
-    GOOD: 'https://schema.org/UsedCondition',
-    FAIR: 'https://schema.org/UsedCondition',
+    USED: 'https://schema.org/UsedCondition',
   };
 
   const url = absoluteUrl(getListingUrl(listing as any));

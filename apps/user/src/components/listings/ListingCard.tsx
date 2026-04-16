@@ -61,9 +61,7 @@ export function ListingCard({ listing, onSaveChange, showStatus }: ListingCardPr
 
   const conditionLabels: Record<string, string> = {
     NEW: 'New',
-    LIKE_NEW: 'Like New',
-    GOOD: 'Good',
-    FAIR: 'Fair',
+    USED: 'Used',
   };
 
   const statusLabels: Record<string, { label: string; className: string }> = {
