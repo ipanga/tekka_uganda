@@ -984,7 +984,7 @@
 				DEVELOPMENT_TEAM = YK6Z393A4D;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Tekka;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tekka Uganda";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1010,7 +1010,7 @@
 				DEVELOPMENT_TEAM = YK6Z393A4D;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Tekka;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tekka Uganda";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1035,7 +1035,7 @@
 				DEVELOPMENT_TEAM = YK6Z393A4D;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Tekka;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tekka Uganda";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1062,7 +1062,7 @@
 				DEVELOPMENT_TEAM = YK6Z393A4D;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Tekka;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tekka Uganda";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1087,7 +1087,7 @@
 				DEVELOPMENT_TEAM = YK6Z393A4D;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Tekka;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tekka Uganda";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1111,7 +1111,7 @@
 				DEVELOPMENT_TEAM = YK6Z393A4D;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Tekka;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tekka Uganda";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1137,7 +1137,7 @@
 				DEVELOPMENT_TEAM = YK6Z393A4D;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Tekka;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tekka Uganda";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1162,7 +1162,7 @@
 				DEVELOPMENT_TEAM = YK6Z393A4D;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Tekka;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tekka Uganda";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1186,7 +1186,7 @@
 				DEVELOPMENT_TEAM = YK6Z393A4D;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Tekka;
+				INFOPLIST_KEY_CFBundleDisplayName = "Tekka Uganda";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.shopping";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

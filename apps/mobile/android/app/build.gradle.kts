@@ -42,16 +42,16 @@ android {
         create("dev") {
             dimension = "environment"
             applicationIdSuffix = ".dev"
-            resValue("string", "app_name", "Tekka Dev")
+            resValue("string", "app_name", "Tekka Uganda Dev")
         }
         create("staging") {
             dimension = "environment"
             applicationIdSuffix = ".staging"
-            resValue("string", "app_name", "Tekka Staging")
+            resValue("string", "app_name", "Tekka Uganda Staging")
         }
         create("prod") {
             dimension = "environment"
-            resValue("string", "app_name", "Tekka")
+            resValue("string", "app_name", "Tekka Uganda")
         }
     }
 

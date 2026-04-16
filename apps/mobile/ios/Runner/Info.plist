@@ -76,8 +76,8 @@
 	<key>UIUserInterfaceStyle</key>
 	<string>Light</string>
 	<key>NSCameraUsageDescription</key>
-	<string>Tekka needs camera access to take photos of items you want to sell.</string>
+	<string>Tekka Uganda needs camera access to take photos of items you want to sell.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Tekka needs photo library access to select images for your listings.</string>
+	<string>Tekka Uganda needs photo library access to select images for your listings.</string>
 </dict>
 </plist>
