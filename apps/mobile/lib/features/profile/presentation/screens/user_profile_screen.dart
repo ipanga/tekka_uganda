@@ -193,26 +193,6 @@ class UserProfileScreen extends ConsumerWidget {
                           height: 40,
                           color: AppColors.outline,
                         ),
-                        listingsAsync.when(
-                          data: (listings) {
-                            final soldCount = listings
-                                .where((l) => l.status == ListingStatus.sold)
-                                .length;
-                            return _StatItem(
-                              value: soldCount.toString(),
-                              label: 'Sold',
-                            );
-                          },
-                          loading: () =>
-                              const _StatItem(value: '-', label: 'Sold'),
-                          error: (_, _) =>
-                              const _StatItem(value: '-', label: 'Sold'),
-                        ),
-                        Container(
-                          width: 1,
-                          height: 40,
-                          color: AppColors.outline,
-                        ),
                       ],
                       ratingAsync.when(
                         data: (rating) => _StatItem(

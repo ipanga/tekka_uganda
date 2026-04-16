@@ -344,9 +344,7 @@ enum ListingCategory {
 
 enum ItemCondition {
   NEW
-  LIKE_NEW
-  GOOD
-  FAIR
+  USED
 }
 
 enum ListingStatus {

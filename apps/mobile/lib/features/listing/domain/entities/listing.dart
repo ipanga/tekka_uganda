@@ -21,21 +21,30 @@ enum ListingStatus {
 
 /// Item condition
 enum ItemCondition {
-  newWithTags('New with Tags', 'NEW'),
-  likeNew('Like New', 'LIKE_NEW'),
-  good('Good', 'GOOD'),
-  fair('Fair', 'FAIR');
+  newItem('New', 'NEW'),
+  used('Used', 'USED');
 
   final String displayName;
   final String apiValue;
   const ItemCondition(this.displayName, this.apiValue);
 
-  /// Parse from API string
+  /// Parse from API string. Accepts legacy values (LIKE_NEW, GOOD, FAIR, …)
+  /// from older API payloads and normalizes them to the current enum.
   static ItemCondition fromApi(String value) {
-    return ItemCondition.values.firstWhere(
-      (e) => e.apiValue == value.toUpperCase(),
-      orElse: () => ItemCondition.good,
-    );
+    switch (value.toUpperCase()) {
+      case 'NEW':
+      case 'LIKE_NEW':
+      case 'NEW_WITH_TAGS':
+      case 'NEW_WITHOUT_TAGS':
+      case 'VERY_GOOD':
+        return ItemCondition.newItem;
+      case 'USED':
+      case 'GOOD':
+      case 'FAIR':
+        return ItemCondition.used;
+      default:
+        return ItemCondition.used;
+    }
   }
 }
 
@@ -468,7 +477,7 @@ class Listing {
       size: map['size'] as String?,
       condition: ItemCondition.values.firstWhere(
         (e) => e.name == map['condition'],
-        orElse: () => ItemCondition.good,
+        orElse: () => ItemCondition.used,
       ),
       imageUrls: List<String>.from(map['imageUrls'] as List? ?? []),
       location: map['location'] as String?,

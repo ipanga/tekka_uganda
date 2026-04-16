@@ -35,7 +35,7 @@ void main() {
         title: 'Test Title',
         description: 'Test Description',
         price: 50000,
-        condition: ItemCondition.good,
+        condition: ItemCondition.used,
         categoryId: 'cat-1',
         categoryName: 'Dresses',
         attributes: {'size': 'M', 'color': ['Red', 'Blue']},
@@ -49,7 +49,7 @@ void main() {
       expect(newState.title, 'Test Title');
       expect(newState.description, 'Test Description');
       expect(newState.price, 50000);
-      expect(newState.condition, ItemCondition.good);
+      expect(newState.condition, ItemCondition.used);
       expect(newState.categoryId, 'cat-1');
       expect(newState.categoryName, 'Dresses');
       expect(newState.attributes['size'], 'M');
@@ -68,13 +68,13 @@ void main() {
       );
 
       final newState = state.copyWith(
-        condition: ItemCondition.newWithTags,
+        condition: ItemCondition.newItem,
       );
 
       expect(newState.title, 'Existing Title');
       expect(newState.price, 30000);
       expect(newState.categoryId, 'cat-1');
-      expect(newState.condition, ItemCondition.newWithTags);
+      expect(newState.condition, ItemCondition.newItem);
     });
 
     test('copyWith clears error when set to null', () {
@@ -90,7 +90,7 @@ void main() {
           title: 'Test',
           price: 50000,
           categoryId: 'cat-1',
-          condition: ItemCondition.good,
+          condition: ItemCondition.used,
         );
 
         expect(state.isValid, false);
@@ -102,7 +102,7 @@ void main() {
           selectedImages: [tempFile],
           price: 50000,
           categoryId: 'cat-1',
-          condition: ItemCondition.good,
+          condition: ItemCondition.used,
         );
 
         expect(state.isValid, false);
@@ -115,7 +115,7 @@ void main() {
           title: '',
           price: 50000,
           categoryId: 'cat-1',
-          condition: ItemCondition.good,
+          condition: ItemCondition.used,
         );
 
         expect(state.isValid, false);
@@ -127,7 +127,7 @@ void main() {
           selectedImages: [tempFile],
           title: 'Test',
           categoryId: 'cat-1',
-          condition: ItemCondition.good,
+          condition: ItemCondition.used,
         );
 
         expect(state.isValid, false);
@@ -140,7 +140,7 @@ void main() {
           title: 'Test',
           price: 0,
           categoryId: 'cat-1',
-          condition: ItemCondition.good,
+          condition: ItemCondition.used,
         );
 
         final stateNegative = CreateListingStateV2(
@@ -148,7 +148,7 @@ void main() {
           title: 'Test',
           price: -100,
           categoryId: 'cat-1',
-          condition: ItemCondition.good,
+          condition: ItemCondition.used,
         );
 
         expect(stateZero.isValid, false);
@@ -161,7 +161,7 @@ void main() {
           selectedImages: [tempFile],
           title: 'Test',
           price: 50000,
-          condition: ItemCondition.good,
+          condition: ItemCondition.used,
         );
 
         expect(state.isValid, false);
@@ -186,7 +186,7 @@ void main() {
           title: 'Test Title',
           price: 50000,
           categoryId: 'cat-1',
-          condition: ItemCondition.good,
+          condition: ItemCondition.used,
         );
 
         expect(state.isValid, true);
@@ -198,7 +198,7 @@ void main() {
           title: 'Test Title',
           price: 50000,
           categoryId: 'cat-1',
-          condition: ItemCondition.good,
+          condition: ItemCondition.used,
         );
 
         expect(state.isValid, true);
@@ -256,7 +256,7 @@ void main() {
 
       final newFilter = filter.copyWith(
         category: ListingCategory.dresses,
-        condition: ItemCondition.newWithTags,
+        condition: ItemCondition.newItem,
         minPrice: 10000,
         maxPrice: 100000,
         searchQuery: 'dress',
@@ -264,7 +264,7 @@ void main() {
       );
 
       expect(newFilter.category, ListingCategory.dresses);
-      expect(newFilter.condition, ItemCondition.newWithTags);
+      expect(newFilter.condition, ItemCondition.newItem);
       expect(newFilter.minPrice, 10000);
       expect(newFilter.maxPrice, 100000);
       expect(newFilter.searchQuery, 'dress');

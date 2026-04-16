@@ -119,7 +119,7 @@ export type ListingCategory =
   | 'BAGS'
   | 'OTHER';
 
-export type ItemCondition = 'NEW' | 'LIKE_NEW' | 'GOOD' | 'FAIR';
+export type ItemCondition = 'NEW' | 'USED';
 
 export type ItemOccasion =
   | 'WEDDING'
@@ -513,10 +513,8 @@ export const CATEGORY_LABELS: Record<ListingCategory, string> = {
 };
 
 export const CONDITION_LABELS: Record<ItemCondition, string> = {
-  NEW: 'New with tags',
-  LIKE_NEW: 'Like New',
-  GOOD: 'Good',
-  FAIR: 'Fair',
+  NEW: 'New',
+  USED: 'Used',
 };
 
 export const OCCASION_LABELS: Record<ItemOccasion, string> = {

@@ -10,8 +10,26 @@ import {
   IsObject,
 } from 'class-validator';
 import { ListingCategory, ItemCondition, ListingStatus } from '@prisma/client';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+
+// Legacy condition values accepted from older clients (pre-collapse). They are
+// normalized to the canonical enum before validation so old app versions and
+// saved searches continue to work. Responses always return the new values.
+const LEGACY_CONDITION_MAP: Record<string, ItemCondition> = {
+  LIKE_NEW: 'NEW' as ItemCondition,
+  VERY_GOOD: 'NEW' as ItemCondition,
+  NEW_WITH_TAGS: 'NEW' as ItemCondition,
+  NEW_WITHOUT_TAGS: 'NEW' as ItemCondition,
+  GOOD: 'USED' as ItemCondition,
+  FAIR: 'USED' as ItemCondition,
+};
+
+const normalizeCondition = ({ value }: { value: unknown }): unknown => {
+  if (typeof value !== 'string') return value;
+  const upper = value.toUpperCase();
+  return LEGACY_CONDITION_MAP[upper] ?? upper;
+};
 
 export class CreateListingDto {
   @ApiProperty({ description: 'Listing title', maxLength: 150 })
@@ -47,6 +65,7 @@ export class CreateListingDto {
   category?: ListingCategory;
 
   @ApiProperty({ description: 'Item condition', enum: ItemCondition })
+  @Transform(normalizeCondition)
   @IsEnum(ItemCondition)
   condition: ItemCondition;
 
@@ -178,6 +197,7 @@ export class UpdateListingDto {
 
   @ApiPropertyOptional({ description: 'Item condition', enum: ItemCondition })
   @IsOptional()
+  @Transform(normalizeCondition)
   @IsEnum(ItemCondition)
   condition?: ItemCondition;
 
@@ -280,6 +300,7 @@ export class ListingQueryDto {
     enum: ItemCondition,
   })
   @IsOptional()
+  @Transform(normalizeCondition)
   @IsEnum(ItemCondition)
   condition?: ItemCondition;
 

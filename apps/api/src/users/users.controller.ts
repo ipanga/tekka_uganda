@@ -124,9 +124,11 @@ export class UsersController {
   }
 
   // Get stats of any user
+  // Public route — sold-items count is owner-only.
+  // Self-view uses the authenticated GET /users/me/stats above, which includes sold data.
   @Get(':userId/stats')
   async getUserStats(@Param('userId') userId: string) {
-    return this.usersService.getStats(userId);
+    return this.usersService.getStats(userId, { includeSold: false });
   }
 
   // Get scheduled account deletion status

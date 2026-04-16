@@ -66,7 +66,7 @@ export type ListingCategory =
   | 'BAGS'
   | 'OTHER';
 
-export type ItemCondition = 'NEW' | 'LIKE_NEW' | 'GOOD' | 'FAIR';
+export type ItemCondition = 'NEW' | 'USED';
 
 export type ItemOccasion =
   | 'WEDDING'

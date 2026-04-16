@@ -61,9 +61,7 @@ export function getStatusVariant(status: string): BadgeVariant {
     CANCELLED: 'danger',
     // Condition statuses
     NEW: 'success',
-    LIKE_NEW: 'success',
-    GOOD: 'info',
-    FAIR: 'warning',
+    USED: 'info',
   };
 
   return statusMap[status] || 'default';

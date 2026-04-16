@@ -501,13 +501,21 @@ export class ListingsService {
       sortOrder = 'desc',
     } = query;
 
+    // Sold listings are owner-only on the public search endpoint.
+    // Non-owners get ACTIVE regardless of what they pass. Sellers querying
+    // their own sold inventory must use GET /listings/my?status=SOLD.
+    const effectiveStatus =
+      status === ListingStatus.SOLD && viewerId !== sellerId
+        ? ListingStatus.ACTIVE
+        : status || ListingStatus.ACTIVE;
+
     // If search term provided, use PostgreSQL full-text search for relevance ranking
     if (search && search.trim()) {
-      return this.fullTextSearch(query, viewerId);
+      return this.fullTextSearch({ ...query, status: effectiveStatus }, viewerId);
     }
 
     const where: Prisma.ListingWhereInput = {
-      status: status || ListingStatus.ACTIVE,
+      status: effectiveStatus,
     };
 
     // NEW: Category ID filter (includes children)

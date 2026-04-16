@@ -245,18 +245,13 @@ export default function PublicProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          {/* Stats — "Items Sold" is intentionally omitted here; it is owner-only
+              and shown on the self-profile page at /profile. */}
+          <div className="grid grid-cols-2 gap-4 mb-6">
             <Card>
               <CardContent className="py-4 text-center">
                 <div className="text-2xl font-bold text-gray-900">{stats?.activeListings || 0}</div>
                 <div className="text-sm text-gray-500">Active Listings</div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="py-4 text-center">
-                <div className="text-2xl font-bold text-gray-900">{stats?.soldListings || 0}</div>
-                <div className="text-sm text-gray-500">Items Sold</div>
               </CardContent>
             </Card>
             <Card>
