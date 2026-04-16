@@ -164,7 +164,12 @@ export class UsersService {
     };
   }
 
-  async getStats(userId: string) {
+  async getStats(
+    userId: string,
+    opts: { includeSold?: boolean } = { includeSold: true },
+  ) {
+    const includeSold = opts.includeSold !== false;
+
     const [totalListings, activeListings, soldListings, reviews] =
       await Promise.all([
         this.prisma.listing.count({
@@ -173,9 +178,11 @@ export class UsersService {
         this.prisma.listing.count({
           where: { sellerId: userId, status: 'ACTIVE' },
         }),
-        this.prisma.listing.count({
-          where: { sellerId: userId, status: 'SOLD' },
-        }),
+        includeSold
+          ? this.prisma.listing.count({
+              where: { sellerId: userId, status: 'SOLD' },
+            })
+          : Promise.resolve(null),
         this.prisma.review.aggregate({
           where: { revieweeId: userId },
           _avg: { rating: true },
