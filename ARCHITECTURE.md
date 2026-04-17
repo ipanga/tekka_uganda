@@ -199,3 +199,42 @@ Use subdomain prefixes for staging:
 - `api.staging.tekka.ug`
 
 Configure via environment variables in separate `.env.staging` file.
+
+## Deep Linking & Push Notifications
+
+### URL scheme
+
+Universal links / verified App Links — `https://tekka.ug/*` only (no custom scheme). The same URLs work as web pages (SEO-friendly) and open the installed app on mobile.
+
+| URL | Destination |
+|-----|-------------|
+| `/listing/:id` | Listing detail |
+| `/chat/:id` | Chat conversation |
+| `/user/:id` | Public seller profile |
+| `/reviews/:userId` | Reviews for a user |
+| `/notifications`, `/notifications/:id` | Notifications list / detail |
+| `/meetups`, `/meetups/:id` | Meetups |
+| `/profile`, `/profile/*` | Profile sub-pages |
+
+### Verification files
+
+Served by `apps/user` at:
+- `GET /.well-known/apple-app-site-association` — JSON declaring iOS `applinks` for bundle `YK6Z393A4D.com.tootiyesolutions.tekka`.
+- `GET /.well-known/assetlinks.json` — Android Digital Asset Links declaring trust for `com.tootiye.tekka`.
+
+Implemented as Next.js route handlers in `apps/user/src/app/.well-known/*/route.ts` to guarantee `Content-Type: application/json` and correct path (AASA must have no `.json` extension).
+
+### FCM payload contract
+
+Every push sent by `apps/api/src/notifications/notifications.service.ts` includes a `data` map with at least:
+- `type` — legacy string (`message`, `listing_approved`, etc.)
+- `deep_link` — canonical URL (e.g. `https://tekka.ug/chat/abc123`)
+- Type-specific ID field (`chatId`, `listingId`, `reviewId`, `meetupId`)
+
+The Flutter `PushNotificationService` prefers `deep_link` and falls back to type-based routing for backwards compatibility with older installs.
+
+### Mobile platform config
+
+- **Android** (`com.tootiye.tekka` prod): `google-services` plugin applied, `google-services.json` at `apps/mobile/android/app/src/prod/`, `<intent-filter android:autoVerify="true">` on `https://tekka.ug` in the manifest, `POST_NOTIFICATIONS` permission declared.
+- **iOS** (`com.tootiyesolutions.tekka` prod): `GoogleService-Info.plist` bundled, `Runner.entitlements` declaring `aps-environment` + `applinks:tekka.ug`, `UIBackgroundModes` includes `remote-notification`. Entitlements wired to Debug/Release/Profile-prod configs only.
+- Dev/staging flavors are **not yet configured** — register additional Firebase apps for `.dev` and `.staging` bundle/package IDs before building non-prod flavors.

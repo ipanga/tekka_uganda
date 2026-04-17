@@ -79,5 +79,10 @@
 	<string>Tekka Uganda needs camera access to take photos of items you want to sell.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Tekka Uganda needs photo library access to select images for your listings.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

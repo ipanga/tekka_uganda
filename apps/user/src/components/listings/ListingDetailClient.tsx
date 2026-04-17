@@ -29,6 +29,8 @@ import { Badge, getStatusVariant } from '@/components/ui/Badge';
 import { Avatar } from '@/components/ui/Avatar';
 import { PageLoader } from '@/components/ui/Spinner';
 import { ReportModal } from '@/components/modals/ReportModal';
+import { GetAppModal } from '@/components/modals/GetAppModal';
+import { detectMobilePlatform, type MobilePlatform } from '@/lib/app-links';
 import { useAuthStore } from '@/stores/authStore';
 
 interface ListingDetailClientProps {
@@ -48,6 +50,12 @@ export default function ListingDetailClient({ listingId }: ListingDetailClientPr
   const [isSaved, setIsSaved] = useState(false);
   const [savingItem, setSavingItem] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
+  const [showGetAppModal, setShowGetAppModal] = useState(false);
+  const [mobilePlatform, setMobilePlatform] = useState<MobilePlatform>(null);
+
+  useEffect(() => {
+    setMobilePlatform(detectMobilePlatform());
+  }, []);
 
   useEffect(() => {
     loadListing();
@@ -138,15 +146,8 @@ export default function ListingDetailClient({ listingId }: ListingDetailClientPr
     }
   };
 
-  const handleContactSeller = async () => {
-    // Use authManager as primary source - it ensures initialization and sets API token
-    if (!authManager.isAuthenticated()) {
-      router.push('/login');
-      return;
-    }
-
+  const startChat = async () => {
     if (!seller) return;
-
     try {
       const chat = await api.createChat({
         participantId: seller.id,
@@ -156,6 +157,28 @@ export default function ListingDetailClient({ listingId }: ListingDetailClientPr
     } catch (err) {
       console.error('Failed to create chat:', err);
     }
+  };
+
+  const handleContactSeller = async () => {
+    // Use authManager as primary source - it ensures initialization and sets API token
+    if (!authManager.isAuthenticated()) {
+      router.push('/login');
+      return;
+    }
+
+    if (!seller) return;
+
+    if (mobilePlatform) {
+      setShowGetAppModal(true);
+      return;
+    }
+
+    await startChat();
+  };
+
+  const handleContinueChatOnWeb = async () => {
+    setShowGetAppModal(false);
+    await startChat();
   };
 
   const nextImage = () => {
@@ -594,6 +617,12 @@ export default function ListingDetailClient({ listingId }: ListingDetailClientPr
           listingId={listing.id}
         />
       )}
+      <GetAppModal
+        isOpen={showGetAppModal}
+        platform={mobilePlatform}
+        onClose={() => setShowGetAppModal(false)}
+        onContinueOnWeb={handleContinueChatOnWeb}
+      />
     </div>
   );
 }

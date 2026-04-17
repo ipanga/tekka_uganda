@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/auth/AuthProvider';
+import SmartAppBanner from '@/components/layout/SmartAppBanner';
 import { buildWebsiteJsonLd, buildOrganizationJsonLd, SITE_URL } from '@/lib/seo';
+import { IOS_APP_ID } from '@/lib/app-links';
 
 const inter = Inter({
   variable: '--font-sans',
@@ -97,6 +99,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta name="apple-itunes-app" content={`app-id=${IOS_APP_ID}`} />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
@@ -107,6 +110,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <SmartAppBanner />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

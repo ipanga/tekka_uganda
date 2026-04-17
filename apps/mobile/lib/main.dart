@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_config.dart';
 import 'core/config/environment.dart';
+import 'core/providers/deep_link_provider.dart';
 import 'core/providers/push_notification_provider.dart';
 import 'core/theme/theme.dart';
 import 'features/auth/application/auth_provider.dart';
@@ -39,6 +40,12 @@ class TekkaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+
+    // Wire notification taps + incoming universal/app links to the router.
+    // Safe to re-wire on rebuild — both are idempotent.
+    ref.read(pushNotificationServiceProvider).onNotificationTap =
+        (route, _) => router.go(route);
+    ref.read(deepLinkServiceProvider).initialize(router);
 
     // Initialize push notifications when user is authenticated
     ref.listen(authStateProvider, (previous, next) {
