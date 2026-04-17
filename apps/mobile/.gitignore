@@ -44,13 +44,14 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Firebase client configs — kept out of version control to satisfy secret
-# scanning. These contain Firebase client API keys which are public-by-design
-# per Firebase docs (they ship in the published APK/IPA), but GitHub flags
-# them regardless. Prod release builds inject these from GitHub Secrets
-# GOOGLE_SERVICES_JSON and GOOGLE_SERVICE_INFO_PLIST (see mobile.yml).
-# For local prod-flavor builds, download from Firebase Console into:
-#   android/app/src/prod/google-services.json
-#   ios/Runner/GoogleService-Info.plist
+# Firebase Android config — contains a Google API key flagged by GitHub
+# secret scanning. Excluded from version control; prod release CI injects
+# from the GOOGLE_SERVICES_JSON secret. Dev/staging builds skip the
+# google-services plugin entirely (see android/app/build.gradle.kts), so
+# they don't need the file. For local prod builds, download from
+# Firebase Console into android/app/src/prod/google-services.json.
+#
+# The iOS equivalent (ios/Runner/GoogleService-Info.plist) stays committed
+# as a placeholder with fake values because Xcode requires the file to
+# exist for bundling; the real plist is injected at release-build time.
 android/app/src/prod/google-services.json
-ios/Runner/GoogleService-Info.plist
