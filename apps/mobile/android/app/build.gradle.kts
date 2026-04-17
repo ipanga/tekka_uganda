@@ -87,3 +87,13 @@ flutter {
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
 }
+
+// Firebase is only configured for the prod flavor. Skip the google-services
+// plugin task for dev/staging variants so their builds don't require a
+// google-services.json. See apps/mobile/android/app/src/prod/ for the config.
+tasks.matching {
+    it.name.contains("GoogleServices") &&
+        (it.name.contains("Dev") || it.name.contains("Staging"))
+}.configureEach {
+    enabled = false
+}
