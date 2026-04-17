@@ -5,6 +5,8 @@ import { getFirebaseMessaging } from '../auth/firebase-admin';
 import { SendNotificationDto, SendBulkNotificationDto } from './dto';
 import { NotificationType } from '@prisma/client';
 
+const WEB_ORIGIN = 'https://tekka.ug';
+
 @Injectable()
 export class NotificationsService {
   constructor(
@@ -39,6 +41,19 @@ export class NotificationsService {
 
     const tokens = fcmTokens.map((t) => t.token);
 
+    // Build canonical deep link (Universal Link / App Link URL).
+    // Flutter's PushNotificationService prefers `deep_link` over legacy
+    // type/id routing for notification taps.
+    const deepLink = this.buildDeepLink(dto.type, dto.data);
+    const dataPayload: Record<string, string> = {
+      ...(dto.data
+        ? Object.fromEntries(
+            Object.entries(dto.data).map(([k, v]) => [k, String(v)]),
+          )
+        : {}),
+    };
+    if (deepLink) dataPayload.deep_link = deepLink;
+
     // Send push notification
     try {
       const messaging = getFirebaseMessaging();
@@ -49,11 +64,7 @@ export class NotificationsService {
             title: dto.title,
             body: dto.body,
           },
-          data: dto.data
-            ? Object.fromEntries(
-                Object.entries(dto.data).map(([k, v]) => [k, String(v)]),
-              )
-            : undefined,
+          data: Object.keys(dataPayload).length > 0 ? dataPayload : undefined,
           android: {
             priority: 'high',
             notification: {
@@ -194,6 +205,50 @@ export class NotificationsService {
     return this.prisma.notification.count({
       where: { userId, isRead: false },
     });
+  }
+
+  /**
+   * Build a canonical deep link URL (https://tekka.ug/...) for a given
+   * notification type + data payload. Returns null when the type has no
+   * in-app destination. Consumed by the Flutter app via `data.deep_link`.
+   */
+  private buildDeepLink(
+    type: NotificationType,
+    data?: Record<string, unknown>,
+  ): string | null {
+    const pick = (key: string): string | null => {
+      const v = data?.[key];
+      return typeof v === 'string' && v.length > 0 ? v : null;
+    };
+
+    switch (type) {
+      case NotificationType.MESSAGE: {
+        const chatId = pick('chatId');
+        return chatId ? `${WEB_ORIGIN}/chat/${chatId}` : null;
+      }
+      case NotificationType.NEW_REVIEW: {
+        const userId = pick('userId') ?? pick('reviewerId');
+        return userId ? `${WEB_ORIGIN}/reviews/${userId}` : null;
+      }
+      case NotificationType.LISTING_APPROVED:
+      case NotificationType.LISTING_REJECTED:
+      case NotificationType.LISTING_SOLD:
+      case NotificationType.PRICE_DROP: {
+        const listingId = pick('listingId');
+        return listingId ? `${WEB_ORIGIN}/listing/${listingId}` : null;
+      }
+      case NotificationType.MEETUP_PROPOSED:
+      case NotificationType.MEETUP_ACCEPTED: {
+        const meetupId = pick('meetupId');
+        return meetupId
+          ? `${WEB_ORIGIN}/meetups/${meetupId}`
+          : `${WEB_ORIGIN}/meetups`;
+      }
+      case NotificationType.SYSTEM:
+        return `${WEB_ORIGIN}/notifications`;
+      default:
+        return null;
+    }
   }
 
   /**

@@ -166,7 +166,8 @@ class Listing {
   final String? divisionId;
   final String? cityName; // Resolved city name for display
   final String? divisionName; // Resolved division name for display
-  final String? categoryName; // Resolved category name for display (L3 or deepest)
+  final String?
+  categoryName; // Resolved category name for display (L3 or deepest)
   final String? categoryParentName; // L2 parent category name (e.g. "Clothing")
   final String? categoryGrandparentName; // L1 main category name (e.g. "Women")
   final String? categoryParentId; // L2 parent category ID
@@ -310,9 +311,11 @@ class Listing {
       divisionName: divisionName ?? this.divisionName,
       categoryName: categoryName ?? this.categoryName,
       categoryParentName: categoryParentName ?? this.categoryParentName,
-      categoryGrandparentName: categoryGrandparentName ?? this.categoryGrandparentName,
+      categoryGrandparentName:
+          categoryGrandparentName ?? this.categoryGrandparentName,
       categoryParentId: categoryParentId ?? this.categoryParentId,
-      categoryGrandparentId: categoryGrandparentId ?? this.categoryGrandparentId,
+      categoryGrandparentId:
+          categoryGrandparentId ?? this.categoryGrandparentId,
       slug: slug ?? this.slug,
       categorySlug: categorySlug ?? this.categorySlug,
     );

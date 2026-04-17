@@ -1,9 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../features/auth/data/repositories/user_api_repository.dart';
+import 'deep_link_mapper.dart';
 
 /// Top-level handler for background messages (must be top-level function)
 @pragma('vm:entry-point')
@@ -11,11 +14,63 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('Background message: ${message.messageId}');
 }
 
+/// Android notification channels — must match ids used by backend
+/// (`apps/api/src/notifications/notifications.service.ts :: getChannelId`).
+const _androidChannels = <AndroidNotificationChannel>[
+  AndroidNotificationChannel(
+    'messages',
+    'Messages',
+    description: 'New chat messages',
+    importance: Importance.high,
+  ),
+  AndroidNotificationChannel(
+    'reviews',
+    'Reviews',
+    description: 'New reviews on your profile',
+    importance: Importance.defaultImportance,
+  ),
+  AndroidNotificationChannel(
+    'listings',
+    'Listings',
+    description: 'Listing approvals, rejections and status',
+    importance: Importance.defaultImportance,
+  ),
+  AndroidNotificationChannel(
+    'price_alerts',
+    'Price alerts',
+    description: 'Price drops on saved items',
+    importance: Importance.defaultImportance,
+  ),
+  AndroidNotificationChannel(
+    'meetups',
+    'Meetups',
+    description: 'Meetup proposals and updates',
+    importance: Importance.high,
+  ),
+  AndroidNotificationChannel(
+    'system',
+    'System',
+    description: 'System announcements',
+    importance: Importance.low,
+  ),
+  AndroidNotificationChannel(
+    'default',
+    'General',
+    description: 'General notifications',
+    importance: Importance.defaultImportance,
+  ),
+];
+
 /// Push notification service for FCM
 class PushNotificationService {
   final UserApiRepository _userApiRepository;
-  final void Function(String route, Map<String, dynamic> data)?
-  onNotificationTap;
+
+  /// Called when a user taps a notification. Set from the app layer so the
+  /// callback has access to the live `GoRouter` instance.
+  void Function(String route, Map<String, dynamic> data)? onNotificationTap;
+
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
 
   String? _currentToken;
   bool _initialized = false;
@@ -46,6 +101,8 @@ class PushNotificationService {
         debugPrint('Push notifications: permission denied');
         return;
       }
+
+      await _initLocalNotifications();
 
       // Get FCM token
       final token = await messaging.getToken();
@@ -78,6 +135,38 @@ class PushNotificationService {
     }
   }
 
+  Future<void> _initLocalNotifications() async {
+    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const iosInit = DarwinInitializationSettings(
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
+    );
+    await _localNotifications.initialize(
+      const InitializationSettings(android: androidInit, iOS: iosInit),
+      onDidReceiveNotificationResponse: (response) {
+        final payload = response.payload;
+        if (payload == null || payload.isEmpty) return;
+        try {
+          final decoded = jsonDecode(payload) as Map<String, dynamic>;
+          _routeFromData(decoded);
+        } catch (e) {
+          debugPrint('Local notification payload decode failed: $e');
+        }
+      },
+    );
+
+    if (Platform.isAndroid) {
+      final android = _localNotifications
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      for (final channel in _androidChannels) {
+        await android?.createNotificationChannel(channel);
+      }
+    }
+  }
+
   Future<void> _registerToken(String token) async {
     _currentToken = token;
     final platform = Platform.isIOS ? 'ios' : 'android';
@@ -91,35 +180,126 @@ class PushNotificationService {
 
   void _handleForegroundMessage(RemoteMessage message) {
     debugPrint('Foreground message: ${message.notification?.title}');
-    // Foreground messages are shown as local notifications by the system
-    // on Android 13+. On iOS, they are shown automatically.
-    // For custom handling, you could use flutter_local_notifications here.
+    final notification = message.notification;
+    if (notification == null) {
+      // Data-only payload — nothing to render.
+      return;
+    }
+
+    final channelId =
+        (message.data['channel_id'] as String?) ??
+        _channelIdForType(message.data['type'] as String?);
+
+    _localNotifications.show(
+      notification.hashCode,
+      notification.title,
+      notification.body,
+      NotificationDetails(
+        android: AndroidNotificationDetails(
+          channelId,
+          _channelNameForId(channelId),
+          channelDescription: 'Foreground notifications',
+          importance: Importance.high,
+          priority: Priority.high,
+          icon: '@mipmap/ic_launcher',
+        ),
+        iOS: const DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
+      ),
+      payload: jsonEncode(message.data),
+    );
   }
 
   void _handleNotificationTap(RemoteMessage message) {
-    final data = message.data;
-    final type = data['type'] as String?;
+    _routeFromData(message.data);
+  }
 
+  /// Resolves a target route from an FCM data payload.
+  /// Priority: `deep_link` (canonical) > type-based fallback.
+  void _routeFromData(Map<String, dynamic> data) {
+    final deepLink = data['deep_link'] as String?;
     String? route;
+
+    if (deepLink != null && deepLink.isNotEmpty) {
+      final uri = Uri.tryParse(deepLink);
+      if (uri != null) route = mapDeepLinkUri(uri);
+    }
+
+    route ??= _fallbackRouteForType(data);
+
+    if (route != null) {
+      onNotificationTap?.call(route, data.cast<String, dynamic>());
+    }
+  }
+
+  /// Legacy type-based routing kept for backwards compatibility with
+  /// older app installs where the backend did not yet send `deep_link`.
+  String? _fallbackRouteForType(Map<String, dynamic> data) {
+    final type = data['type'] as String?;
     switch (type) {
+      case 'message':
       case 'new_message':
       case 'chat':
         final chatId = data['chatId'] as String?;
-        if (chatId != null) route = '/chat/$chatId';
-        break;
+        return chatId != null ? '/chat/$chatId' : '/chat';
+      case 'review':
+      case 'new_review':
+        final userId = data['userId'] as String?;
+        return userId != null ? '/reviews/$userId' : '/profile';
       case 'listing_approved':
       case 'listing_rejected':
+      case 'listing_suspended':
+      case 'listing_sold':
         final listingId = data['listingId'] as String?;
-        if (listingId != null) route = '/listing/$listingId';
-        break;
-      case 'new_review':
-        route = '/profile';
-        break;
+        return listingId != null ? '/listing/$listingId' : null;
+      case 'price_drop':
+        final listingId = data['listingId'] as String?;
+        return listingId != null ? '/listing/$listingId' : null;
+      case 'meetup_proposed':
+      case 'meetup_accepted':
+        final meetupId = data['meetupId'] as String?;
+        return meetupId != null ? '/meetups/$meetupId' : '/meetups';
+      case 'system':
+        return '/notifications';
+      default:
+        return null;
     }
+  }
 
-    if (route != null) {
-      onNotificationTap?.call(route, data);
+  String _channelIdForType(String? type) {
+    switch (type) {
+      case 'message':
+      case 'new_message':
+      case 'chat':
+        return 'messages';
+      case 'review':
+      case 'new_review':
+        return 'reviews';
+      case 'listing_approved':
+      case 'listing_rejected':
+      case 'listing_suspended':
+      case 'listing_sold':
+        return 'listings';
+      case 'price_drop':
+        return 'price_alerts';
+      case 'meetup_proposed':
+      case 'meetup_accepted':
+        return 'meetups';
+      case 'system':
+        return 'system';
+      default:
+        return 'default';
     }
+  }
+
+  String _channelNameForId(String id) {
+    for (final channel in _androidChannels) {
+      if (channel.id == id) return channel.name;
+    }
+    return 'General';
   }
 
   /// Remove FCM token on sign out

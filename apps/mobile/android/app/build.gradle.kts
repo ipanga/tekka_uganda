@@ -6,6 +6,7 @@ plugins {
     id("kotlin-android")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 val keystoreProperties = Properties()
@@ -20,6 +21,8 @@ android {
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
+        // Required by flutter_local_notifications for java.time APIs on API < 26.
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
@@ -42,16 +45,16 @@ android {
         create("dev") {
             dimension = "environment"
             applicationIdSuffix = ".dev"
-            resValue("string", "app_name", "Tekka Dev")
+            resValue("string", "app_name", "Tekka Uganda Dev")
         }
         create("staging") {
             dimension = "environment"
             applicationIdSuffix = ".staging"
-            resValue("string", "app_name", "Tekka Staging")
+            resValue("string", "app_name", "Tekka Uganda Staging")
         }
         create("prod") {
             dimension = "environment"
-            resValue("string", "app_name", "Tekka")
+            resValue("string", "app_name", "Tekka Uganda")
         }
     }
 
@@ -79,4 +82,18 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+
+// Firebase is only configured for the prod flavor. Skip the google-services
+// plugin task for dev/staging variants so their builds don't require a
+// google-services.json. See apps/mobile/android/app/src/prod/ for the config.
+tasks.matching {
+    it.name.contains("GoogleServices") &&
+        (it.name.contains("Dev") || it.name.contains("Staging"))
+}.configureEach {
+    enabled = false
 }
