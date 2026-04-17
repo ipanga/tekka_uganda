@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  Placeholder committed so Xcode's Resources build phase does not fail for
+  dev/staging iOS builds. Release builds on main replace this file with the
+  real plist from the GOOGLE_SERVICE_INFO_PLIST GitHub secret — see
+  .github/workflows/mobile.yml :: build-ios-release. For local prod-flavor
+  builds, download the real plist from Firebase Console and overwrite this
+  file locally (do not commit). See apps/mobile/README.md.
+-->
 <plist version="1.0">
 <dict>
 	<key>API_KEY</key>
-	<string>AIzaSyCHkHPAkIUH4xsyVfOlAKJqNyJ0MH0OQ3M</string>
+	<string>PLACEHOLDER_INJECTED_AT_RELEASE_BUILD_TIME</string>
 	<key>GCM_SENDER_ID</key>
-	<string>605753559838</string>
+	<string>000000000000</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
@@ -15,16 +23,16 @@
 	<key>STORAGE_BUCKET</key>
 	<string>tekka-uganda-app.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_ANALYTICS_ENABLED</key>
-	<false></false>
+	<false/>
 	<key>IS_APPINVITE_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_GCM_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>IS_SIGNIN_ENABLED</key>
-	<true></true>
+	<true/>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:605753559838:ios:965d871fbff938b704570f</string>
+	<string>1:000000000000:ios:0000000000000000000000</string>
 </dict>
 </plist>
