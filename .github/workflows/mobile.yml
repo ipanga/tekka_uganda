@@ -153,6 +153,12 @@ jobs:
           cache: true
           cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}
 
+      - name: Inject google-services.json
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          mkdir -p android/app/src/prod
+          echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 --decode > android/app/src/prod/google-services.json
+
       - name: Get dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: flutter pub get
@@ -225,6 +231,11 @@ jobs:
           channel: stable
           cache: true
           cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}
+
+      - name: Inject GoogleService-Info.plist
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}" | base64 --decode > ios/Runner/GoogleService-Info.plist
 
       - name: Get dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
