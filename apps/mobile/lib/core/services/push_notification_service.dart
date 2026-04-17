@@ -186,7 +186,8 @@ class PushNotificationService {
       return;
     }
 
-    final channelId = (message.data['channel_id'] as String?) ??
+    final channelId =
+        (message.data['channel_id'] as String?) ??
         _channelIdForType(message.data['type'] as String?);
 
     _localNotifications.show(

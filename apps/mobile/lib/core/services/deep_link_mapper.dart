@@ -18,7 +18,9 @@
 ///   /reviews/:userId        -> /reviews/:userId
 ///   /browse, /home, /saved  -> passthrough
 String? mapDeepLinkUri(Uri uri) {
-  if (uri.host.isNotEmpty && uri.host != 'tekka.ug' && uri.host != 'www.tekka.ug') {
+  if (uri.host.isNotEmpty &&
+      uri.host != 'tekka.ug' &&
+      uri.host != 'www.tekka.ug') {
     return null;
   }
   final segments = uri.pathSegments.where((s) => s.isNotEmpty).toList();

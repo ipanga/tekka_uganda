@@ -43,8 +43,8 @@ class TekkaApp extends ConsumerWidget {
 
     // Wire notification taps + incoming universal/app links to the router.
     // Safe to re-wire on rebuild — both are idempotent.
-    ref.read(pushNotificationServiceProvider).onNotificationTap =
-        (route, _) => router.go(route);
+    ref.read(pushNotificationServiceProvider).onNotificationTap = (route, _) =>
+        router.go(route);
     ref.read(deepLinkServiceProvider).initialize(router);
 
     // Initialize push notifications when user is authenticated
