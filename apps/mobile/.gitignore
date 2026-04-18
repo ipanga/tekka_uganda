@@ -44,14 +44,18 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Firebase Android config — contains a Google API key flagged by GitHub
-# secret scanning. Excluded from version control; prod release CI injects
-# from the GOOGLE_SERVICES_JSON secret. Dev/staging builds skip the
-# google-services plugin entirely (see android/app/build.gradle.kts), so
-# they don't need the file. For local prod builds, download from
-# Firebase Console into android/app/src/prod/google-services.json.
-#
-# The iOS equivalent (ios/Runner/GoogleService-Info.plist) stays committed
-# as a placeholder with fake values because Xcode requires the file to
-# exist for bundling; the real plist is injected at release-build time.
+# Firebase client configs — real configs contain Google API keys flagged by
+# GitHub secret scanning. Both platforms' files are gitignored; CI injects
+# them from repo secrets GOOGLE_SERVICES_JSON (Android) and
+# GOOGLE_SERVICE_INFO_PLIST (iOS). For local builds, download from
+# Firebase Console into:
+#   android/app/src/prod/google-services.json
+#   ios/Runner/GoogleService-Info.plist
+# Android dev/staging flavors skip the google-services plugin (see
+# android/app/build.gradle.kts) so Android non-prod works without the file.
+# iOS dev/staging strip the plist from the built .app at build time (see
+# Runner.xcodeproj :: "Strip Firebase plist" phase), but Xcode's Copy
+# Bundle Resources still needs the file to exist locally — CI seeds a
+# minimal placeholder; local devs keep their real prod plist in place.
 android/app/src/prod/google-services.json
+ios/Runner/GoogleService-Info.plist
