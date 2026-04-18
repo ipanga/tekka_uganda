@@ -17,11 +17,16 @@ void main() async {
   EnvironmentConfig.init(Environment.prod);
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase (requires flutterfire configure)
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    debugPrint('Firebase init failed: $e — run "flutterfire configure" first');
+  // Initialize Firebase for prod only. Non-prod iOS builds strip the plist
+  // at build time (see Runner.xcodeproj :: "Strip Firebase plist" phase) and
+  // non-prod Android skips the google-services plugin, so neither ships with
+  // a Firebase config. Dev/staging don't use any Firebase features.
+  if (EnvironmentConfig.isProd) {
+    try {
+      await Firebase.initializeApp();
+    } catch (e) {
+      debugPrint('Firebase init failed: $e');
+    }
   }
 
   // Set preferred orientations
