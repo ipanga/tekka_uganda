@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/services/api_client.dart';
@@ -236,11 +237,7 @@ class FirebaseAuthRepository implements AuthRepository {
     try {
       return await _userApiRepository.getPublicProfile(userId);
     } catch (e) {
-      assert(() {
-        // ignore: avoid_print
-        print('getUserById($userId) failed: $e');
-        return true;
-      }());
+      debugPrint('getUserById($userId) failed: $e');
       return null;
     }
   }

@@ -1,5 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/providers/repository_providers.dart';
+import '../../../core/providers/swr.dart';
+import '../../../core/services/cache/cache_keys.dart';
 import '../domain/entities/category.dart';
 import '../domain/entities/location.dart';
 
@@ -57,7 +59,9 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
 
   CategoryNotifier(this._ref) : super(const CategoryState());
 
-  /// Load categories and cities
+  /// Load categories and cities. Reads through the shared cache — these are
+  /// reference data that rarely changes, so a 24h TTL is safe and the initial
+  /// app load is instant on a warm cache / offline.
   Future<void> loadData() async {
     if (state.isLoading) return;
 
@@ -67,8 +71,22 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
       final categoryRepo = _ref.read(categoryApiRepositoryProvider);
 
       final results = await Future.wait([
-        categoryRepo.getCategories(),
-        categoryRepo.getCitiesWithDivisions(),
+        fetchListWithCache<Category>(
+          ref: _ref,
+          key: CacheKeys.categoriesRoot,
+          ttl: CacheKeys.referenceTtl,
+          fetch: categoryRepo.getCategories,
+          toJson: (c) => c.toJson(),
+          fromJson: Category.fromJson,
+        ),
+        fetchListWithCache<City>(
+          ref: _ref,
+          key: CacheKeys.cities,
+          ttl: CacheKeys.referenceTtl,
+          fetch: categoryRepo.getCitiesWithDivisions,
+          toJson: (c) => c.toJson(),
+          fromJson: City.fromJson,
+        ),
       ]);
 
       state = state.copyWith(
@@ -81,12 +99,20 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
     }
   }
 
-  /// Get attributes for a category
+  /// Get attributes for a category. Cached with the same 24h reference TTL —
+  /// attributes per category are stable between releases.
   Future<List<AttributeDefinition>> getAttributesForCategory(
     String categoryId,
   ) async {
     final categoryRepo = _ref.read(categoryApiRepositoryProvider);
-    return categoryRepo.getCategoryAttributes(categoryId);
+    return fetchListWithCache<AttributeDefinition>(
+      ref: _ref,
+      key: CacheKeys.categoryAttributes(categoryId),
+      ttl: CacheKeys.referenceTtl,
+      fetch: () => categoryRepo.getCategoryAttributes(categoryId),
+      toJson: (a) => a.toJson(),
+      fromJson: AttributeDefinition.fromJson,
+    );
   }
 }
 

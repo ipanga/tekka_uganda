@@ -577,13 +577,17 @@ export default function ListingDetailClient({ listingId }: ListingDetailClientPr
                 <p className="text-gray-600 whitespace-pre-wrap">{listing.description}</p>
               </div>
 
-              {/* Stats & Meta */}
+              {/* Stats & Meta — view count is seller-private analytics, so
+                  it only renders for the owner (and the API nulls it out for
+                  everyone else as a defense in depth). */}
               <div className="flex items-center justify-between text-sm text-gray-500">
                 <div className="flex items-center gap-4">
-                  <span className="flex items-center gap-1">
-                    <EyeIcon className="w-4 h-4" />
-                    {listing.viewCount} views
-                  </span>
+                  {isOwnListing && listing.viewCount != null && (
+                    <span className="flex items-center gap-1">
+                      <EyeIcon className="w-4 h-4" />
+                      {listing.viewCount} views
+                    </span>
+                  )}
                   <span className="flex items-center gap-1">
                     <HeartIcon className="w-4 h-4" />
                     {listing.saveCount} saves

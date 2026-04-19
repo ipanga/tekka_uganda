@@ -271,17 +271,22 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                               listing.timeAgo,
                               style: AppTypography.bodySmall,
                             ),
-                            const Spacer(),
-                            Icon(
-                              Icons.visibility_outlined,
-                              size: AppSpacing.iconSmall,
-                              color: AppColors.onSurfaceVariant,
-                            ),
-                            const SizedBox(width: AppSpacing.space1),
-                            Text(
-                              '${listing.viewCount}',
-                              style: AppTypography.bodySmall,
-                            ),
+                            // View count is seller-private analytics — show
+                            // only to the owner. The API nulls the field out
+                            // for everyone else as a defense in depth.
+                            if (isOwner) ...[
+                              const Spacer(),
+                              const Icon(
+                                Icons.visibility_outlined,
+                                size: AppSpacing.iconSmall,
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                              const SizedBox(width: AppSpacing.space1),
+                              Text(
+                                '${listing.viewCount}',
+                                style: AppTypography.bodySmall,
+                              ),
+                            ],
                           ],
                         ),
 
@@ -1237,12 +1242,9 @@ class _Breadcrumb extends StatelessWidget {
               ),
             ),
           ],
-          Flexible(
-            child: Text(
-              listing.title,
-              style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
-              overflow: TextOverflow.ellipsis,
-            ),
+          Text(
+            listing.title,
+            style: TextStyle(fontSize: 12, color: AppColors.onSurfaceVariant),
           ),
         ],
       ),
@@ -1285,6 +1287,7 @@ class _DetailRow extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.space3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
@@ -1292,7 +1295,15 @@ class _DetailRow extends StatelessWidget {
               color: AppColors.onSurfaceVariant,
             ),
           ),
-          Text(value, style: AppTypography.bodyMedium),
+          const SizedBox(width: AppSpacing.space3),
+          Expanded(
+            child: Text(
+              value,
+              style: AppTypography.bodyMedium,
+              textAlign: TextAlign.end,
+              softWrap: true,
+            ),
+          ),
         ],
       ),
     );

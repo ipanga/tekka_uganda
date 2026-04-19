@@ -196,6 +196,19 @@ jobs:
           cache: true
           cache-key: flutter-${{ env.FLUTTER_VERSION }}-${{ runner.os }}
 
+      - name: Seed placeholder GoogleService-Info.plist
+        # Xcode's Resources build phase references the plist — it must exist
+        # on disk during the build. The "Strip Firebase plist" Run Script
+        # phase removes it from the final .app for non-prod configs, so the
+        # placeholder never ships and never executes.
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          cat > ios/Runner/GoogleService-Info.plist <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict/></plist>
+          PLIST
+
       - name: Get dependencies
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: flutter pub get

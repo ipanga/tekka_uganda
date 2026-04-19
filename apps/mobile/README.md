@@ -17,21 +17,28 @@ flutter run --flavor dev -t lib/main_dev.dart
 
 ## Firebase configuration (prod only)
 
-### Android (`google-services.json`)
+### Local setup (one-time)
 
-Not committed. Dev/staging Android builds skip the google-services plugin
-(see `android/app/build.gradle.kts`), so no file is needed. For prod:
-download from [Firebase Console](https://console.firebase.google.com/project/tekka-uganda-app/settings/general)
-and place at `android/app/src/prod/google-services.json`.
+Download both files from [Firebase Console → Project Settings](https://console.firebase.google.com/project/tekka-uganda-app/settings/general)
+and place them at:
 
-### iOS (`GoogleService-Info.plist`)
+- `android/app/src/prod/google-services.json`
+- `ios/Runner/GoogleService-Info.plist`
 
-A **placeholder** with obviously-fake values is committed so Xcode's
-Resources build phase succeeds. Firebase init at runtime will fail with
-this placeholder, but dev/staging flavors don't depend on Firebase. For
-local prod-flavor builds: download the real plist from Firebase Console
-and overwrite `ios/Runner/GoogleService-Info.plist` locally. **Do not
-commit the real file** — CI injects it at release build time.
+Both paths are gitignored — **do not commit real values**.
+
+### What happens per build
+
+- **Android dev / staging**: the google-services plugin is skipped entirely
+  (`android/app/build.gradle.kts` :: `tasks.matching { ... GoogleServices ... }.configureEach { enabled = false }`), so no file is needed.
+- **Android prod**: plugin reads `android/app/src/prod/google-services.json`.
+  Build fails if missing — download it or expect CI to inject.
+- **iOS dev / staging**: Xcode's Resources phase needs the plist to exist,
+  but the `Strip Firebase plist` Run Script phase removes it from the
+  final `.app` so Firebase never initializes. Having your real prod plist
+  sitting locally is fine — it's stripped from dev/staging builds.
+- **iOS prod**: plist stays in the bundle; `FLTFirebaseCorePlugin` reads it
+  and initializes FIRApp with the real API key.
 
 ### Why these aren't "secrets"
 

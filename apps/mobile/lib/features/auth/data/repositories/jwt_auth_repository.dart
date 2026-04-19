@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
+
 import '../../../../core/errors/app_exception.dart';
 import '../../../../core/services/api_client.dart';
 import '../../domain/entities/app_user.dart';
@@ -259,11 +261,7 @@ class JwtAuthRepository implements AuthRepository {
     try {
       return await _userApiRepository.getPublicProfile(userId);
     } catch (e) {
-      assert(() {
-        // ignore: avoid_print
-        print('getUserById($userId) failed: $e');
-        return true;
-      }());
+      debugPrint('getUserById($userId) failed: $e');
       return null;
     }
   }

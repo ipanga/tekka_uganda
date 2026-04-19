@@ -74,6 +74,7 @@ class PushNotificationService {
 
   String? _currentToken;
   bool _initialized = false;
+  Future<void>? _initFuture;
 
   PushNotificationService({
     required UserApiRepository userApiRepository,
@@ -82,10 +83,12 @@ class PushNotificationService {
 
   bool get isInitialized => _initialized;
 
-  /// Initialize push notifications — call after user is authenticated
-  Future<void> initialize() async {
-    if (_initialized) return;
+  /// Initialize push notifications — call after user is authenticated.
+  /// Idempotent: concurrent callers all await the same underlying init, so
+  /// message/token listeners are attached exactly once per process.
+  Future<void> initialize() => _initFuture ??= _doInitialize();
 
+  Future<void> _doInitialize() async {
     try {
       final messaging = FirebaseMessaging.instance;
 
@@ -102,22 +105,52 @@ class PushNotificationService {
         return;
       }
 
-      await _initLocalNotifications();
-
-      // Get FCM token
-      final token = await messaging.getToken();
-      if (token != null) {
-        await _registerToken(token);
+      // iOS: show alerts in-foreground too. Without this, iOS silently drops
+      // banners while the app is active.
+      if (Platform.isIOS) {
+        await messaging.setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
       }
 
-      // Listen for token refresh
+      await _initLocalNotifications();
+
+      // Attach listeners FIRST. On iOS, the FCM token is only available after
+      // APNs registration completes; if we wait for the token synchronously
+      // we can miss it. onTokenRefresh fires once APNs is ready.
       messaging.onTokenRefresh.listen(_registerToken);
-
-      // Foreground messages
       FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-
-      // When app is opened from a notification (background → foreground)
       FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+      // iOS requires an APNs token before FCM can mint one. Poll briefly —
+      // the simulator / a slow first-run device may not have it instantly.
+      if (Platform.isIOS) {
+        for (var i = 0; i < 10; i++) {
+          final apns = await messaging.getAPNSToken();
+          if (apns != null) break;
+          await Future<void>.delayed(const Duration(milliseconds: 500));
+        }
+      }
+
+      // Attempt to grab the FCM token up-front. If it's not yet available
+      // (common on iOS cold start), onTokenRefresh will deliver it shortly.
+      try {
+        final token = await messaging.getToken();
+        if (token != null) {
+          // Print the raw token only in local debug builds so it's easy to
+          // copy during testing. `debugPrint` is already debug-gated, but
+          // wrap in kDebugMode as defense-in-depth against release leaks.
+          if (kDebugMode) {
+            debugPrint('FCM token: $token');
+          }
+          await _registerToken(token);
+        }
+      } catch (e) {
+        debugPrint('Initial FCM token fetch failed (will retry via onTokenRefresh): $e');
+      }
 
       // Check if app was opened from a terminated state notification
       final initialMessage = await messaging.getInitialMessage();
@@ -125,13 +158,12 @@ class PushNotificationService {
         _handleNotificationTap(initialMessage);
       }
 
-      // Background handler
-      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
-
       _initialized = true;
       debugPrint('Push notifications initialized');
     } catch (e) {
       debugPrint('Push notification init failed: $e');
+      // Allow a retry on transient failure (e.g. permission dialog race).
+      _initFuture = null;
     }
   }
 
@@ -313,5 +345,6 @@ class PushNotificationService {
       _currentToken = null;
     }
     _initialized = false;
+    _initFuture = null;
   }
 }

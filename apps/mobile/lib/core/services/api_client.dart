@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../config/app_config.dart';
 import '../errors/app_exception.dart';
+import 'retry_interceptor.dart';
 
 /// API Client for communicating with Tekka backend
 class ApiClient {
@@ -43,6 +44,9 @@ class ApiClient {
         onError: _onError,
       ),
     );
+    // Retries run AFTER auth (so 401 refresh still happens first) and only
+    // on idempotent requests. See RetryInterceptor for details.
+    _dio.interceptors.add(RetryInterceptor(dio: _dio));
   }
 
   Future<void> _onRequest(

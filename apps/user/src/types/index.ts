@@ -93,7 +93,8 @@ export interface Listing {
   location?: string;
   imageUrls: string[];
   status: ListingStatus;
-  viewCount: number;
+  /** Seller-private analytics. Null when the viewer isn't the owner. */
+  viewCount: number | null;
   saveCount: number;
   createdAt: string;
   updatedAt: string;

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+  App Privacy Manifest — Tekka Uganda.
+
+  Apple requires this file since May 2024 for apps using "required reason APIs".
+  It declares WHY the app (not SDKs — those ship their own manifests) uses
+  each API Apple considers sensitive. Data actually COLLECTED and sent off-
+  device is declared on App Store Connect's App Privacy labels, not here.
+
+  Tracking: Tekka does NOT use the IDFA or any cross-app tracking SDK, so
+  NSPrivacyTracking is false and there are no tracking domains.
+-->
+<plist version="1.0">
+<dict>
+  <key>NSPrivacyTracking</key>
+  <false/>
+
+  <key>NSPrivacyTrackingDomains</key>
+  <array/>
+
+  <key>NSPrivacyCollectedDataTypes</key>
+  <array/>
+
+  <key>NSPrivacyAccessedAPITypes</key>
+  <array>
+    <!-- NSUserDefaults: used by shared_preferences (app language, onboarding
+         flags, offline queue, response cache). -->
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>CA92.1</string>
+      </array>
+    </dict>
+
+    <!-- File timestamps: touched by path_provider + image caching. -->
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>C617.1</string>
+      </array>
+    </dict>
+
+    <!-- System boot time: transitively used by Firebase SDKs for session
+         timing / diagnostics. -->
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategorySystemBootTime</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>35F9.1</string>
+      </array>
+    </dict>
+
+    <!-- Disk space: used when compressing / caching listing images. -->
+    <dict>
+      <key>NSPrivacyAccessedAPIType</key>
+      <string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+      <key>NSPrivacyAccessedAPITypeReasons</key>
+      <array>
+        <string>E174.1</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>

@@ -3,7 +3,13 @@ import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/providers/cache_providers.dart';
+import '../../../core/providers/connectivity_provider.dart';
+import '../../../core/providers/swr.dart';
+import '../../../core/services/cache/cache_keys.dart';
 import '../../../core/services/image_service.dart';
+import '../../../core/services/offline_queue/offline_queue.dart';
+import '../../../core/services/offline_queue/queued_action.dart';
 import '../../../core/services/storage_service.dart';
 import '../../../core/services/image_service_provider.dart';
 import '../../../core/providers/repository_providers.dart';
@@ -15,41 +21,57 @@ import '../domain/entities/listing.dart';
 export '../../../core/services/image_service_provider.dart'
     show storageServiceProvider, imageServiceProvider;
 
-/// Listings feed provider with pagination (filters blocked users)
+/// Listings feed provider with pagination (filters blocked users).
+///
+/// Reads through the shared cache: fresh cache hit → instant render, no
+/// network. Cache miss / stale → fetch; on fetch failure, falls back to
+/// stale data (see `fetchListWithCache`) so the offline screen still shows
+/// something.
 final listingsFeedProvider =
     FutureProvider.family<List<Listing>, ListingsFilter>((ref, filter) async {
       final repository = ref.watch(listingApiRepositoryProvider);
       final currentUser = ref.watch(currentUserProvider);
 
-      // Get listings from API
-      final result = await repository.search(
-        query: filter.searchQuery,
-        category: filter.category,
-        categoryId: filter.categoryId,
-        condition: filter.condition,
-        occasion: filter.occasion,
-        minPrice: filter.minPrice,
-        maxPrice: filter.maxPrice,
-        location: filter.location,
-        cityId: filter.cityId,
-        divisionId: filter.divisionId,
-        sortBy: filter.sortBy,
-        sortOrder: filter.sortOrder,
-        page: filter.page,
-        limit: filter.limit,
+      final listings = await fetchListWithCache<Listing>(
+        ref: ref,
+        key: CacheKeys.listingsFeed(filter._cacheFingerprint()),
+        ttl: CacheKeys.listingsFeedTtl,
+        // Cap what we keep on disk — first page only; later pages refetch fresh.
+        maxCacheItems: 20,
+        fetch: () async {
+          final result = await repository.search(
+            query: filter.searchQuery,
+            category: filter.category,
+            categoryId: filter.categoryId,
+            condition: filter.condition,
+            occasion: filter.occasion,
+            minPrice: filter.minPrice,
+            maxPrice: filter.maxPrice,
+            location: filter.location,
+            cityId: filter.cityId,
+            divisionId: filter.divisionId,
+            sortBy: filter.sortBy,
+            sortOrder: filter.sortOrder,
+            page: filter.page,
+            limit: filter.limit,
+          );
+          return result.listings;
+        },
+        toJson: (l) => l.toJson(),
+        fromJson: Listing.fromJson,
       );
-
-      var listings = result.listings;
 
       // If no user is logged in, return all listings
       if (currentUser == null) return listings;
 
-      // Get blocked users and filter them out
+      // Get blocked users and filter them out. Kept outside the cache path
+      // because block lists change per user and shouldn't pollute the shared
+      // listings cache.
       try {
         final blockedUsers = await ref.watch(blockedUsersProvider.future);
         if (blockedUsers.isNotEmpty) {
           final blockedUserIds = blockedUsers.map((u) => u.uid).toSet();
-          listings = listings
+          return listings
               .where((listing) => !blockedUserIds.contains(listing.sellerId))
               .toList();
         }
@@ -242,14 +264,23 @@ final paginatedListingsProvider =
       return notifier;
     });
 
-/// Single listing provider
+/// Single listing provider. Reads through the shared cache; on fetch
+/// failure falls back to any cached copy (still returns null if neither
+/// cache nor network have anything).
 final listingProvider = FutureProvider.family<Listing?, String>((
   ref,
   listingId,
 ) async {
   final repository = ref.watch(listingApiRepositoryProvider);
   try {
-    return await repository.getById(listingId);
+    return await fetchWithCache<Listing>(
+      ref: ref,
+      key: CacheKeys.listingDetail(listingId),
+      ttl: CacheKeys.listingDetailTtl,
+      fetch: () => repository.getById(listingId),
+      toJson: (l) => l.toJson(),
+      fromJson: Listing.fromJson,
+    );
   } catch (_) {
     return null;
   }
@@ -420,6 +451,28 @@ class ListingsFilter {
       page,
       limit,
     );
+  }
+
+  /// Stable string fingerprint used as a cache key. Only the filter fields
+  /// that affect server results matter — omit things like the UI-only
+  /// `limit` if they ever diverge from server defaults.
+  String _cacheFingerprint() {
+    return [
+      category?.name ?? '',
+      categoryId ?? '',
+      condition?.name ?? '',
+      occasion?.name ?? '',
+      location ?? '',
+      cityId ?? '',
+      divisionId ?? '',
+      minPrice ?? '',
+      maxPrice ?? '',
+      searchQuery?.trim().toLowerCase() ?? '',
+      sortBy ?? '',
+      sortOrder ?? '',
+      page,
+      limit,
+    ].join('|');
   }
 }
 
@@ -709,10 +762,18 @@ final createListingProvider =
 /// Listing actions notifier (for detail screen)
 class ListingActionsNotifier extends StateNotifier<AsyncValue<void>> {
   final ListingApiRepository _repository;
+  final OfflineQueue _queue;
+  final bool Function() _isConnected;
   final String listingId;
 
-  ListingActionsNotifier(this._repository, this.listingId)
-    : super(const AsyncValue.data(null));
+  ListingActionsNotifier(
+    this._repository,
+    this.listingId, {
+    required OfflineQueue queue,
+    required bool Function() isConnected,
+  })  : _queue = queue,
+        _isConnected = isConnected,
+        super(const AsyncValue.data(null));
 
   /// Increment view count (called when listing is opened)
   Future<void> incrementView() async {
@@ -727,6 +788,18 @@ class ListingActionsNotifier extends StateNotifier<AsyncValue<void>> {
 
   Future<bool> toggleSave() async {
     state = const AsyncValue.loading();
+    // Offline: we don't know the current saved state of the server, so we
+    // conservatively enqueue a `saveListing` — backend save is idempotent.
+    // If the user wanted to unsave, they'll tap again once online.
+    if (!_isConnected()) {
+      await _queue.enqueue(
+        kind: QueuedActionKind.saveListing,
+        payload: {'listingId': listingId},
+        idempotencyKey: 'saveListing:$listingId',
+      );
+      state = const AsyncValue.data(null);
+      return true;
+    }
     try {
       final result = await _repository.toggleFavorite(listingId);
       state = const AsyncValue.data(null);
@@ -739,6 +812,15 @@ class ListingActionsNotifier extends StateNotifier<AsyncValue<void>> {
 
   Future<void> saveListing() async {
     state = const AsyncValue.loading();
+    if (!_isConnected()) {
+      await _queue.enqueue(
+        kind: QueuedActionKind.saveListing,
+        payload: {'listingId': listingId},
+        idempotencyKey: 'saveListing:$listingId',
+      );
+      state = const AsyncValue.data(null);
+      return;
+    }
     try {
       await _repository.save(listingId);
       state = const AsyncValue.data(null);
@@ -749,6 +831,15 @@ class ListingActionsNotifier extends StateNotifier<AsyncValue<void>> {
 
   Future<void> unsaveListing() async {
     state = const AsyncValue.loading();
+    if (!_isConnected()) {
+      await _queue.enqueue(
+        kind: QueuedActionKind.unsaveListing,
+        payload: {'listingId': listingId},
+        idempotencyKey: 'unsaveListing:$listingId',
+      );
+      state = const AsyncValue.data(null);
+      return;
+    }
     try {
       await _repository.unsave(listingId);
       state = const AsyncValue.data(null);
@@ -805,7 +896,13 @@ final listingActionsProvider = StateNotifierProvider.family
       listingId,
     ) {
       final repository = ref.watch(listingApiRepositoryProvider);
-      return ListingActionsNotifier(repository, listingId);
+      final queue = ref.watch(offlineQueueProvider);
+      return ListingActionsNotifier(
+        repository,
+        listingId,
+        queue: queue,
+        isConnected: () => ref.read(isConnectedProvider),
+      );
     });
 
 /// Provider to check if a listing is favorited/saved by current user
