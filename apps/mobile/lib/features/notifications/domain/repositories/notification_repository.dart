@@ -1,9 +1,31 @@
 import '../entities/app_notification.dart';
 
+/// One page of notifications + the cursor to request the next page.
+/// `nextCursor` is null when there are no more rows.
+class NotificationPage {
+  final List<AppNotification> items;
+  final String? nextCursor;
+  final bool hasMore;
+
+  const NotificationPage({
+    required this.items,
+    required this.nextCursor,
+    required this.hasMore,
+  });
+}
+
 /// Repository interface for notification operations
 abstract class NotificationRepository {
   /// Get all notifications for a user
   Future<List<AppNotification>> getNotifications(String userId);
+
+  /// Get one page of notifications. Used by the infinite-scroll notifier;
+  /// pass the previous page's `nextCursor` to fetch the next page.
+  Future<NotificationPage> getNotificationsPage(
+    String userId, {
+    int limit = 20,
+    String? cursor,
+  });
 
   /// Stream of notifications for a user
   Stream<List<AppNotification>> watchNotifications(String userId);

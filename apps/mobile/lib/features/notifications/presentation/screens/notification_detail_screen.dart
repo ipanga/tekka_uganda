@@ -343,6 +343,7 @@ class _NotificationDetailScreenState
             break;
           case NotificationType.listingApproved:
           case NotificationType.listingRejected:
+          case NotificationType.listingSuspended:
           case NotificationType.listingSold:
           case NotificationType.priceDropped:
             buttonText = 'View Listing';
@@ -359,6 +360,28 @@ class _NotificationDetailScreenState
             onPressed = () {
               context.push(
                 AppRoutes.userProfile.replaceFirst(':userId', targetId),
+              );
+            };
+            break;
+          case NotificationType.newReview:
+            buttonText = 'View Reviews';
+            buttonIcon = Icons.star_outline;
+            onPressed = () {
+              context.push(
+                AppRoutes.reviews.replaceFirst(':userId', targetId),
+              );
+            };
+            break;
+          case NotificationType.meetupProposed:
+          case NotificationType.meetupAccepted:
+          case NotificationType.meetupDeclined:
+          case NotificationType.meetupCancelled:
+          case NotificationType.meetupNoShow:
+            buttonText = 'View Meetup';
+            buttonIcon = Icons.handshake_outlined;
+            onPressed = () {
+              context.push(
+                AppRoutes.meetupDetail.replaceFirst(':id', targetId),
               );
             };
             break;
@@ -394,12 +417,25 @@ class _NotificationDetailScreenState
         return Icons.verified_outlined;
       case NotificationType.listingRejected:
         return Icons.block_outlined;
+      case NotificationType.listingSuspended:
+        return Icons.pause_circle_outline;
       case NotificationType.listingSold:
         return Icons.sell_outlined;
       case NotificationType.newFollower:
         return Icons.person_add_outlined;
+      case NotificationType.newReview:
+        return Icons.star_outline;
       case NotificationType.priceDropped:
         return Icons.trending_down;
+      case NotificationType.meetupProposed:
+        return Icons.event_outlined;
+      case NotificationType.meetupAccepted:
+        return Icons.event_available_outlined;
+      case NotificationType.meetupDeclined:
+      case NotificationType.meetupCancelled:
+        return Icons.event_busy_outlined;
+      case NotificationType.meetupNoShow:
+        return Icons.person_off_outlined;
       case NotificationType.system:
         return Icons.info_outline;
     }
@@ -414,14 +450,24 @@ class _NotificationDetailScreenState
       case NotificationType.offerAccepted:
       case NotificationType.listingApproved:
       case NotificationType.listingSold:
+      case NotificationType.meetupAccepted:
         return AppColors.success.withAlpha(50);
       case NotificationType.offerDeclined:
       case NotificationType.listingRejected:
+      case NotificationType.meetupDeclined:
+      case NotificationType.meetupCancelled:
+      case NotificationType.meetupNoShow:
         return AppColors.error.withAlpha(50);
+      case NotificationType.listingSuspended:
+        return AppColors.warning.withAlpha(50);
       case NotificationType.newFollower:
         return AppColors.secondary.withAlpha(50);
+      case NotificationType.newReview:
+        return AppColors.gold.withAlpha(50);
       case NotificationType.priceDropped:
         return AppColors.secondaryLight.withAlpha(50);
+      case NotificationType.meetupProposed:
+        return AppColors.primaryContainer;
       case NotificationType.system:
         return AppColors.gray100;
     }
@@ -436,14 +482,24 @@ class _NotificationDetailScreenState
       case NotificationType.offerAccepted:
       case NotificationType.listingApproved:
       case NotificationType.listingSold:
+      case NotificationType.meetupAccepted:
         return AppColors.success;
       case NotificationType.offerDeclined:
       case NotificationType.listingRejected:
+      case NotificationType.meetupDeclined:
+      case NotificationType.meetupCancelled:
+      case NotificationType.meetupNoShow:
         return AppColors.error;
+      case NotificationType.listingSuspended:
+        return AppColors.warning;
       case NotificationType.newFollower:
         return AppColors.secondary;
+      case NotificationType.newReview:
+        return AppColors.gold;
       case NotificationType.priceDropped:
         return AppColors.secondaryLight;
+      case NotificationType.meetupProposed:
+        return AppColors.primary;
       case NotificationType.system:
         return AppColors.onSurfaceVariant;
     }
@@ -571,12 +627,26 @@ class _TypeBadge extends StatelessWidget {
         return 'Approved';
       case NotificationType.listingRejected:
         return 'Rejected';
+      case NotificationType.listingSuspended:
+        return 'Suspended';
       case NotificationType.listingSold:
         return 'Sold';
       case NotificationType.newFollower:
         return 'New Follower';
+      case NotificationType.newReview:
+        return 'New Review';
       case NotificationType.priceDropped:
         return 'Price Drop';
+      case NotificationType.meetupProposed:
+        return 'Meetup Proposed';
+      case NotificationType.meetupAccepted:
+        return 'Meetup Accepted';
+      case NotificationType.meetupDeclined:
+        return 'Meetup Declined';
+      case NotificationType.meetupCancelled:
+        return 'Meetup Cancelled';
+      case NotificationType.meetupNoShow:
+        return 'No-Show';
       case NotificationType.system:
         return 'System';
     }
@@ -596,12 +666,25 @@ class _TypeBadge extends StatelessWidget {
         return Icons.verified;
       case NotificationType.listingRejected:
         return Icons.block;
+      case NotificationType.listingSuspended:
+        return Icons.pause_circle;
       case NotificationType.listingSold:
         return Icons.sell;
       case NotificationType.newFollower:
         return Icons.person_add;
+      case NotificationType.newReview:
+        return Icons.star;
       case NotificationType.priceDropped:
         return Icons.trending_down;
+      case NotificationType.meetupProposed:
+        return Icons.event;
+      case NotificationType.meetupAccepted:
+        return Icons.event_available;
+      case NotificationType.meetupDeclined:
+      case NotificationType.meetupCancelled:
+        return Icons.event_busy;
+      case NotificationType.meetupNoShow:
+        return Icons.person_off;
       case NotificationType.system:
         return Icons.info;
     }
@@ -616,14 +699,24 @@ class _TypeBadge extends StatelessWidget {
       case NotificationType.offerAccepted:
       case NotificationType.listingApproved:
       case NotificationType.listingSold:
+      case NotificationType.meetupAccepted:
         return AppColors.success;
       case NotificationType.offerDeclined:
       case NotificationType.listingRejected:
+      case NotificationType.meetupDeclined:
+      case NotificationType.meetupCancelled:
+      case NotificationType.meetupNoShow:
         return AppColors.error;
+      case NotificationType.listingSuspended:
+        return AppColors.warning;
       case NotificationType.newFollower:
         return AppColors.secondary;
+      case NotificationType.newReview:
+        return AppColors.gold;
       case NotificationType.priceDropped:
         return AppColors.secondaryLight;
+      case NotificationType.meetupProposed:
+        return AppColors.primary;
       case NotificationType.system:
         return AppColors.onSurfaceVariant;
     }
@@ -638,14 +731,24 @@ class _TypeBadge extends StatelessWidget {
       case NotificationType.offerAccepted:
       case NotificationType.listingApproved:
       case NotificationType.listingSold:
+      case NotificationType.meetupAccepted:
         return AppColors.success.withAlpha(30);
       case NotificationType.offerDeclined:
       case NotificationType.listingRejected:
+      case NotificationType.meetupDeclined:
+      case NotificationType.meetupCancelled:
+      case NotificationType.meetupNoShow:
         return AppColors.error.withAlpha(30);
+      case NotificationType.listingSuspended:
+        return AppColors.warning.withAlpha(30);
       case NotificationType.newFollower:
         return AppColors.secondary.withAlpha(30);
+      case NotificationType.newReview:
+        return AppColors.gold.withAlpha(30);
       case NotificationType.priceDropped:
         return AppColors.secondaryLight.withAlpha(30);
+      case NotificationType.meetupProposed:
+        return AppColors.primaryContainer;
       case NotificationType.system:
         return AppColors.gray100;
     }
