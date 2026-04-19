@@ -26,6 +26,29 @@ export class ListingsService {
   ) {}
 
   /**
+   * Strips `viewCount` from a listing response unless the viewer owns it.
+   * View count is seller-private analytics — buyers have no business seeing
+   * it. Returns `null` (not `undefined`) so clients that rely on the field
+   * being present still deserialize cleanly.
+   *
+   * No-op if `listing` isn't shaped like a listing (safety for any transform
+   * path that might pass a plain object).
+   */
+  private maskViewCount<
+    T extends { sellerId?: string; viewCount?: number | null },
+  >(listing: T, viewerId?: string | null): T {
+    if (!listing) return listing;
+    if (viewerId && listing.sellerId === viewerId) return listing;
+    return { ...listing, viewCount: null };
+  }
+
+  private maskViewCounts<
+    T extends { sellerId?: string; viewCount?: number | null },
+  >(listings: T[], viewerId?: string | null): T[] {
+    return listings.map((l) => this.maskViewCount(l, viewerId));
+  }
+
+  /**
    * Generate a URL-friendly slug from a title.
    * Appends a short random suffix to ensure uniqueness.
    */
@@ -171,19 +194,22 @@ export class ListingsService {
     const listingData = listing as any;
     const { categoryRef, cityRef, divisionRef, ...rest } = listingData;
 
-    return {
-      ...rest,
-      isSaved,
-      // Map Prisma relations to frontend expected names
-      categoryData: categoryRef,
-      city: cityRef,
-      division: divisionRef,
-      seller: {
-        ...listingData.seller,
-        rating: sellerStats._avg.rating || 0,
-        reviewCount: sellerStats._count.rating,
+    return this.maskViewCount(
+      {
+        ...rest,
+        isSaved,
+        // Map Prisma relations to frontend expected names
+        categoryData: categoryRef,
+        city: cityRef,
+        division: divisionRef,
+        seller: {
+          ...listingData.seller,
+          rating: sellerStats._avg.rating || 0,
+          reviewCount: sellerStats._count.rating,
+        },
       },
-    };
+      viewerId,
+    );
   }
 
   async findBySlug(slug: string, viewerId?: string) {
@@ -244,18 +270,21 @@ export class ListingsService {
     const listingData = listing as any;
     const { categoryRef, cityRef, divisionRef, ...rest } = listingData;
 
-    return {
-      ...rest,
-      isSaved,
-      categoryData: categoryRef,
-      city: cityRef,
-      division: divisionRef,
-      seller: {
-        ...listingData.seller,
-        rating: sellerStats._avg.rating || 0,
-        reviewCount: sellerStats._count.rating,
+    return this.maskViewCount(
+      {
+        ...rest,
+        isSaved,
+        categoryData: categoryRef,
+        city: cityRef,
+        division: divisionRef,
+        seller: {
+          ...listingData.seller,
+          rating: sellerStats._avg.rating || 0,
+          reviewCount: sellerStats._count.rating,
+        },
       },
-    };
+      viewerId,
+    );
   }
 
   async update(
@@ -600,7 +629,7 @@ export class ListingsService {
     );
 
     return {
-      listings: listingsWithSaved,
+      listings: this.maskViewCounts(listingsWithSaved, viewerId),
       pagination: {
         page,
         limit,
@@ -877,7 +906,7 @@ export class ListingsService {
     );
 
     return {
-      listings: listingsWithSaved,
+      listings: this.maskViewCounts(listingsWithSaved, viewerId),
       pagination: {
         page,
         limit,
@@ -1030,18 +1059,23 @@ export class ListingsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Transform listings to include properly named category/location data
+    // Transform listings to include properly named category/location data.
+    // The caller (userId) is the viewer here, so they still see the count for
+    // any of their own listings they've happened to save.
     return saved.map((s) => {
       const listing = s.listing as any;
       const { categoryRef, cityRef, divisionRef, ...rest } = listing;
-      return {
-        ...rest,
-        // Map Prisma relations to frontend expected names
-        categoryData: categoryRef,
-        city: cityRef,
-        division: divisionRef,
-        isSaved: true,
-      };
+      return this.maskViewCount(
+        {
+          ...rest,
+          // Map Prisma relations to frontend expected names
+          categoryData: categoryRef,
+          city: cityRef,
+          division: divisionRef,
+          isSaved: true,
+        },
+        userId,
+      );
     });
   }
 
@@ -1126,7 +1160,7 @@ export class ListingsService {
     }
 
     return {
-      data,
+      data: this.maskViewCounts(data, viewerId),
       total,
       page: 1,
       limit: total,
@@ -1156,11 +1190,19 @@ export class ListingsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return purchases.map((purchase) => ({
-      ...purchase.listing,
-      purchasedAt: purchase.createdAt,
-      purchasePrice: purchase.finalPrice,
-    }));
+    // A buyer is by definition not the seller of the listings they purchased,
+    // so viewCount is always stripped here. Passing `buyerId` keeps the mask
+    // consistent (handles the edge case of a self-purchase cleanly).
+    return purchases.map((purchase) =>
+      this.maskViewCount(
+        {
+          ...purchase.listing,
+          purchasedAt: purchase.createdAt,
+          purchasePrice: purchase.finalPrice,
+        },
+        buyerId,
+      ),
+    );
   }
 
   // Admin actions
