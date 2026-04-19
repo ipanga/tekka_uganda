@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers/repository_providers.dart';
+import '../../../core/providers/swr.dart';
+import '../../../core/services/cache/cache_keys.dart';
 import '../data/repositories/jwt_auth_repository.dart';
 import '../data/repositories/user_api_repository.dart';
 import '../domain/entities/app_user.dart';
@@ -198,13 +200,25 @@ final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((
   return AuthNotifier(repository);
 });
 
-/// Public user provider - for viewing other user profiles
+/// Public user provider — for viewing other users' profiles. Reads through
+/// the shared cache; when offline, falls back to the last-seen profile copy.
 final publicUserProvider = FutureProvider.family<AppUser?, String>((
   ref,
   userId,
 ) async {
   final repository = ref.watch(authRepositoryProvider);
-  return repository.getUserById(userId);
+  try {
+    return await fetchWithCache<AppUser?>(
+      ref: ref,
+      key: 'user:public:$userId',
+      ttl: CacheKeys.userProfileTtl,
+      fetch: () => repository.getUserById(userId),
+      toJson: (u) => u == null ? const {} : u.toJson(),
+      fromJson: (json) => json.isEmpty ? null : AppUser.fromJson(json),
+    );
+  } catch (_) {
+    return null;
+  }
 });
 
 /// User stats provider

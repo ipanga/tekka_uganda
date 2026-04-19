@@ -75,10 +75,50 @@ class ApiClient {
       (headers as Record<string, string>)['Authorization'] = `Bearer ${this.token}`;
     }
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
-      headers,
-    });
+    // Retry transient network/server failures on GET only. Writes aren't
+    // retried — most mutation endpoints aren't idempotent on the server yet.
+    const method = (options.method || 'GET').toUpperCase();
+    const canRetry = method === 'GET' || method === 'HEAD';
+    const maxAttempts = canRetry ? 3 : 1;
+    const backoffMs = [0, 500, 1500];
+
+    let response: Response;
+    let lastNetworkError: unknown = null;
+    let attempt = 0;
+    for (;;) {
+      if (attempt > 0) {
+        await new Promise((r) => setTimeout(r, backoffMs[attempt] ?? 1500));
+      }
+      try {
+        response = await fetch(`${API_URL}${endpoint}`, {
+          ...options,
+          headers,
+        });
+        // Retry 502/503/504/429 on GET.
+        if (
+          canRetry &&
+          attempt < maxAttempts - 1 &&
+          [429, 502, 503, 504].includes(response.status)
+        ) {
+          attempt++;
+          continue;
+        }
+        break;
+      } catch (err) {
+        // `fetch` throws on network failure (offline, DNS). Retry those on GET.
+        lastNetworkError = err;
+        if (canRetry && attempt < maxAttempts - 1) {
+          attempt++;
+          continue;
+        }
+        // Exhausted — surface a clear error so callers can show a network UX.
+        const msg =
+          typeof navigator !== 'undefined' && !navigator.onLine
+            ? 'You are offline. Check your connection and try again.'
+            : 'Network error. Please try again.';
+        throw new Error(msg, { cause: lastNetworkError as Error });
+      }
+    }
 
     // On 401, attempt silent token refresh and retry once
     if (response.status === 401 && !_isRetry && this._onTokenRefresh) {

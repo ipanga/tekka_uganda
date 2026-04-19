@@ -5,10 +5,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_config.dart';
 import 'core/config/environment.dart';
+import 'core/providers/cache_providers.dart';
+import 'core/providers/connectivity_provider.dart';
 import 'core/providers/deep_link_provider.dart';
 import 'core/providers/push_notification_provider.dart';
+import 'core/services/offline_queue/queue_executor.dart';
 import 'core/theme/theme.dart';
-import 'features/auth/application/auth_provider.dart';
 import 'router/app_router.dart';
 import 'shared/widgets/app_lock_wrapper.dart';
 import 'shared/widgets/offline_banner.dart';
@@ -52,15 +54,28 @@ class TekkaApp extends ConsumerWidget {
         router.go(route);
     ref.read(deepLinkServiceProvider).initialize(router);
 
-    // Initialize push notifications when user is authenticated
-    ref.listen(authStateProvider, (previous, next) {
-      final user = next.valueOrNull;
-      final pushService = ref.read(pushNotificationServiceProvider);
-      if (user != null && !pushService.isInitialized) {
-        pushService.initialize();
-      } else if (user == null && pushService.isInitialized) {
-        pushService.cleanup();
-      }
+    // TEMP TEST: force-init push on boot so we can observe FCM token + verify
+    // delivery via Firebase Console before implementing full auth flow.
+    final pushServiceBoot = ref.read(pushNotificationServiceProvider);
+    if (!pushServiceBoot.isInitialized) {
+      pushServiceBoot.initialize();
+    }
+
+    // Prime the cache + offline queue and teach the queue how to replay
+    // actions. Runs once at boot; Riverpod providers are idempotent.
+    ref.read(cacheServiceProvider).init();
+    final queue = ref.read(offlineQueueProvider);
+    final container = ProviderScope.containerOf(context);
+    queue.registerExecutor(buildQueueExecutor(container));
+    queue.init().then((_) {
+      // Boot-time flush: anything queued in a previous session ships now
+      // (if we're online). Harmless no-op when offline.
+      if (ref.read(isConnectedProvider)) queue.flush();
+    });
+
+    // Drain the queue every time connectivity is restored.
+    ref.listen<AsyncValue<void>>(connectivityRestoredProvider, (_, next) {
+      next.whenData((_) => ref.read(offlineQueueProvider).flush());
     });
 
     return AppLockWrapper(

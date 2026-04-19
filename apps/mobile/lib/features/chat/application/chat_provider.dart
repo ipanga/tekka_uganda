@@ -2,7 +2,11 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/providers/cache_providers.dart';
+import '../../../core/providers/connectivity_provider.dart';
 import '../../../core/providers/repository_providers.dart';
+import '../../../core/services/offline_queue/offline_queue.dart';
+import '../../../core/services/offline_queue/queued_action.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../report/application/report_provider.dart';
 import '../data/repositories/api_chat_repository.dart';
@@ -60,13 +64,23 @@ final typingStatusProvider = StreamProvider.family<Map<String, bool>, String>((
 /// Chat actions notifier for a specific chat
 class ChatActionsNotifier extends StateNotifier<ChatActionsState> {
   final ChatRepository _repository;
+  final OfflineQueue _queue;
+  final bool Function() _isConnected;
   final String chatId;
   final String userId;
   final String userName;
   Timer? _typingTimer;
 
-  ChatActionsNotifier(this._repository, this.chatId, this.userId, this.userName)
-    : super(const ChatActionsState());
+  ChatActionsNotifier(
+    this._repository,
+    this.chatId,
+    this.userId,
+    this.userName, {
+    required OfflineQueue queue,
+    required bool Function() isConnected,
+  })  : _queue = queue,
+        _isConnected = isConnected,
+        super(const ChatActionsState());
 
   Future<void> sendMessage(
     String content, {
@@ -78,6 +92,26 @@ class ChatActionsNotifier extends StateNotifier<ChatActionsState> {
     if (content.trim().isEmpty && imageUrl == null) return;
 
     state = state.copyWith(isSending: true);
+
+    // Offline path: enqueue for replay, clear the send state so the UI
+    // doesn't look stuck. The queue is drained when connectivity returns.
+    if (!_isConnected()) {
+      await _queue.enqueue(
+        kind: QueuedActionKind.sendMessage,
+        payload: {
+          'chatId': chatId,
+          'content': content.trim(),
+          'type': type.name,
+          if (imageUrl != null) 'imageUrl': imageUrl,
+          if (offerAmount != null) 'offerAmount': offerAmount,
+          if (meetupData != null) 'meetupData': meetupData,
+          'userId': userId,
+          'userName': userName,
+        },
+      );
+      state = state.copyWith(isSending: false);
+      return;
+    }
 
     try {
       await _repository.sendMessage(
@@ -103,6 +137,16 @@ class ChatActionsNotifier extends StateNotifier<ChatActionsState> {
   }
 
   Future<void> markAsRead() async {
+    // If offline, queue the read receipt; order doesn't matter so it's safe
+    // to do lazily when the network comes back.
+    if (!_isConnected()) {
+      await _queue.enqueue(
+        kind: QueuedActionKind.markChatRead,
+        payload: {'chatId': chatId, 'userId': userId},
+        idempotencyKey: 'markRead:$chatId:$userId',
+      );
+      return;
+    }
     try {
       await _repository.markAsRead(chatId, userId);
     } catch (_) {
@@ -210,12 +254,15 @@ final chatActionsProvider =
       (ref, chatId) {
         final user = ref.watch(currentUserProvider);
         final repository = ref.watch(chatRepositoryProvider);
+        final queue = ref.watch(offlineQueueProvider);
 
         return ChatActionsNotifier(
           repository,
           chatId,
           user?.uid ?? '',
           user?.displayName ?? 'User',
+          queue: queue,
+          isConnected: () => ref.read(isConnectedProvider),
         );
       },
     );

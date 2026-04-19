@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { AuthProvider } from '@/components/auth/AuthProvider';
+import OfflineBanner from '@/components/layout/OfflineBanner';
 import SmartAppBanner from '@/components/layout/SmartAppBanner';
 import { buildWebsiteJsonLd, buildOrganizationJsonLd, SITE_URL } from '@/lib/seo';
 import { IOS_APP_ID } from '@/lib/app-links';
@@ -110,6 +111,7 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <OfflineBanner />
         <SmartAppBanner />
         <AuthProvider>{children}</AuthProvider>
       </body>
