@@ -1,4 +1,8 @@
-/// Notification types
+/// Notification types.
+///
+/// Mirrors the backend `NotificationType` Prisma enum. When adding a value
+/// here also extend `_parseNotificationType` and the three icon/color
+/// switches in `_NotificationTile` (notifications_screen.dart).
 enum NotificationType {
   message,
   offer,
@@ -6,9 +10,16 @@ enum NotificationType {
   offerDeclined,
   listingApproved,
   listingRejected,
+  listingSuspended,
   listingSold,
   newFollower,
+  newReview,
   priceDropped,
+  meetupProposed,
+  meetupAccepted,
+  meetupDeclined,
+  meetupCancelled,
+  meetupNoShow,
   system,
 }
 
@@ -148,12 +159,26 @@ class AppNotification {
         return NotificationType.listingApproved;
       case 'LISTING_REJECTED':
         return NotificationType.listingRejected;
+      case 'LISTING_SUSPENDED':
+        return NotificationType.listingSuspended;
       case 'LISTING_SOLD':
         return NotificationType.listingSold;
       case 'NEW_FOLLOWER':
         return NotificationType.newFollower;
+      case 'NEW_REVIEW':
+        return NotificationType.newReview;
       case 'PRICE_DROP':
         return NotificationType.priceDropped;
+      case 'MEETUP_PROPOSED':
+        return NotificationType.meetupProposed;
+      case 'MEETUP_ACCEPTED':
+        return NotificationType.meetupAccepted;
+      case 'MEETUP_DECLINED':
+        return NotificationType.meetupDeclined;
+      case 'MEETUP_CANCELLED':
+        return NotificationType.meetupCancelled;
+      case 'MEETUP_NO_SHOW':
+        return NotificationType.meetupNoShow;
       case 'SYSTEM':
       default:
         return NotificationType.system;

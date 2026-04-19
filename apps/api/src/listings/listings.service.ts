@@ -502,13 +502,24 @@ export class ListingsService {
       );
     }
 
-    return this.prisma.listing.update({
+    const updated = await this.prisma.listing.update({
       where: { id },
       data: {
         status: ListingStatus.SOLD,
         soldAt: new Date(),
       },
     });
+
+    // Notify the seller. Non-fatal — the sale is already persisted.
+    this.notificationsService
+      .sendListingSold(sellerId, listing.title, id)
+      .catch((err) =>
+        this.logger.warn(
+          `Listing-sold push failed for seller ${sellerId} listing ${id}: ${err?.message ?? err}`,
+        ),
+      );
+
+    return updated;
   }
 
   async search(query: ListingQueryDto, viewerId?: string) {
@@ -1404,6 +1415,17 @@ export class ListingsService {
           priceDropPercent,
         },
       });
+
+      // Push notification. Non-fatal: a delivery failure must not block
+      // creating the remaining PriceAlert rows or the update() that called
+      // us, so we don't `await` / rethrow here.
+      this.notificationsService
+        .sendPriceDrop(save.user.id, listing.title, newPrice, listing.id)
+        .catch((err) =>
+          this.logger.warn(
+            `Price drop push failed for user ${save.user.id} listing ${listing.id}: ${err?.message ?? err}`,
+          ),
+        );
     }
   }
 }

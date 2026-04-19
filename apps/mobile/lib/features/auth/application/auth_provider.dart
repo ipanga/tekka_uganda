@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/providers/push_notification_provider.dart';
 import '../../../core/providers/repository_providers.dart';
 import '../../../core/providers/swr.dart';
 import '../../../core/services/cache/cache_keys.dart';
+import '../../../core/services/push_notification_service.dart';
 import '../data/repositories/jwt_auth_repository.dart';
 import '../data/repositories/user_api_repository.dart';
 import '../domain/entities/app_user.dart';
@@ -49,8 +53,10 @@ final isOnboardingCompleteProvider = FutureProvider<bool>((ref) async {
 /// Auth notifier for handling auth actions
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
+  final PushNotificationService _pushService;
 
-  AuthNotifier(this._repository) : super(const AuthState());
+  AuthNotifier(this._repository, this._pushService)
+    : super(const AuthState());
 
   /// Send OTP to phone number
   Future<void> sendOtp(String phoneNumber) async {
@@ -107,6 +113,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
         verificationId: state.verificationId!,
         otp: otp,
       );
+      // Boot the push service now that we have a logged-in user and a live
+      // access token — the FCM token registration endpoint requires auth.
+      // Fire and forget: permission prompt + token fetch shouldn't block OTP
+      // completion, and initialize() is idempotent.
+      unawaited(_pushService.initialize());
       state = state.copyWith(isLoading: false);
       return user;
     } catch (e) {
@@ -141,6 +152,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
   Future<void> signOut() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
+      // Deregister the FCM token BEFORE clearing auth — the DELETE endpoint
+      // requires a valid token. Never let a cleanup failure block sign-out
+      // (e.g. offline → the backend will age out the token eventually).
+      try {
+        await _pushService.cleanup();
+      } catch (_) {
+        // swallowed intentionally
+      }
       await _repository.signOut();
       state = const AuthState();
     } catch (e) {
@@ -197,7 +216,8 @@ final authNotifierProvider = StateNotifierProvider<AuthNotifier, AuthState>((
   ref,
 ) {
   final repository = ref.watch(authRepositoryProvider);
-  return AuthNotifier(repository);
+  final pushService = ref.watch(pushNotificationServiceProvider);
+  return AuthNotifier(repository, pushService);
 });
 
 /// Public user provider — for viewing other users' profiles. Reads through

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { getFirebaseMessaging } from '../auth/firebase-admin';
@@ -7,8 +7,22 @@ import { NotificationType } from '@prisma/client';
 
 const WEB_ORIGIN = 'https://tekka.ug';
 
+/**
+ * FCM error codes that indicate the token is permanently dead and should be
+ * purged from the FcmToken table. Anything else (network, rate, auth) may be
+ * transient and leaves the token in place.
+ * Ref: https://firebase.google.com/docs/cloud-messaging/send-message#admin
+ */
+const DEAD_TOKEN_ERROR_CODES = new Set([
+  'messaging/registration-token-not-registered',
+  'messaging/invalid-registration-token',
+  'messaging/invalid-argument',
+]);
+
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
@@ -58,7 +72,7 @@ export class NotificationsService {
     try {
       const messaging = getFirebaseMessaging();
       if (messaging && tokens.length > 0) {
-        await messaging.sendEachForMulticast({
+        const response = await messaging.sendEachForMulticast({
           tokens,
           notification: {
             title: dto.title,
@@ -80,13 +94,52 @@ export class NotificationsService {
             },
           },
         });
+        // Prune any tokens FCM reports as permanently dead (app uninstalled,
+        // token rotated, etc.) so the FcmToken table stays honest and future
+        // sends don't keep shipping to ghosts.
+        await this.pruneDeadTokens(response.responses, tokens);
       }
     } catch (error) {
-      console.error('Failed to send push notification:', error);
+      this.logger.error('Failed to send push notification', error as Error);
       // Don't throw - notification was saved
     }
 
     return notification;
+  }
+
+  /**
+   * Delete FcmToken rows whose token FCM flagged as permanently invalid.
+   * Runs after every multicast; total cost is a single `deleteMany` with
+   * the offending tokens inlined (bounded by device count per user, small).
+   */
+  private async pruneDeadTokens(
+    responses: Array<{ success: boolean; error?: { code?: string } }>,
+    tokens: string[],
+  ) {
+    const dead: string[] = [];
+    responses.forEach((result, idx) => {
+      if (!result.success && result.error?.code) {
+        if (DEAD_TOKEN_ERROR_CODES.has(result.error.code)) {
+          dead.push(tokens[idx]);
+        }
+      }
+    });
+    if (dead.length === 0) return;
+
+    try {
+      const { count } = await this.prisma.fcmToken.deleteMany({
+        where: { token: { in: dead } },
+      });
+      if (count > 0) {
+        this.logger.log(
+          `Pruned ${count} stale FCM token(s) after multicast send`,
+        );
+      }
+    } catch (err) {
+      this.logger.warn(
+        `Stale-token prune failed: ${(err as Error).message ?? err}`,
+      );
+    }
   }
 
   /**
@@ -232,13 +285,17 @@ export class NotificationsService {
       }
       case NotificationType.LISTING_APPROVED:
       case NotificationType.LISTING_REJECTED:
+      case NotificationType.LISTING_SUSPENDED:
       case NotificationType.LISTING_SOLD:
       case NotificationType.PRICE_DROP: {
         const listingId = pick('listingId');
         return listingId ? `${WEB_ORIGIN}/listing/${listingId}` : null;
       }
       case NotificationType.MEETUP_PROPOSED:
-      case NotificationType.MEETUP_ACCEPTED: {
+      case NotificationType.MEETUP_ACCEPTED:
+      case NotificationType.MEETUP_DECLINED:
+      case NotificationType.MEETUP_CANCELLED:
+      case NotificationType.MEETUP_NO_SHOW: {
         const meetupId = pick('meetupId');
         return meetupId
           ? `${WEB_ORIGIN}/meetups/${meetupId}`
@@ -260,10 +317,14 @@ export class NotificationsService {
       [NotificationType.NEW_REVIEW]: 'reviews',
       [NotificationType.LISTING_APPROVED]: 'listings',
       [NotificationType.LISTING_REJECTED]: 'listings',
+      [NotificationType.LISTING_SUSPENDED]: 'listings',
       [NotificationType.LISTING_SOLD]: 'listings',
       [NotificationType.PRICE_DROP]: 'price_alerts',
       [NotificationType.MEETUP_PROPOSED]: 'meetups',
       [NotificationType.MEETUP_ACCEPTED]: 'meetups',
+      [NotificationType.MEETUP_DECLINED]: 'meetups',
+      [NotificationType.MEETUP_CANCELLED]: 'meetups',
+      [NotificationType.MEETUP_NO_SHOW]: 'meetups',
       [NotificationType.SYSTEM]: 'system',
     };
 
@@ -356,12 +417,26 @@ export class NotificationsService {
   ) {
     return this.send({
       userId,
-      type: NotificationType.LISTING_REJECTED, // Using rejected type for suspended
+      type: NotificationType.LISTING_SUSPENDED,
       title: 'Listing Suspended',
       body: reason
         ? `Your listing "${listingTitle}" has been suspended for review: ${reason}`
         : `Your listing "${listingTitle}" has been suspended and is pending review`,
       data: { listingId, type: 'listing_suspended' },
+    });
+  }
+
+  async sendListingSold(
+    userId: string,
+    listingTitle: string,
+    listingId: string,
+  ) {
+    return this.send({
+      userId,
+      type: NotificationType.LISTING_SOLD,
+      title: 'Listing Sold',
+      body: `Your listing "${listingTitle}" has been marked as sold. Nice work!`,
+      data: { listingId, type: 'listing_sold' },
     });
   }
 }

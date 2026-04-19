@@ -110,6 +110,164 @@ final notificationActionsProvider =
       return NotificationActionsNotifier(repository, user?.uid ?? '');
     });
 
+// ============================================
+// PAGINATED NOTIFICATIONS (infinite scroll)
+// ============================================
+
+/// State for the paginated notifications list.
+class NotificationsListState {
+  final List<AppNotification> items;
+  final String? nextCursor;
+  final bool hasMore;
+  final bool isInitialLoading;
+  final bool isLoadingMore;
+  final bool isRefreshing;
+  final String? error;
+
+  const NotificationsListState({
+    this.items = const [],
+    this.nextCursor,
+    this.hasMore = true,
+    this.isInitialLoading = true,
+    this.isLoadingMore = false,
+    this.isRefreshing = false,
+    this.error,
+  });
+
+  NotificationsListState copyWith({
+    List<AppNotification>? items,
+    String? nextCursor,
+    bool? hasMore,
+    bool? isInitialLoading,
+    bool? isLoadingMore,
+    bool? isRefreshing,
+    String? error,
+    bool clearError = false,
+    bool clearCursor = false,
+  }) {
+    return NotificationsListState(
+      items: items ?? this.items,
+      nextCursor: clearCursor ? null : (nextCursor ?? this.nextCursor),
+      hasMore: hasMore ?? this.hasMore,
+      isInitialLoading: isInitialLoading ?? this.isInitialLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
+      error: clearError ? null : (error ?? this.error),
+    );
+  }
+}
+
+/// Notifier that owns the paginated notifications feed. Follows the same
+/// shape as `PaginatedListingsNotifier` — initial load on create, refresh()
+/// to reset the list, loadMore() to append the next page.
+class NotificationsListNotifier extends StateNotifier<NotificationsListState> {
+  final NotificationRepository _repository;
+  final String _userId;
+
+  static const int _pageSize = 20;
+
+  NotificationsListNotifier(this._repository, this._userId)
+    : super(const NotificationsListState()) {
+    _loadInitial();
+  }
+
+  Future<void> _loadInitial() async {
+    if (_userId.isEmpty) {
+      state = state.copyWith(isInitialLoading: false, items: const []);
+      return;
+    }
+    try {
+      final page = await _repository.getNotificationsPage(
+        _userId,
+        limit: _pageSize,
+      );
+      state = NotificationsListState(
+        items: page.items,
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+        isInitialLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isInitialLoading: false,
+        error: e.toString(),
+      );
+    }
+  }
+
+  /// Pull-to-refresh: drops the current list and re-fetches page 1.
+  Future<void> refresh() async {
+    if (_userId.isEmpty) return;
+    state = state.copyWith(isRefreshing: true, clearError: true);
+    try {
+      final page = await _repository.getNotificationsPage(
+        _userId,
+        limit: _pageSize,
+      );
+      state = NotificationsListState(
+        items: page.items,
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+        isInitialLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isRefreshing: false, error: e.toString());
+    }
+  }
+
+  /// Infinite scroll: fetch the next page and append. No-op if there's
+  /// nothing more, we're already loading, or the user isn't signed in.
+  Future<void> loadMore() async {
+    if (_userId.isEmpty) return;
+    if (!state.hasMore || state.isLoadingMore || state.isRefreshing) return;
+    state = state.copyWith(isLoadingMore: true, clearError: true);
+    try {
+      final page = await _repository.getNotificationsPage(
+        _userId,
+        limit: _pageSize,
+        cursor: state.nextCursor,
+      );
+      state = state.copyWith(
+        items: [...state.items, ...page.items],
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+        isLoadingMore: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoadingMore: false, error: e.toString());
+    }
+  }
+
+  /// Locally reflect a mark-as-read so the UI updates instantly; the actual
+  /// backend write is owned by `NotificationActionsNotifier`.
+  void markReadLocally(String notificationId) {
+    final updated = state.items
+        .map(
+          (n) => n.id == notificationId ? n.copyWith(isRead: true) : n,
+        )
+        .toList(growable: false);
+    state = state.copyWith(items: updated);
+  }
+
+  /// Remove a deleted notification from local state.
+  void removeLocally(String notificationId) {
+    state = state.copyWith(
+      items: state.items.where((n) => n.id != notificationId).toList(
+        growable: false,
+      ),
+    );
+  }
+}
+
+final notificationsListProvider =
+    StateNotifierProvider<NotificationsListNotifier, NotificationsListState>((
+      ref,
+    ) {
+      final user = ref.watch(currentUserProvider);
+      final repository = ref.watch(notificationRepositoryProvider);
+      return NotificationsListNotifier(repository, user?.uid ?? '');
+    });
+
 /// Create notification helper provider
 final createNotificationProvider = Provider((ref) {
   final repository = ref.watch(notificationRepositoryProvider);

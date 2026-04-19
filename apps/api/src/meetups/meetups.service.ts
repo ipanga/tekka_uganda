@@ -100,7 +100,7 @@ export class MeetupsService {
       type: NotificationType.MEETUP_PROPOSED,
       title: 'Meetup Proposed',
       body: `A meetup has been proposed at ${locationName}`,
-      data: { meetupId: meetup.id, chatId: dto.chatId },
+      data: { meetupId: meetup.id, chatId: dto.chatId, type: 'meetup_proposed' },
     });
 
     return meetup;
@@ -212,7 +212,7 @@ export class MeetupsService {
       type: NotificationType.MEETUP_ACCEPTED,
       title: 'Meetup Accepted',
       body: `Your meetup at ${meetup.locationName} has been accepted`,
-      data: { meetupId: id },
+      data: { meetupId: id, type: 'meetup_accepted' },
     });
 
     return updated;
@@ -236,10 +236,10 @@ export class MeetupsService {
     // Notify the proposer
     await this.notificationsService.send({
       userId: meetup.proposerId,
-      type: NotificationType.SYSTEM,
+      type: NotificationType.MEETUP_DECLINED,
       title: 'Meetup Declined',
       body: `Your meetup at ${meetup.locationName} has been declined`,
-      data: { meetupId: id },
+      data: { meetupId: id, type: 'meetup_declined' },
     });
 
     return updated;
@@ -270,10 +270,10 @@ export class MeetupsService {
         : meetup.chat.buyerId;
     await this.notificationsService.send({
       userId: otherUserId,
-      type: NotificationType.SYSTEM,
+      type: NotificationType.MEETUP_CANCELLED,
       title: 'Meetup Cancelled',
       body: `The meetup at ${meetup.locationName} has been cancelled`,
-      data: { meetupId: id },
+      data: { meetupId: id, type: 'meetup_cancelled' },
     });
 
     return updated;
@@ -319,10 +319,10 @@ export class MeetupsService {
         : meetup.chat.buyerId;
     await this.notificationsService.send({
       userId: otherUserId,
-      type: NotificationType.SYSTEM,
+      type: NotificationType.MEETUP_NO_SHOW,
       title: 'Meetup No-Show',
       body: `The meetup at ${meetup.locationName} was marked as no-show`,
-      data: { meetupId: id },
+      data: { meetupId: id, type: 'meetup_no_show' },
     });
 
     return updated;

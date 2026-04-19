@@ -11,6 +11,7 @@ import 'core/providers/deep_link_provider.dart';
 import 'core/providers/push_notification_provider.dart';
 import 'core/services/offline_queue/queue_executor.dart';
 import 'core/theme/theme.dart';
+import 'features/auth/application/auth_provider.dart';
 import 'router/app_router.dart';
 import 'shared/widgets/app_lock_wrapper.dart';
 import 'shared/widgets/offline_banner.dart';
@@ -70,6 +71,18 @@ class TekkaApp extends ConsumerWidget {
     // Drain the queue every time connectivity is restored.
     ref.listen<AsyncValue<void>>(connectivityRestoredProvider, (_, next) {
       next.whenData((_) => ref.read(offlineQueueProvider).flush());
+    });
+
+    // Initialize push when the auth state first goes non-null. Covers both
+    // the returning-user case (session restored at boot from secure storage)
+    // and any login path that isn't verifyOtp (e.g. Firebase email fallback).
+    // initialize() is idempotent so concurrent callers are safe.
+    ref.listen<AsyncValue<Object?>>(authStateProvider, (prev, next) {
+      final prevUser = prev?.valueOrNull;
+      final nextUser = next.valueOrNull;
+      if (prevUser == null && nextUser != null) {
+        ref.read(pushNotificationServiceProvider).initialize();
+      }
     });
 
     return AppLockWrapper(

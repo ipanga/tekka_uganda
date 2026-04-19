@@ -4,14 +4,21 @@ import {
   ForbiddenException,
   BadRequestException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsService } from '../notifications/notifications.service';
 import { CreateReviewDto, UpdateReviewDto } from './dto';
 import { ReviewType } from '@prisma/client';
 
 @Injectable()
 export class ReviewsService {
-  constructor(private prisma: PrismaService) {}
+  private readonly logger = new Logger(ReviewsService.name);
+
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   /**
    * Create a review for a user
@@ -124,6 +131,21 @@ export class ReviewsService {
         },
       },
     });
+
+    // Notify the reviewee. Non-fatal — a push/notification DB failure must
+    // not rollback the review itself.
+    this.notificationsService
+      .sendNewReview(
+        dto.revieweeId,
+        review.reviewer.displayName ?? 'Someone',
+        dto.rating,
+        review.id,
+      )
+      .catch((err) =>
+        this.logger.warn(
+          `Failed to notify ${dto.revieweeId} about new review ${review.id}: ${err?.message ?? err}`,
+        ),
+      );
 
     return review;
   }

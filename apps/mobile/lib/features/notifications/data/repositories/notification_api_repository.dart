@@ -4,6 +4,9 @@ import '../../../../core/services/api_client.dart';
 import '../../domain/entities/app_notification.dart';
 import '../../domain/repositories/notification_repository.dart';
 
+export '../../domain/repositories/notification_repository.dart'
+    show NotificationPage;
+
 /// API-based implementation of NotificationRepository
 class NotificationApiRepository implements NotificationRepository {
   final ApiClient _apiClient;
@@ -22,6 +25,30 @@ class NotificationApiRepository implements NotificationRepository {
     return notifications
         .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  @override
+  Future<NotificationPage> getNotificationsPage(
+    String userId, {
+    int limit = 20,
+    String? cursor,
+  }) async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/notifications',
+      queryParameters: {
+        'limit': limit,
+        if (cursor != null && cursor.isNotEmpty) 'cursor': cursor,
+      },
+    );
+    final raw = response['data'] as List<dynamic>? ?? const [];
+    final items = raw
+        .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
+        .toList(growable: false);
+    return NotificationPage(
+      items: items,
+      nextCursor: response['nextCursor'] as String?,
+      hasMore: response['hasMore'] as bool? ?? false,
+    );
   }
 
   @override
