@@ -50,16 +50,10 @@ class TekkaApp extends ConsumerWidget {
 
     // Wire notification taps + incoming universal/app links to the router.
     // Safe to re-wire on rebuild — both are idempotent.
+    // Push init itself fires from the auth flow once the user is signed in.
     ref.read(pushNotificationServiceProvider).onNotificationTap = (route, _) =>
         router.go(route);
     ref.read(deepLinkServiceProvider).initialize(router);
-
-    // TEMP TEST: force-init push on boot so we can observe FCM token + verify
-    // delivery via Firebase Console before implementing full auth flow.
-    final pushServiceBoot = ref.read(pushNotificationServiceProvider);
-    if (!pushServiceBoot.isInitialized) {
-      pushServiceBoot.initialize();
-    }
 
     // Prime the cache + offline queue and teach the queue how to replay
     // actions. Runs once at boot; Riverpod providers are idempotent.

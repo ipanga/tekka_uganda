@@ -140,9 +140,12 @@ class PushNotificationService {
       try {
         final token = await messaging.getToken();
         if (token != null) {
-          debugPrint('====== FCM_TOKEN ======');
-          debugPrint(token);
-          debugPrint('====== END FCM_TOKEN ======');
+          // Print the raw token only in local debug builds so it's easy to
+          // copy during testing. `debugPrint` is already debug-gated, but
+          // wrap in kDebugMode as defense-in-depth against release leaks.
+          if (kDebugMode) {
+            debugPrint('FCM token: $token');
+          }
           await _registerToken(token);
         }
       } catch (e) {
