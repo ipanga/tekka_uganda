@@ -218,8 +218,10 @@ abstract class AppSpacing {
   /// Listing grid gap
   static const double listingGridGap = space4;
 
-  /// Listing card aspect ratio (width / height) for grids
-  static const double listingCardAspectRatio = 0.67;
+  /// Listing card aspect ratio (width / height) for grids.
+  /// Tuned so the square image + title + price + location row fits without
+  /// overflow on the narrowest supported phones (~170dp column width).
+  static const double listingCardAspectRatio = 0.62;
 
   /// Admin queue grid columns (desktop)
   static const int adminQueueColumns = 4;
