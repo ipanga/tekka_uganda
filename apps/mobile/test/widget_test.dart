@@ -12,10 +12,11 @@ void main() {
       ),
     );
 
-    // Verify that the app renders (will show phone input due to auth redirect)
-    await tester.pumpAndSettle();
+    // Let the first frame settle. We can't pumpAndSettle here because the
+    // app legitimately runs long-lived streams (deep-link, connectivity,
+    // auth) that never quiesce.
+    await tester.pump(const Duration(milliseconds: 100));
 
-    // Basic smoke test - app should render without crashing
     expect(find.byType(TekkaApp), findsOneWidget);
   });
 }
