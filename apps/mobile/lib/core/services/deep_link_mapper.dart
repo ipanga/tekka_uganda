@@ -4,8 +4,8 @@
 /// callers ignore the link (the router stays on the current screen).
 ///
 /// Supported:
-///   /listing/:id            -> /listing/:id
-///   /listing/:id/*          -> /listing/:id   (strips sub-paths like /edit)
+///   /listing/:slug                      -> /listing/:slug
+///   /listing/:categorySlug/:slug        -> /listing/:slug   (SEO web URLs)
 ///   /chat/:id               -> /chat/:id
 ///   /user/:id               -> /user/:id
 ///   /profile                -> /profile
@@ -29,7 +29,10 @@ String? mapDeepLinkUri(Uri uri) {
   final first = segments[0];
   switch (first) {
     case 'listing':
-      if (segments.length >= 2) return '/listing/${segments[1]}';
+      // Web uses SEO URLs `/listing/{categorySlug}/{slug}`; legacy is
+      // `/listing/{id}`. In both cases the actual listing identifier is the
+      // last segment, which the API resolves as either id or slug.
+      if (segments.length >= 2) return '/listing/${segments.last}';
       return null;
     case 'chat':
       if (segments.length >= 2) return '/chat/${segments[1]}';

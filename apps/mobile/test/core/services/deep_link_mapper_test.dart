@@ -15,11 +15,16 @@ void main() {
         expect(mapDeepLinkUri(Uri.parse('https://tekka.ug/listing')), null);
       });
 
-      test('strips sub-paths like /listing/:id/edit', () {
-        // We intentionally only extract the id; the router handles edit separately.
+      test('maps SEO URL /listing/:categorySlug/:slug to /listing/:slug', () {
+        // Web uses SEO-friendly URLs like /listing/books/the-subtitle-art-...
+        // The actual listing identifier is the last segment.
         expect(
-          mapDeepLinkUri(Uri.parse('https://tekka.ug/listing/abc123/edit')),
-          '/listing/abc123',
+          mapDeepLinkUri(
+            Uri.parse(
+              'https://tekka.ug/listing/books/the-subtitle-art-of-not-giving-a-fck-0hjwbz',
+            ),
+          ),
+          '/listing/the-subtitle-art-of-not-giving-a-fck-0hjwbz',
         );
       });
     });

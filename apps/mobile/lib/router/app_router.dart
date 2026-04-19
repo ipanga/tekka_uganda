@@ -240,6 +240,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return ListingDetailScreen(listingId: id);
         },
       ),
+      // Web SEO deep-link shape `/listing/{categorySlug}/{slug}` — Flutter's
+      // engine forwards the raw URL to the router before DeepLinkService can
+      // remap it, so we redirect here too. The backend resolves the slug.
+      GoRoute(
+        path: '/listing/:categorySlug/:slug',
+        redirect: (context, state) =>
+            '/listing/${state.pathParameters['slug']}',
+      ),
       GoRoute(
         path: AppRoutes.createListing,
         builder: (context, state) => const CreateListingScreen(),
