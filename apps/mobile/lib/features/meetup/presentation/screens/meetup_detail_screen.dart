@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../../../router/app_router.dart';
 import '../../../auth/application/auth_provider.dart';
 import '../../application/meetup_provider.dart';
 import '../../domain/entities/meetup_location.dart';
@@ -20,9 +21,21 @@ class MeetupDetailScreen extends ConsumerWidget {
     final user = ref.watch(authStateProvider).valueOrNull;
     final userId = user?.uid ?? '';
 
-    return Scaffold(
+    return PopScope(
+      // Deep-linked into meetup → system back should go /home.
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(AppRoutes.home);
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Meetup Details')),
+      appBar: AppBar(
+        title: const Text('Meetup Details'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.popOrGoHome(),
+        ),
+      ),
       body: meetupAsync.when(
         data: (meetup) {
           if (meetup == null) {
@@ -39,7 +52,7 @@ class MeetupDetailScreen extends ConsumerWidget {
                   Text('Meetup not found', style: AppTypography.titleMedium),
                   const SizedBox(height: AppSpacing.space4),
                   FilledButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () => context.popOrGoHome(),
                     child: const Text('Go Back'),
                   ),
                 ],
@@ -374,6 +387,7 @@ class MeetupDetailScreen extends ConsumerWidget {
           ),
         ),
       ),
+    ),
     );
   }
 

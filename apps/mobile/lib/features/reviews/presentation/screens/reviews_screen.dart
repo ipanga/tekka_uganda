@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/theme.dart';
+import '../../../../router/app_router.dart';
 import '../../application/review_provider.dart';
 import '../../domain/entities/review.dart';
 
@@ -22,9 +24,21 @@ class ReviewsScreen extends ConsumerWidget {
     final reviewsAsync = ref.watch(userReviewsProvider(userId));
     final ratingAsync = ref.watch(userRatingProvider(userId));
 
-    return Scaffold(
+    return PopScope(
+      // Deep-linked into reviews → system back should go /home.
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(AppRoutes.home);
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: Text('$userName\'s Reviews')),
+      appBar: AppBar(
+        title: Text('$userName\'s Reviews'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.popOrGoHome(),
+        ),
+      ),
       body: reviewsAsync.when(
         data: (reviews) {
           if (reviews.isEmpty) {
@@ -86,6 +100,7 @@ class ReviewsScreen extends ConsumerWidget {
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error loading reviews: $e')),
       ),
+    ),
     );
   }
 }

@@ -64,11 +64,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ref.read(chatActionsProvider(widget.chatId).notifier).clearError();
       }
       if (next.isDeleted) {
-        context.pop();
+        context.popOrGoHome();
       }
     });
 
-    return chatAsync.when(
+    return PopScope(
+      // Deep-linked into chat → system back should go /home, not exit.
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(AppRoutes.home);
+      },
+      child: chatAsync.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (error, _) => Scaffold(
@@ -263,6 +269,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           ),
         );
       },
+    ),
     );
   }
 

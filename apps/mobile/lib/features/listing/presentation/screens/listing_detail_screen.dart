@@ -52,6 +52,23 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
     final listingAsync = ref.watch(listingProvider(widget.listingId));
     final currentUser = ref.watch(currentUserProvider);
 
+    return PopScope(
+      // When opened via a cold-start deep link there is no route underneath
+      // this one, so the default pop would exit the app. Intercept and send
+      // the user to /home instead.
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(AppRoutes.home);
+      },
+      child: _buildContent(context, listingAsync, currentUser),
+    );
+  }
+
+  Widget _buildContent(
+    BuildContext context,
+    AsyncValue<Listing?> listingAsync,
+    dynamic currentUser,
+  ) {
     return listingAsync.when(
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
@@ -97,7 +114,7 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                   child: _CircularIconBackground(
                     child: IconButton(
                       icon: const Icon(Icons.arrow_back),
-                      onPressed: () => context.pop(),
+                      onPressed: () => context.popOrGoHome(),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       iconSize: AppSpacing.iconMedium,

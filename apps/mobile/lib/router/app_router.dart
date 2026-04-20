@@ -433,3 +433,37 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ),
   );
 });
+
+/// Pops the current route, falling back to /home when the navigation stack
+/// is empty — which happens when the app was cold-started via a deep link.
+/// Without this fallback the back button/gesture silently no-ops (or exits
+/// the app on Android), because GoRouter has nothing underneath to pop to.
+extension GoRouterBackFallback on BuildContext {
+  void popOrGoHome() {
+    if (canPop()) {
+      pop();
+    } else {
+      go(AppRoutes.home);
+    }
+  }
+}
+
+/// Wraps a deep-linkable screen so the system back gesture/button routes
+/// to `/home` when there is nothing on the stack underneath. Pair with
+/// `context.popOrGoHome()` for in-app back buttons.
+class DeepLinkBackScope extends StatelessWidget {
+  const DeepLinkBackScope({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(AppRoutes.home);
+      },
+      child: child,
+    );
+  }
+}

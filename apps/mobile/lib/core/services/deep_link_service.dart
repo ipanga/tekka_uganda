@@ -19,6 +19,7 @@ class DeepLinkService {
   final AppLinks _appLinks;
   StreamSubscription<Uri>? _subscription;
   bool _initialized = false;
+  Uri? _lastHandledUri;
 
   Future<void> initialize(GoRouter router) async {
     if (_initialized) return;
@@ -45,6 +46,11 @@ class DeepLinkService {
       debugPrint('DeepLinkService: no mapping for $uri');
       return;
     }
+    // Skip if we've already handled this exact URI in this app session.
+    // The OS delivers the cold-start link via getInitialLink and the foreground
+    // stream, so we'd otherwise push twice.
+    if (_lastHandledUri == uri) return;
+    _lastHandledUri = uri;
     debugPrint('DeepLinkService: navigating to $route (from $uri)');
     router.go(route);
   }
