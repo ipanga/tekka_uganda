@@ -1,3 +1,4 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.release-staging.xcconfig"
 #include "Generated.xcconfig"
 APP_DISPLAY_NAME=Tekka Uganda Staging
+APS_ENVIRONMENT=production
