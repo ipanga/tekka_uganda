@@ -160,6 +160,7 @@ class PaginatedListingsNotifier extends StateNotifier<PaginatedListingsState> {
 
       final filtered = await _filterBlocked(result.listings);
 
+      if (!mounted) return;
       state = PaginatedListingsState(
         listings: filtered,
         currentPage: 1,
@@ -168,6 +169,7 @@ class PaginatedListingsNotifier extends StateNotifier<PaginatedListingsState> {
         isInitialLoading: false,
       );
     } catch (e) {
+      if (!mounted) return;
       state = PaginatedListingsState(
         isInitialLoading: false,
         error: e.toString(),
@@ -202,6 +204,7 @@ class PaginatedListingsNotifier extends StateNotifier<PaginatedListingsState> {
 
       final filtered = await _filterBlocked(result.listings);
 
+      if (!mounted) return;
       // Deduplicate against existing listings
       final existingIds = state.listings.map((l) => l.id).toSet();
       final newListings = filtered
@@ -215,6 +218,7 @@ class PaginatedListingsNotifier extends StateNotifier<PaginatedListingsState> {
         isLoadingMore: false,
       );
     } catch (e) {
+      if (!mounted) return;
       state = state.copyWith(isLoadingMore: false, error: e.toString());
     }
   }

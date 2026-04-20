@@ -125,10 +125,11 @@ class PushNotificationService {
       FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-      // iOS requires an APNs token before FCM can mint one. Poll briefly —
-      // the simulator / a slow first-run device may not have it instantly.
+      // iOS requires an APNs token before FCM can mint one. Poll for up to
+      // 30s — first-launch registration on slow networks can take 10-20s.
+      // onTokenRefresh will still deliver it if the poll times out.
       if (Platform.isIOS) {
-        for (var i = 0; i < 10; i++) {
+        for (var i = 0; i < 60; i++) {
           final apns = await messaging.getAPNSToken();
           if (apns != null) break;
           await Future<void>.delayed(const Duration(milliseconds: 500));
