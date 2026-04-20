@@ -288,13 +288,22 @@ export interface Notification {
 
 export type NotificationType =
   | 'MESSAGE'
+  | 'OFFER'
+  | 'OFFER_ACCEPTED'
+  | 'OFFER_DECLINED'
+  | 'OFFER_COUNTERED'
+  | 'OFFER_EXPIRED'
   | 'LISTING_APPROVED'
   | 'LISTING_REJECTED'
+  | 'LISTING_SUSPENDED'
   | 'LISTING_SOLD'
   | 'PRICE_DROP'
   | 'NEW_REVIEW'
   | 'MEETUP_PROPOSED'
   | 'MEETUP_ACCEPTED'
+  | 'MEETUP_DECLINED'
+  | 'MEETUP_CANCELLED'
+  | 'MEETUP_NO_SHOW'
   | 'SYSTEM';
 
 export interface NotificationData {

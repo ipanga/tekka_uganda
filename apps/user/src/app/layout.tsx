@@ -59,9 +59,9 @@ export const metadata: Metadata = {
       'Buy and sell second-hand clothes in Uganda on Tekka. Affordable fashion in Kampala and across Uganda.',
     images: [
       {
-        url: '/og-image.png',
-        width: 1200,
-        height: 630,
+        url: '/images/hero-bg.jpg',
+        width: 2048,
+        height: 1174,
         alt: 'Tekka Uganda - Buy & Sell Second-Hand Clothes',
       },
     ],
@@ -71,7 +71,7 @@ export const metadata: Metadata = {
     title: 'Tekka Uganda - Buy & Sell Second-Hand Clothes Online',
     description:
       'Buy and sell second-hand clothes in Uganda on Tekka. Affordable fashion in Kampala and across Uganda.',
-    images: ['/og-image.png'],
+    images: ['/images/hero-bg.jpg'],
   },
   robots: {
     index: true,
