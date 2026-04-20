@@ -27,13 +27,22 @@ import { useNotificationStore } from '@/stores/notificationStore';
 
 const NOTIFICATION_ICONS: Record<NotificationType, React.ReactNode> = {
   MESSAGE: <ChatBubbleLeftRightIcon className="w-5 h-5" />,
+  OFFER: <TagIcon className="w-5 h-5" />,
+  OFFER_ACCEPTED: <CheckCircleIcon className="w-5 h-5 text-green-500" />,
+  OFFER_DECLINED: <XCircleIcon className="w-5 h-5 text-red-500" />,
+  OFFER_COUNTERED: <TagIcon className="w-5 h-5 text-primary-500" />,
+  OFFER_EXPIRED: <XCircleIcon className="w-5 h-5 text-gray-400" />,
   LISTING_APPROVED: <CheckCircleIcon className="w-5 h-5 text-green-500" />,
   LISTING_REJECTED: <XCircleIcon className="w-5 h-5 text-red-500" />,
+  LISTING_SUSPENDED: <XCircleIcon className="w-5 h-5 text-orange-500" />,
   LISTING_SOLD: <TagIcon className="w-5 h-5 text-primary-500" />,
   PRICE_DROP: <TagIcon className="w-5 h-5 text-green-500" />,
   NEW_REVIEW: <StarIcon className="w-5 h-5 text-yellow-500" />,
   MEETUP_PROPOSED: <MapPinIcon className="w-5 h-5" />,
   MEETUP_ACCEPTED: <MapPinIcon className="w-5 h-5 text-green-500" />,
+  MEETUP_DECLINED: <MapPinIcon className="w-5 h-5 text-red-500" />,
+  MEETUP_CANCELLED: <MapPinIcon className="w-5 h-5 text-gray-400" />,
+  MEETUP_NO_SHOW: <MapPinIcon className="w-5 h-5 text-red-500" />,
   SYSTEM: <BellIcon className="w-5 h-5" />,
 };
 

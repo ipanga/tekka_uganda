@@ -193,117 +193,133 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: AppSpacing.screenPadding,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: AppSpacing.space4),
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: AppSpacing.screenPadding,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: AppSpacing.space4),
 
-              Text('Verify your number', style: AppTypography.headlineSmall),
+                    Text(
+                      'Verify your number',
+                      style: AppTypography.headlineSmall,
+                    ),
 
-              const SizedBox(height: AppSpacing.space2),
+                    const SizedBox(height: AppSpacing.space2),
 
-              Text(
-                'Enter the 6-digit code sent to',
-                style: AppTypography.bodyMedium.copyWith(
-                  color: AppColors.onSurfaceVariant,
-                ),
-              ),
-              Text(
-                widget.phoneNumber,
-                style: AppTypography.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+                    Text(
+                      'Enter the 6-digit code sent to',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      widget.phoneNumber,
+                      style: AppTypography.bodyMedium.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
 
-              const SizedBox(height: AppSpacing.space8),
+                    const SizedBox(height: AppSpacing.space8),
 
-              // OTP input fields
-              AutofillGroup(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: List.generate(
-                    AppConstants.otpLength,
-                    (index) => SizedBox(
-                      width: 48,
-                      child: TextFormField(
-                        controller: _controllers[index],
-                        focusNode: _focusNodes[index],
-                        keyboardType: TextInputType.number,
-                        textAlign: TextAlign.center,
-                        maxLength: index == 0 ? AppConstants.otpLength : 1,
-                        style: AppTypography.headlineMedium,
-                        autofillHints: index == 0
-                            ? const [AutofillHints.oneTimeCode]
+                    // OTP input fields
+                    AutofillGroup(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: List.generate(
+                          AppConstants.otpLength,
+                          (index) => SizedBox(
+                            width: 48,
+                            child: TextFormField(
+                              controller: _controllers[index],
+                              focusNode: _focusNodes[index],
+                              keyboardType: TextInputType.number,
+                              textAlign: TextAlign.center,
+                              maxLength: index == 0
+                                  ? AppConstants.otpLength
+                                  : 1,
+                              style: AppTypography.headlineMedium,
+                              autofillHints: index == 0
+                                  ? const [AutofillHints.oneTimeCode]
+                                  : null,
+                              decoration: const InputDecoration(
+                                counterText: '',
+                                contentPadding: EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              onChanged: (value) => _onOtpChanged(index, value),
+                              onEditingComplete: () {
+                                if (index < AppConstants.otpLength - 1) {
+                                  _focusNodes[index + 1].requestFocus();
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: AppSpacing.space6),
+
+                    // Verify button
+                    if (authState.isLoading)
+                      const Center(child: CircularProgressIndicator())
+                    else
+                      FilledButton(
+                        onPressed: _otp.length == AppConstants.otpLength
+                            ? _verifyOtp
                             : null,
-                        decoration: const InputDecoration(
-                          counterText: '',
-                          contentPadding: EdgeInsets.symmetric(vertical: 12),
-                        ),
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                        ],
-                        onChanged: (value) => _onOtpChanged(index, value),
-                        onEditingComplete: () {
-                          if (index < AppConstants.otpLength - 1) {
-                            _focusNodes[index + 1].requestFocus();
-                          }
-                        },
+                        child: const Text('Verify'),
                       ),
+
+                    const SizedBox(height: AppSpacing.space6),
+
+                    // Resend OTP
+                    Center(
+                      child: _canResend
+                          ? TextButton(
+                              onPressed: _resendOtp,
+                              child: const Text('Resend code'),
+                            )
+                          : Text(
+                              'Resend code in ${_resendSeconds}s',
+                              style: AppTypography.bodyMedium.copyWith(
+                                color: AppColors.onSurfaceVariant,
+                              ),
+                            ),
                     ),
-                  ),
-                ),
-              ),
 
-              const SizedBox(height: AppSpacing.space6),
-
-              // Verify button
-              if (authState.isLoading)
-                const Center(child: CircularProgressIndicator())
-              else
-                FilledButton(
-                  onPressed: _otp.length == AppConstants.otpLength
-                      ? _verifyOtp
-                      : null,
-                  child: const Text('Verify'),
-                ),
-
-              const SizedBox(height: AppSpacing.space6),
-
-              // Resend OTP
-              Center(
-                child: _canResend
-                    ? TextButton(
-                        onPressed: _resendOtp,
-                        child: const Text('Resend code'),
-                      )
-                    : Text(
-                        'Resend code in ${_resendSeconds}s',
-                        style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                    // Email fallback option
+                    if (authState.hasEmail) ...[
+                      const SizedBox(height: AppSpacing.space2),
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: authState.isLoading
+                              ? null
+                              : _sendOtpViaEmail,
+                          icon: const Icon(Icons.email_outlined, size: 18),
+                          label: Text(
+                            authState.emailHint != null
+                                ? 'Send code to ${authState.emailHint}'
+                                : 'Send code via email instead',
+                          ),
                         ),
                       ),
-              ),
+                    ],
 
-              // Email fallback option
-              if (authState.hasEmail) ...[
-                const SizedBox(height: AppSpacing.space2),
-                Center(
-                  child: TextButton.icon(
-                    onPressed: authState.isLoading ? null : _sendOtpViaEmail,
-                    icon: const Icon(Icons.email_outlined, size: 18),
-                    label: Text(
-                      authState.emailHint != null
-                          ? 'Send code to ${authState.emailHint}'
-                          : 'Send code via email instead',
-                    ),
-                  ),
+                    const Spacer(),
+                  ],
                 ),
-              ],
-
-              const Spacer(),
-            ],
+              ),
+            ),
           ),
         ),
       ),

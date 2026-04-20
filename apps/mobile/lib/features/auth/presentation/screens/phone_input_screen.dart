@@ -71,140 +71,150 @@ class _PhoneInputScreenState extends ConsumerState<PhoneInputScreen> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: SafeArea(
-        child: Padding(
-          padding: AppSpacing.screenPadding,
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: AppSpacing.space2),
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            padding: AppSpacing.screenPadding,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: IntrinsicHeight(
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SizedBox(height: AppSpacing.space2),
 
-                // Back / close button
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    onPressed: () {
-                      if (canGoBack) {
-                        context.pop();
-                      } else {
-                        context.go(AppRoutes.home);
-                      }
-                    },
-                    icon: Icon(
-                      canGoBack
-                          ? Icons.arrow_back_rounded
-                          : Icons.close_rounded,
-                      color: AppColors.onSurface,
-                    ),
-                    tooltip: canGoBack ? 'Back' : 'Continue browsing',
-                  ),
-                ),
+                      // Back / close button
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: IconButton(
+                          onPressed: () {
+                            if (canGoBack) {
+                              context.pop();
+                            } else {
+                              context.go(AppRoutes.home);
+                            }
+                          },
+                          icon: Icon(
+                            canGoBack
+                                ? Icons.arrow_back_rounded
+                                : Icons.close_rounded,
+                            color: AppColors.onSurface,
+                          ),
+                          tooltip: canGoBack ? 'Back' : 'Continue browsing',
+                        ),
+                      ),
 
-                const SizedBox(height: AppSpacing.space4),
+                      const SizedBox(height: AppSpacing.space4),
 
-                // Logo
-                const Center(child: TekkaLogo(height: 48)),
+                      // Logo
+                      const Center(child: TekkaLogo(height: 48)),
 
-                const SizedBox(height: AppSpacing.space2),
+                      const SizedBox(height: AppSpacing.space2),
 
-                Text(
-                  'Fashion Marketplace',
-                  style: AppTypography.bodyLarge.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                      Text(
+                        'Fashion Marketplace',
+                        style: AppTypography.bodyLarge.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
 
-                const SizedBox(height: AppSpacing.space12),
+                      const SizedBox(height: AppSpacing.space12),
 
-                // Title
-                Text(
-                  'Enter your phone number',
-                  style: AppTypography.headlineSmall,
-                ),
+                      // Title
+                      Text(
+                        'Enter your phone number',
+                        style: AppTypography.headlineSmall,
+                      ),
 
-                const SizedBox(height: AppSpacing.space2),
+                      const SizedBox(height: AppSpacing.space2),
 
-                Text(
-                  'We\'ll send you a verification code',
-                  style: AppTypography.bodyMedium.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                ),
+                      Text(
+                        'We\'ll send you a verification code',
+                        style: AppTypography.bodyMedium.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                      ),
 
-                const SizedBox(height: AppSpacing.space6),
+                      const SizedBox(height: AppSpacing.space6),
 
-                // Phone input
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  textInputAction: TextInputAction.done,
-                  validator: _validatePhone,
-                  inputFormatters: [
-                    // Only allow digits (we handle the +256 prefix visually)
-                    FilteringTextInputFormatter.digitsOnly,
-                    LengthLimitingTextInputFormatter(10),
-                  ],
-                  decoration: InputDecoration(
-                    hintText: '712 345 678',
-                    helperText: 'Enter with or without the leading 0',
-                    prefixIcon: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Text('🇺🇬', style: TextStyle(fontSize: 24)),
-                          const SizedBox(width: 8),
-                          Text(
-                            AppConstants.ugandaCountryCode,
-                            style: AppTypography.bodyLarge.copyWith(
-                              fontWeight: FontWeight.w500,
+                      // Phone input
+                      TextFormField(
+                        controller: _phoneController,
+                        keyboardType: TextInputType.phone,
+                        textInputAction: TextInputAction.done,
+                        validator: _validatePhone,
+                        inputFormatters: [
+                          // Only allow digits (we handle the +256 prefix visually)
+                          FilteringTextInputFormatter.digitsOnly,
+                          LengthLimitingTextInputFormatter(10),
+                        ],
+                        decoration: InputDecoration(
+                          hintText: '712 345 678',
+                          helperText: 'Enter with or without the leading 0',
+                          prefixIcon: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  '🇺🇬',
+                                  style: TextStyle(fontSize: 24),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  AppConstants.ugandaCountryCode,
+                                  style: AppTypography.bodyLarge.copyWith(
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  width: 1,
+                                  height: 24,
+                                  color: AppColors.outline,
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Container(
-                            width: 1,
-                            height: 24,
-                            color: AppColors.outline,
-                          ),
-                        ],
+                        ),
+                        onFieldSubmitted: (_) => _onContinue(),
                       ),
-                    ),
+
+                      const SizedBox(height: AppSpacing.space6),
+
+                      // Continue button
+                      FilledButton(
+                        onPressed: authState.isLoading ? null : _onContinue,
+                        child: authState.isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Text('Continue'),
+                      ),
+
+                      const Spacer(),
+
+                      // Terms
+                      Text(
+                        'By continuing, you agree to our Terms of Service and Privacy Policy',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.onSurfaceVariant,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+
+                      const SizedBox(height: AppSpacing.space4),
+                    ],
                   ),
-                  onFieldSubmitted: (_) => _onContinue(),
                 ),
-
-                const SizedBox(height: AppSpacing.space6),
-
-                // Continue button
-                FilledButton(
-                  onPressed: authState.isLoading ? null : _onContinue,
-                  child: authState.isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Text('Continue'),
-                ),
-
-                const Spacer(),
-
-                // Terms
-                Text(
-                  'By continuing, you agree to our Terms of Service and Privacy Policy',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: AppSpacing.space4),
-              ],
+              ),
             ),
           ),
         ),

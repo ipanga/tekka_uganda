@@ -39,7 +39,13 @@ class UserProfileScreen extends ConsumerWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return Scaffold(
+    return PopScope(
+      // Deep-linked into a public profile → system back should go /home.
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(AppRoutes.home);
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       body: userAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -59,7 +65,7 @@ class UserProfileScreen extends ConsumerWidget {
                   Text('User not found', style: AppTypography.titleMedium),
                   const SizedBox(height: AppSpacing.space4),
                   OutlinedButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () => context.popOrGoHome(),
                     child: const Text('Go Back'),
                   ),
                 ],
@@ -429,6 +435,7 @@ class UserProfileScreen extends ConsumerWidget {
           );
         },
       ),
+    ),
     );
   }
 

@@ -49,10 +49,20 @@ class _NotificationDetailScreenState
       singleNotificationProvider(widget.notificationId),
     );
 
-    return Scaffold(
+    return PopScope(
+      // Deep-linked into a notification → system back should go /home.
+      canPop: context.canPop(),
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) context.go(AppRoutes.home);
+      },
+      child: Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Notification'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.popOrGoHome(),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete_outline),
@@ -100,7 +110,7 @@ class _NotificationDetailScreenState
                   ),
                   const SizedBox(height: AppSpacing.space4),
                   FilledButton(
-                    onPressed: () => context.pop(),
+                    onPressed: () => context.popOrGoHome(),
                     child: const Text('Go Back'),
                   ),
                 ],
@@ -111,6 +121,7 @@ class _NotificationDetailScreenState
           return _buildContent(context, notification);
         },
       ),
+    ),
     );
   }
 
