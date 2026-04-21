@@ -73,6 +73,7 @@ jobs:
               cd /opt/tekka
               git pull origin main --ff-only || true
               docker compose -f infra/docker/docker-compose.prod.yml --env-file .env pull api
+              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env run --rm api npx prisma migrate deploy
               docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --force-recreate --remove-orphans api
               docker image prune -f || true
             '
