@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/profile/application/app_lock_provider.dart';
 import '../../features/profile/presentation/screens/app_lock_screen.dart';
+import '../services/tab_data_refresh.dart';
 
 /// Wrapper widget that handles app lifecycle and shows lock screen when needed
 class AppLockWrapper extends ConsumerStatefulWidget {
@@ -38,6 +39,9 @@ class _AppLockWrapperState extends ConsumerState<AppLockWrapper>
       case AppLifecycleState.resumed:
         // App came to foreground - check if we should lock
         appLockNotifier.onAppResumed();
+        // Kick any tab providers that may be stuck after a suspended socket
+        // or a polling timer that fired into thin air while backgrounded.
+        refreshTabDataAfterResume(ref);
         break;
       case AppLifecycleState.paused:
         // App went to background

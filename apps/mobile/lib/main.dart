@@ -13,6 +13,7 @@ import 'core/services/offline_queue/queue_executor.dart';
 import 'core/theme/theme.dart';
 import 'features/auth/application/auth_provider.dart';
 import 'router/app_router.dart';
+import 'shared/services/tab_data_refresh.dart';
 import 'shared/widgets/app_lock_wrapper.dart';
 import 'shared/widgets/offline_banner.dart';
 
@@ -68,9 +69,14 @@ class TekkaApp extends ConsumerWidget {
       if (ref.read(isConnectedProvider)) queue.flush();
     });
 
-    // Drain the queue every time connectivity is restored.
+    // Drain the queue every time connectivity is restored, and refresh the
+    // tab-level providers so a request that died during the offline window
+    // doesn't leave a screen stuck on a spinner.
     ref.listen<AsyncValue<void>>(connectivityRestoredProvider, (_, next) {
-      next.whenData((_) => ref.read(offlineQueueProvider).flush());
+      next.whenData((_) {
+        ref.read(offlineQueueProvider).flush();
+        refreshTabDataAfterResume(ref);
+      });
     });
 
     // Initialize push when the auth state first goes non-null. Covers both
