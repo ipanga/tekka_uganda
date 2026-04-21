@@ -240,14 +240,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           return ListingDetailScreen(listingId: id);
         },
       ),
-      // Web SEO deep-link shape `/listing/{categorySlug}/{slug}` — Flutter's
-      // engine forwards the raw URL to the router before DeepLinkService can
-      // remap it, so we redirect here too. The backend resolves the slug.
-      GoRoute(
-        path: '/listing/:categorySlug/:slug',
-        redirect: (context, state) =>
-            '/listing/${state.pathParameters['slug']}',
-      ),
       GoRoute(
         path: AppRoutes.createListing,
         builder: (context, state) => const CreateListingScreen(),
@@ -419,6 +411,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             sellerName: params['sellerName'] as String,
           );
         },
+      ),
+      // Web SEO deep-link shape `/listing/{categorySlug}/{slug}` — Flutter's
+      // engine forwards the raw URL to the router before DeepLinkService can
+      // remap it, so we redirect here too. The backend resolves the slug.
+      // Must come AFTER `/listing/:id/edit` and `/listing/:id/report` so those
+      // literal-suffix routes match first; otherwise this catch-all hijacks
+      // them (e.g. /listing/<id>/edit redirects to /listing/edit → 404).
+      GoRoute(
+        path: '/listing/:categorySlug/:slug',
+        redirect: (context, state) =>
+            '/listing/${state.pathParameters['slug']}',
       ),
       GoRoute(
         path: AppRoutes.notificationDetail,
