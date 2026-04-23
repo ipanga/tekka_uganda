@@ -51,6 +51,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   // Edit mode
   bool get isEditMode => widget.listingId != null;
   bool _editInitialized = false;
+  bool _editLoadFailed = false;
   ListingStatus? _editingListingStatus;
 
   /// Returns the appropriate provider based on mode
@@ -83,7 +84,16 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
     try {
       final listing = await ref.read(listingProvider(widget.listingId!).future);
-      if (listing == null || !mounted) return;
+      if (!mounted) return;
+      if (listing == null) {
+        // Listing was deleted, never existed, or the ID was mangled by a
+        // stale route — surface a fallback screen instead of an empty wizard.
+        debugPrint(
+          'CreateListingScreen: listing ${widget.listingId} not found',
+        );
+        setState(() => _editLoadFailed = true);
+        return;
+      }
 
       setState(() => _editingListingStatus = listing.status);
 
@@ -112,8 +122,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
           categoryState.activeCities,
         );
       }
-    } catch (e) {
-      // Listing load failed - error will be shown via provider
+    } catch (e, st) {
+      debugPrint('CreateListingScreen: failed to load listing for edit: $e\n$st');
+      if (mounted) setState(() => _editLoadFailed = true);
     }
   }
 
@@ -217,6 +228,43 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_editLoadFailed) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(title: const Text('Edit Listing')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppColors.onSurfaceVariant,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  "Couldn't load this listing",
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'It may have been removed, or the link is invalid.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                FilledButton(
+                  onPressed: () => context.pop(),
+                  child: const Text('Go back'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final createState = ref.watch(_provider);
     final notifier = ref.read(_provider.notifier);
     final categoryState = ref.watch(categoryProvider);
