@@ -39,7 +39,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha
+            type=sha,format=long,prefix=sha-
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
@@ -62,6 +62,7 @@ jobs:
     env:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GHCR_USERNAME: ${{ github.actor }}
+      IMAGE_TAG: sha-${{ github.sha }}
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
@@ -70,24 +71,52 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
-          command_timeout: 10m
-          envs: GHCR_TOKEN,GHCR_USERNAME
+          command_timeout: 15m
+          envs: GHCR_TOKEN,GHCR_USERNAME,IMAGE_TAG
           script: |
             flock -w 300 /tmp/tekka-deploy.lock bash -c '
               set -euo pipefail
               cd /opt/tekka
 
-              # 1. Refresh GHCR credentials (workflow-scoped GITHUB_TOKEN)
+              SERVICE=nginx
+              LAST_GOOD_FILE="/opt/tekka/.last-good-${SERVICE}"
+              PREVIOUS_TAG="$(cat "$LAST_GOOD_FILE" 2>/dev/null || true)"
+              export NGINX_IMAGE_TAG="$IMAGE_TAG"
+
               echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
-              # 2. Sync repo to main HEAD; overwrite any local drift on the VPS
               git fetch origin main
               git reset --hard origin/main
 
-              # 3. Pull and roll the service
-              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env pull nginx
-              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --force-recreate --remove-orphans nginx
+              echo "Deploying $SERVICE @ $IMAGE_TAG (previous: ${PREVIOUS_TAG:-none})"
+              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env pull $SERVICE
+              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --force-recreate --remove-orphans $SERVICE
 
-              # 4. Cleanup
+              STATUS=unknown
+              for i in {1..30}; do
+                STATUS=$(docker inspect --format="{{.State.Health.Status}}" tekka-$SERVICE 2>/dev/null || echo "unknown")
+                [ "$STATUS" = "healthy" ] && break
+                sleep 2
+              done
+              echo "Container health: $STATUS"
+
+              # Nginx fronts all three subdomains; smoke-test each.
+              if curl -fsS --max-time 10 https://tekka.ug/ > /dev/null \
+                  && curl -fsS --max-time 10 https://api.tekka.ug/api/v1/ > /dev/null \
+                  && curl -fsS --max-time 10 https://admin.tekka.ug/ > /dev/null; then
+                echo "Smoke test passed."
+                echo "$IMAGE_TAG" > "$LAST_GOOD_FILE"
+              else
+                echo "Smoke test FAILED on at least one subdomain"
+                if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$IMAGE_TAG" ]; then
+                  echo "Rolling back to $PREVIOUS_TAG"
+                  export NGINX_IMAGE_TAG="$PREVIOUS_TAG"
+                  docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --force-recreate $SERVICE
+                else
+                  echo "No previous tag recorded; manual intervention required."
+                fi
+                exit 1
+              fi
+
               docker image prune -f || true
             '
