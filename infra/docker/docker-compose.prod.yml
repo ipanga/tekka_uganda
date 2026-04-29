@@ -7,7 +7,10 @@ services:
   # ===========================================
   api:
     init: true
-    image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-api:latest
+    # Tag is set by the deploy workflow to `sha-<commit>` so deploys are
+    # reproducible and rollbacks have something concrete to point at.
+    # Falls back to `:latest` for hand-run `docker compose up`.
+    image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-api:${API_IMAGE_TAG:-latest}
     container_name: tekka-api
     environment:
       NODE_ENV: production
@@ -47,7 +50,7 @@ services:
   # Admin Dashboard (admin.tekka.ug)
   # ===========================================
   admin:
-    image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-admin:latest
+    image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-admin:${ADMIN_IMAGE_TAG:-latest}
     container_name: tekka-admin
     environment:
       NODE_ENV: production
@@ -75,7 +78,7 @@ services:
   # User Dashboard (tekka.ug)
   # ===========================================
   user:
-    image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-user:latest
+    image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-user:${USER_IMAGE_TAG:-latest}
     container_name: tekka-user
     environment:
       NODE_ENV: production
@@ -103,7 +106,7 @@ services:
   # Nginx Reverse Proxy
   # ===========================================
   nginx:
-    image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-nginx:latest
+    image: ghcr.io/${GHCR_OWNER:-ipanga}/tekka-nginx:${NGINX_IMAGE_TAG:-latest}
     container_name: tekka-nginx
     ports:
       - "80:80"
