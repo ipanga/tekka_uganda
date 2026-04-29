@@ -164,9 +164,11 @@ export default function PrivacyPage() {
                 <div>
                   <p className="mb-2">When you delete your account:</p>
                   <ul className="list-disc pl-5 space-y-1">
-                    <li>Personal data is removed within 30 days</li>
+                    <li>You can choose immediate deletion, or schedule it with a 7-day grace period during which you can cancel</li>
+                    <li>After the grace period (or immediately if you opt out of it), your personal data is permanently removed</li>
                     <li>Some data may be retained for legal compliance</li>
                     <li>Anonymized data may be retained for analytics</li>
+                    <li>See <a href="/account-deletion" className="text-primary-500 hover:text-primary-600">Delete your account</a> for the full process</li>
                   </ul>
                 </div>
               </div>
