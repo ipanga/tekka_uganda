@@ -291,8 +291,7 @@ export class UsersService {
     reason: string,
     gracePeriodDays = 7,
   ) {
-    // Verify user exists (throws if not found)
-    await this.findById(userId);
+    const user = await this.findById(userId);
     const scheduledDate = new Date();
     scheduledDate.setDate(scheduledDate.getDate() + gracePeriodDays);
 
@@ -322,6 +321,16 @@ export class UsersService {
       },
     });
 
+    if (user.email) {
+      await this.emailService
+        .sendAccountDeletionScheduled(user.email, scheduledDate)
+        .catch((err) =>
+          this.logger.error(
+            `Failed to send deletion-scheduled email to ${user.email}: ${err?.message ?? err}`,
+          ),
+        );
+    }
+
     return {
       scheduledDate: scheduledDate.toISOString(),
       daysUntilDeletion: gracePeriodDays,
@@ -329,7 +338,7 @@ export class UsersService {
   }
 
   async cancelScheduledDeletion(userId: string) {
-    await this.findById(userId);
+    const user = await this.findById(userId);
 
     // Delete the scheduled deletion record
     await this.prisma.scheduledDeletion.deleteMany({
@@ -344,6 +353,16 @@ export class UsersService {
         accountDeletionDate: null,
       },
     });
+
+    if (user.email) {
+      await this.emailService
+        .sendAccountDeletionCancelled(user.email)
+        .catch((err) =>
+          this.logger.error(
+            `Failed to send deletion-cancelled email to ${user.email}: ${err?.message ?? err}`,
+          ),
+        );
+    }
 
     return { cancelled: true };
   }
@@ -368,6 +387,10 @@ export class UsersService {
   }
 
   async deleteAccountImmediately(userId: string) {
+    // Capture email BEFORE the transaction so we can notify after the user row is gone.
+    const user = await this.findById(userId);
+    const userEmail = user.email;
+
     // Delete all user data using transaction
     await this.prisma.$transaction(async (tx) => {
       // Delete user's listings
@@ -415,6 +438,16 @@ export class UsersService {
       // Finally delete the user
       await tx.user.delete({ where: { id: userId } });
     });
+
+    if (userEmail) {
+      await this.emailService
+        .sendAccountDeletionCompleted(userEmail)
+        .catch((err) =>
+          this.logger.error(
+            `Failed to send deletion-completed email to ${userEmail}: ${err?.message ?? err}`,
+          ),
+        );
+    }
 
     return { deleted: true };
   }
