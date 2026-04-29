@@ -18,7 +18,7 @@ COMPOSE_FILE="/opt/tekka/infra/docker/docker-compose.prod.yml"
 ENV_FILE="/opt/tekka/.env"
 
 # Docker Compose command with env file
-DC="$DC --env-file $ENV_FILE"
+DC="docker compose -f $COMPOSE_FILE --env-file $ENV_FILE"
 
 # Colors (disabled in non-interactive mode)
 if [ -t 1 ]; then
