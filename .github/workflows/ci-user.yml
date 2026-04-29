@@ -1,0 +1,54 @@
+name: CI - User Dashboard
+
+# PR-time and develop-push checks for the Next.js consumer site.
+# Skips `next build` because it requires NEXT_PUBLIC_* env vars and
+# would slow the loop. Type-checking via tsc covers the same surface
+# for compile errors. Add `next build` later if SEO-critical SSG
+# regressions become a concern.
+
+on:
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'apps/user/**'
+      - '.github/workflows/ci-user.yml'
+  push:
+    branches: [develop]
+    paths:
+      - 'apps/user/**'
+      - '.github/workflows/ci-user.yml'
+  workflow_dispatch:
+
+env:
+  WORKING_DIRECTORY: apps/user
+  NODE_VERSION: '20'
+
+jobs:
+  ci:
+    name: Lint, type-check, test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: ${{ env.WORKING_DIRECTORY }}/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check
+        run: npx tsc --noEmit
+
+      - name: Run unit tests
+        run: npm test -- --ci --reporters=default --passWithNoTests
