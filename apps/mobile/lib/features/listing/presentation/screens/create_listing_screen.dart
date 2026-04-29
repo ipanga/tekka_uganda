@@ -123,7 +123,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         );
       }
     } catch (e, st) {
-      debugPrint('CreateListingScreen: failed to load listing for edit: $e\n$st');
+      debugPrint(
+        'CreateListingScreen: failed to load listing for edit: $e\n$st',
+      );
       if (mounted) setState(() => _editLoadFailed = true);
     }
   }

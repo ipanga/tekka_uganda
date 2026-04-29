@@ -28,366 +28,370 @@ class MeetupDetailScreen extends ConsumerWidget {
         if (!didPop) context.go(AppRoutes.home);
       },
       child: Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Meetup Details'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.popOrGoHome(),
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Meetup Details'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.popOrGoHome(),
+          ),
         ),
-      ),
-      body: meetupAsync.when(
-        data: (meetup) {
-          if (meetup == null) {
-            return Center(
+        body: meetupAsync.when(
+          data: (meetup) {
+            if (meetup == null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.calendar_today_outlined,
+                      size: 64,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: AppSpacing.space4),
+                    Text('Meetup not found', style: AppTypography.titleMedium),
+                    const SizedBox(height: AppSpacing.space4),
+                    FilledButton(
+                      onPressed: () => context.popOrGoHome(),
+                      child: const Text('Go Back'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final isBuyer = meetup.buyerId == userId;
+            final isProposed = meetup.status == MeetupStatus.proposed;
+            final isConfirmed = meetup.status == MeetupStatus.confirmed;
+            final canConfirm = isProposed && !isBuyer; // Seller confirms
+            final canCancel = isProposed || isConfirmed;
+            final canComplete =
+                isConfirmed && meetup.scheduledAt.isBefore(DateTime.now());
+            final canMarkNoShow =
+                isConfirmed && meetup.scheduledAt.isBefore(DateTime.now());
+
+            return SingleChildScrollView(
+              padding: AppSpacing.screenPadding,
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.calendar_today_outlined,
-                    size: 64,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: AppSpacing.space4),
-                  Text('Meetup not found', style: AppTypography.titleMedium),
-                  const SizedBox(height: AppSpacing.space4),
-                  FilledButton(
-                    onPressed: () => context.popOrGoHome(),
-                    child: const Text('Go Back'),
-                  ),
-                ],
-              ),
-            );
-          }
+                  // Status banner
+                  _StatusBanner(meetup: meetup),
 
-          final isBuyer = meetup.buyerId == userId;
-          final isProposed = meetup.status == MeetupStatus.proposed;
-          final isConfirmed = meetup.status == MeetupStatus.confirmed;
-          final canConfirm = isProposed && !isBuyer; // Seller confirms
-          final canCancel = isProposed || isConfirmed;
-          final canComplete =
-              isConfirmed && meetup.scheduledAt.isBefore(DateTime.now());
-          final canMarkNoShow =
-              isConfirmed && meetup.scheduledAt.isBefore(DateTime.now());
+                  const SizedBox(height: AppSpacing.space6),
 
-          return SingleChildScrollView(
-            padding: AppSpacing.screenPadding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Status banner
-                _StatusBanner(meetup: meetup),
-
-                const SizedBox(height: AppSpacing.space6),
-
-                // Date & Time card
-                _InfoCard(
-                  icon: Icons.calendar_today,
-                  title: 'Date & Time',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _formatFullDate(meetup.scheduledAt),
-                        style: AppTypography.titleMedium,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        meetup.formattedTime,
-                        style: AppTypography.bodyLarge.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
+                  // Date & Time card
+                  _InfoCard(
+                    icon: Icons.calendar_today,
+                    title: 'Date & Time',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _formatFullDate(meetup.scheduledAt),
+                          style: AppTypography.titleMedium,
                         ),
-                      ),
-                      if (meetup.isUpcoming) ...[
-                        const SizedBox(height: AppSpacing.space2),
+                        const SizedBox(height: 4),
+                        Text(
+                          meetup.formattedTime,
+                          style: AppTypography.bodyLarge.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        if (meetup.isUpcoming) ...[
+                          const SizedBox(height: AppSpacing.space2),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.warning.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: Text(
+                              _getTimeUntil(meetup.scheduledAt),
+                              style: AppTypography.labelMedium.copyWith(
+                                color: AppColors.warning,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.space4),
+
+                  // Location card
+                  _InfoCard(
+                    icon: Icons.location_on,
+                    title: 'Location',
+                    trailing: meetup.location.isVerified
+                        ? Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.success.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.verified_user,
+                                  size: 14,
+                                  color: AppColors.success,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Verified',
+                                  style: AppTypography.labelSmall.copyWith(
+                                    color: AppColors.success,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          meetup.location.name,
+                          style: AppTypography.titleMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          meetup.location.address,
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                        if (meetup.location.area.isNotEmpty) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            meetup.location.area,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.space3),
+                        // Location type badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.primaryContainer,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            meetup.location.type.displayName,
+                            style: AppTypography.labelSmall.copyWith(
+                              color: AppColors.primary,
+                            ),
+                          ),
+                        ),
+                        // Amenities
+                        if (meetup.location.amenities.isNotEmpty) ...[
+                          const SizedBox(height: AppSpacing.space3),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: meetup.location.amenities.map((amenity) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.gray100,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      _getAmenityIcon(amenity),
+                                      size: 14,
+                                      color: AppColors.onSurfaceVariant,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      amenity,
+                                      style: AppTypography.labelSmall.copyWith(
+                                        color: AppColors.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.space4),
+                        // Map button
+                        OutlinedButton.icon(
+                          onPressed: () => _openMaps(
+                            meetup.location.latitude,
+                            meetup.location.longitude,
+                            meetup.location.name,
+                          ),
+                          icon: const Icon(Icons.map_outlined),
+                          label: const Text('Open in Maps'),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSpacing.space4),
+
+                  // Role card
+                  _InfoCard(
+                    icon: isBuyer
+                        ? Icons.shopping_bag_outlined
+                        : Icons.sell_outlined,
+                    title: 'Your Role',
+                    child: Row(
+                      children: [
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 12,
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: AppColors.warning.withValues(alpha: 0.1),
+                            color: isBuyer
+                                ? AppColors.primaryContainer
+                                : AppColors.secondaryContainer,
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
-                            _getTimeUntil(meetup.scheduledAt),
-                            style: AppTypography.labelMedium.copyWith(
-                              color: AppColors.warning,
+                            isBuyer ? 'Buyer' : 'Seller',
+                            style: AppTypography.labelLarge.copyWith(
+                              color: isBuyer
+                                  ? AppColors.primary
+                                  : AppColors.secondary,
                             ),
                           ),
                         ),
                       ],
-                    ],
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: AppSpacing.space4),
-
-                // Location card
-                _InfoCard(
-                  icon: Icons.location_on,
-                  title: 'Location',
-                  trailing: meetup.location.isVerified
-                      ? Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppColors.success.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.verified_user,
-                                size: 14,
-                                color: AppColors.success,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'Verified',
-                                style: AppTypography.labelSmall.copyWith(
-                                  color: AppColors.success,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      : null,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        meetup.location.name,
-                        style: AppTypography.titleMedium,
+                  // Notes card
+                  if (meetup.notes != null && meetup.notes!.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.space4),
+                    _InfoCard(
+                      icon: Icons.note_outlined,
+                      title: 'Notes',
+                      child: Text(
+                        meetup.notes!,
+                        style: AppTypography.bodyMedium,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        meetup.location.address,
+                    ),
+                  ],
+
+                  // Cancel reason
+                  if (meetup.status == MeetupStatus.cancelled &&
+                      meetup.cancelReason != null) ...[
+                    const SizedBox(height: AppSpacing.space4),
+                    _InfoCard(
+                      icon: Icons.cancel_outlined,
+                      title: 'Cancellation Reason',
+                      child: Text(
+                        meetup.cancelReason!,
                         style: AppTypography.bodyMedium.copyWith(
-                          color: AppColors.onSurfaceVariant,
+                          color: AppColors.error,
                         ),
                       ),
-                      if (meetup.location.area.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          meetup.location.area,
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.space3),
-                      // Location type badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primaryContainer,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          meetup.location.type.displayName,
-                          style: AppTypography.labelSmall.copyWith(
-                            color: AppColors.primary,
-                          ),
-                        ),
-                      ),
-                      // Amenities
-                      if (meetup.location.amenities.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.space3),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: meetup.location.amenities.map((amenity) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.gray100,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    _getAmenityIcon(amenity),
-                                    size: 14,
-                                    color: AppColors.onSurfaceVariant,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    amenity,
-                                    style: AppTypography.labelSmall.copyWith(
-                                      color: AppColors.onSurfaceVariant,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                      const SizedBox(height: AppSpacing.space4),
-                      // Map button
-                      OutlinedButton.icon(
-                        onPressed: () => _openMaps(
-                          meetup.location.latitude,
-                          meetup.location.longitude,
-                          meetup.location.name,
-                        ),
-                        icon: const Icon(Icons.map_outlined),
-                        label: const Text('Open in Maps'),
-                      ),
-                    ],
-                  ),
-                ),
+                    ),
+                  ],
 
+                  const SizedBox(height: AppSpacing.space8),
+
+                  // Action buttons
+                  if (canConfirm)
+                    _ActionButton(
+                      label: 'Confirm Meetup',
+                      icon: Icons.check_circle_outline,
+                      color: AppColors.success,
+                      onPressed: () => _confirmMeetup(context, ref),
+                    ),
+
+                  if (canComplete) ...[
+                    _ActionButton(
+                      label: 'Mark as Completed',
+                      icon: Icons.task_alt,
+                      color: AppColors.primary,
+                      onPressed: () => _completeMeetup(context, ref),
+                    ),
+                    const SizedBox(height: AppSpacing.space3),
+                  ],
+
+                  if (canMarkNoShow) ...[
+                    _ActionButton(
+                      label: 'Report No-Show',
+                      icon: Icons.person_off_outlined,
+                      color: AppColors.warning,
+                      isOutlined: true,
+                      onPressed: () => _markNoShow(context, ref),
+                    ),
+                    const SizedBox(height: AppSpacing.space3),
+                  ],
+
+                  if (canCancel)
+                    _ActionButton(
+                      label: 'Cancel Meetup',
+                      icon: Icons.cancel_outlined,
+                      color: AppColors.error,
+                      isOutlined: true,
+                      onPressed: () => _showCancelDialog(context, ref),
+                    ),
+
+                  const SizedBox(height: AppSpacing.space6),
+
+                  // Chat button
+                  if (meetup.status != MeetupStatus.cancelled &&
+                      meetup.status != MeetupStatus.noShow)
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => context.push('/chat/${meetup.chatId}'),
+                        icon: const Icon(Icons.chat_outlined),
+                        label: const Text('Go to Chat'),
+                      ),
+                    ),
+
+                  const SizedBox(height: AppSpacing.space8),
+                ],
+              ),
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 48, color: AppColors.error),
                 const SizedBox(height: AppSpacing.space4),
-
-                // Role card
-                _InfoCard(
-                  icon: isBuyer
-                      ? Icons.shopping_bag_outlined
-                      : Icons.sell_outlined,
-                  title: 'Your Role',
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isBuyer
-                              ? AppColors.primaryContainer
-                              : AppColors.secondaryContainer,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Text(
-                          isBuyer ? 'Buyer' : 'Seller',
-                          style: AppTypography.labelLarge.copyWith(
-                            color: isBuyer
-                                ? AppColors.primary
-                                : AppColors.secondary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                Text('Error loading meetup', style: AppTypography.titleMedium),
+                const SizedBox(height: AppSpacing.space2),
+                TextButton(
+                  onPressed: () =>
+                      ref.refresh(scheduledMeetupProvider(meetupId)),
+                  child: const Text('Retry'),
                 ),
-
-                // Notes card
-                if (meetup.notes != null && meetup.notes!.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.space4),
-                  _InfoCard(
-                    icon: Icons.note_outlined,
-                    title: 'Notes',
-                    child: Text(meetup.notes!, style: AppTypography.bodyMedium),
-                  ),
-                ],
-
-                // Cancel reason
-                if (meetup.status == MeetupStatus.cancelled &&
-                    meetup.cancelReason != null) ...[
-                  const SizedBox(height: AppSpacing.space4),
-                  _InfoCard(
-                    icon: Icons.cancel_outlined,
-                    title: 'Cancellation Reason',
-                    child: Text(
-                      meetup.cancelReason!,
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: AppColors.error,
-                      ),
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: AppSpacing.space8),
-
-                // Action buttons
-                if (canConfirm)
-                  _ActionButton(
-                    label: 'Confirm Meetup',
-                    icon: Icons.check_circle_outline,
-                    color: AppColors.success,
-                    onPressed: () => _confirmMeetup(context, ref),
-                  ),
-
-                if (canComplete) ...[
-                  _ActionButton(
-                    label: 'Mark as Completed',
-                    icon: Icons.task_alt,
-                    color: AppColors.primary,
-                    onPressed: () => _completeMeetup(context, ref),
-                  ),
-                  const SizedBox(height: AppSpacing.space3),
-                ],
-
-                if (canMarkNoShow) ...[
-                  _ActionButton(
-                    label: 'Report No-Show',
-                    icon: Icons.person_off_outlined,
-                    color: AppColors.warning,
-                    isOutlined: true,
-                    onPressed: () => _markNoShow(context, ref),
-                  ),
-                  const SizedBox(height: AppSpacing.space3),
-                ],
-
-                if (canCancel)
-                  _ActionButton(
-                    label: 'Cancel Meetup',
-                    icon: Icons.cancel_outlined,
-                    color: AppColors.error,
-                    isOutlined: true,
-                    onPressed: () => _showCancelDialog(context, ref),
-                  ),
-
-                const SizedBox(height: AppSpacing.space6),
-
-                // Chat button
-                if (meetup.status != MeetupStatus.cancelled &&
-                    meetup.status != MeetupStatus.noShow)
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      onPressed: () => context.push('/chat/${meetup.chatId}'),
-                      icon: const Icon(Icons.chat_outlined),
-                      label: const Text('Go to Chat'),
-                    ),
-                  ),
-
-                const SizedBox(height: AppSpacing.space8),
               ],
             ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: AppSpacing.space4),
-              Text('Error loading meetup', style: AppTypography.titleMedium),
-              const SizedBox(height: AppSpacing.space2),
-              TextButton(
-                onPressed: () => ref.refresh(scheduledMeetupProvider(meetupId)),
-                child: const Text('Retry'),
-              ),
-            ],
           ),
         ),
       ),
-    ),
     );
   }
 

@@ -1,0 +1,39 @@
+name: Sync Scripts to VPS
+
+# Operational scripts under infra/scripts/** are run directly on the VPS
+# (e.g. /opt/tekka/infra/scripts/renew-ssl.sh by cron). The four deploy
+# workflows already do `git reset --hard origin/main` and pick up these
+# changes when they run, but a script-only change wouldn't trigger any of
+# them. This workflow exists to ensure the VPS repo gets fast-forwarded
+# whenever a script lands on main, without bouncing any container.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/scripts/**'
+      - '.github/workflows/sync-scripts.yml'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Sync /opt/tekka on VPS
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Sync via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
+          command_timeout: 5m
+          script: |
+            flock -w 60 /tmp/tekka-deploy.lock bash -c '
+              set -euo pipefail
+              cd /opt/tekka
+              git fetch origin main
+              git reset --hard origin/main
+              echo "Repo synced to $(git rev-parse --short HEAD)"
+            '

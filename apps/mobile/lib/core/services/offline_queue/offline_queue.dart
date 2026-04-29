@@ -51,8 +51,7 @@ class OfflineQueue {
       if (raw != null && raw.isNotEmpty) {
         final list = jsonDecode(raw) as List<dynamic>;
         for (final item in list) {
-          final action =
-              QueuedAction.fromJson(item as Map<String, dynamic>);
+          final action = QueuedAction.fromJson(item as Map<String, dynamic>);
           if (action != null) _queue.add(action);
         }
       }
