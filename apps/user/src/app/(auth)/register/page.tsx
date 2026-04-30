@@ -70,7 +70,7 @@ function RegisterContent() {
    */
   const normalizePhoneNumber = (phone: string): string => {
     // Remove all non-digit characters except +
-    let cleaned = phone.replace(/[^\d+]/g, '');
+    const cleaned = phone.replace(/[^\d+]/g, '');
 
     // Handle already normalized number
     if (cleaned.startsWith('+256')) {

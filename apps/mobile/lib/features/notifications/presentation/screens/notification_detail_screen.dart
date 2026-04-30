@@ -56,72 +56,76 @@ class _NotificationDetailScreenState
         if (!didPop) context.go(AppRoutes.home);
       },
       child: Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Notification'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.popOrGoHome(),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete_outline),
-            onPressed: () => _deleteNotification(context),
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: const Text('Notification'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.popOrGoHome(),
           ),
-        ],
-      ),
-      body: notificationAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: AppSpacing.space4),
-              Text(
-                'Failed to load notification',
-                style: AppTypography.bodyLarge,
-              ),
-              const SizedBox(height: AppSpacing.space2),
-              TextButton(
-                onPressed: () => ref.invalidate(
-                  singleNotificationProvider(widget.notificationId),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.delete_outline),
+              onPressed: () => _deleteNotification(context),
+            ),
+          ],
+        ),
+        body: notificationAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (error, _) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppColors.error,
                 ),
-                child: const Text('Retry'),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.space4),
+                Text(
+                  'Failed to load notification',
+                  style: AppTypography.bodyLarge,
+                ),
+                const SizedBox(height: AppSpacing.space2),
+                TextButton(
+                  onPressed: () => ref.invalidate(
+                    singleNotificationProvider(widget.notificationId),
+                  ),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
           ),
-        ),
-        data: (notification) {
-          if (notification == null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.notifications_off_outlined,
-                    size: 64,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: AppSpacing.space4),
-                  Text(
-                    'Notification not found',
-                    style: AppTypography.titleMedium,
-                  ),
-                  const SizedBox(height: AppSpacing.space4),
-                  FilledButton(
-                    onPressed: () => context.popOrGoHome(),
-                    child: const Text('Go Back'),
-                  ),
-                ],
-              ),
-            );
-          }
+          data: (notification) {
+            if (notification == null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.notifications_off_outlined,
+                      size: 64,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: AppSpacing.space4),
+                    Text(
+                      'Notification not found',
+                      style: AppTypography.titleMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.space4),
+                    FilledButton(
+                      onPressed: () => context.popOrGoHome(),
+                      child: const Text('Go Back'),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-          return _buildContent(context, notification);
-        },
+            return _buildContent(context, notification);
+          },
+        ),
       ),
-    ),
     );
   }
 
@@ -378,9 +382,7 @@ class _NotificationDetailScreenState
             buttonText = 'View Reviews';
             buttonIcon = Icons.star_outline;
             onPressed = () {
-              context.push(
-                AppRoutes.reviews.replaceFirst(':userId', targetId),
-              );
+              context.push(AppRoutes.reviews.replaceFirst(':userId', targetId));
             };
             break;
           case NotificationType.meetupProposed:

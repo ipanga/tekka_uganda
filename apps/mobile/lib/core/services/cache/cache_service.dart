@@ -113,8 +113,9 @@ class CacheService {
     final raw = prefs.getString(_prefsPrefix + key);
     if (raw == null) return null;
     try {
-      final entry =
-          CacheEntry.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      final entry = CacheEntry.fromJson(
+        jsonDecode(raw) as Map<String, dynamic>,
+      );
       if (entry != null) _putMemory(key, entry);
       return entry;
     } catch (_) {
@@ -156,8 +157,10 @@ class CacheService {
     _memory.removeWhere((k, _) => k.startsWith(prefix));
     final prefs = await _getPrefs();
     final fullPrefix = _prefsPrefix + prefix;
-    final toRemove =
-        prefs.getKeys().where((k) => k.startsWith(fullPrefix)).toList();
+    final toRemove = prefs
+        .getKeys()
+        .where((k) => k.startsWith(fullPrefix))
+        .toList();
     for (final k in toRemove) {
       await prefs.remove(k);
     }

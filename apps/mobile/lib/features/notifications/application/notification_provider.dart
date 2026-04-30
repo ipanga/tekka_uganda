@@ -188,10 +188,7 @@ class NotificationsListNotifier extends StateNotifier<NotificationsListState> {
         isInitialLoading: false,
       );
     } catch (e) {
-      state = state.copyWith(
-        isInitialLoading: false,
-        error: e.toString(),
-      );
+      state = state.copyWith(isInitialLoading: false, error: e.toString());
     }
   }
 
@@ -242,9 +239,7 @@ class NotificationsListNotifier extends StateNotifier<NotificationsListState> {
   /// backend write is owned by `NotificationActionsNotifier`.
   void markReadLocally(String notificationId) {
     final updated = state.items
-        .map(
-          (n) => n.id == notificationId ? n.copyWith(isRead: true) : n,
-        )
+        .map((n) => n.id == notificationId ? n.copyWith(isRead: true) : n)
         .toList(growable: false);
     state = state.copyWith(items: updated);
   }
@@ -252,9 +247,9 @@ class NotificationsListNotifier extends StateNotifier<NotificationsListState> {
   /// Remove a deleted notification from local state.
   void removeLocally(String notificationId) {
     state = state.copyWith(
-      items: state.items.where((n) => n.id != notificationId).toList(
-        growable: false,
-      ),
+      items: state.items
+          .where((n) => n.id != notificationId)
+          .toList(growable: false),
     );
   }
 }

@@ -775,9 +775,9 @@ class ListingActionsNotifier extends StateNotifier<AsyncValue<void>> {
     this.listingId, {
     required OfflineQueue queue,
     required bool Function() isConnected,
-  })  : _queue = queue,
-        _isConnected = isConnected,
-        super(const AsyncValue.data(null));
+  }) : _queue = queue,
+       _isConnected = isConnected,
+       super(const AsyncValue.data(null));
 
   /// Increment view count (called when listing is opened)
   Future<void> incrementView() async {

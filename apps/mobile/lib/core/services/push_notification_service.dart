@@ -150,7 +150,9 @@ class PushNotificationService {
           await _registerToken(token);
         }
       } catch (e) {
-        debugPrint('Initial FCM token fetch failed (will retry via onTokenRefresh): $e');
+        debugPrint(
+          'Initial FCM token fetch failed (will retry via onTokenRefresh): $e',
+        );
       }
 
       // Check if app was opened from a terminated state notification

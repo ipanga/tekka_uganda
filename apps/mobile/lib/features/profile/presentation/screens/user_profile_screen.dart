@@ -46,396 +46,401 @@ class UserProfileScreen extends ConsumerWidget {
         if (!didPop) context.go(AppRoutes.home);
       },
       child: Scaffold(
-      backgroundColor: AppColors.background,
-      body: userAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error loading profile: $e')),
-        data: (user) {
-          if (user == null) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.person_off_outlined,
-                    size: 64,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: AppSpacing.space4),
-                  Text('User not found', style: AppTypography.titleMedium),
-                  const SizedBox(height: AppSpacing.space4),
-                  OutlinedButton(
-                    onPressed: () => context.popOrGoHome(),
-                    child: const Text('Go Back'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          // Check if user can view this profile
-          final canView = canViewAsync.valueOrNull ?? true;
-          final privacy =
-              privacyAsync.valueOrNull ?? const PrivacyPreferences();
-
-          if (!canView) {
-            return _PrivateProfileView(user: user, userId: userId);
-          }
-
-          return CustomScrollView(
-            slivers: [
-              // App bar with user name
-              SliverAppBar(
-                expandedHeight: 200,
-                pinned: true,
-                actions: [
-                  _ProfileActionsMenu(
-                    userId: userId,
-                    userName: user.displayName ?? 'User',
-                  ),
-                ],
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          AppColors.primary,
-                          AppColors.primary.withValues(alpha: 0.8),
-                        ],
-                      ),
+        backgroundColor: AppColors.background,
+        body: userAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error loading profile: $e')),
+          data: (user) {
+            if (user == null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(
+                      Icons.person_off_outlined,
+                      size: 64,
+                      color: AppColors.onSurfaceVariant,
                     ),
-                    child: SafeArea(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const SizedBox(height: 40),
-                          CircleAvatar(
-                            radius: 45,
-                            backgroundColor: AppColors.white,
-                            child: CircleAvatar(
-                              radius: 42,
-                              backgroundColor: AppColors.primaryContainer,
-                              backgroundImage: user.photoUrl != null
-                                  ? CachedNetworkImageProvider(user.photoUrl!)
-                                  : null,
-                              child: user.photoUrl == null
-                                  ? Text(
-                                      user.displayName?.isNotEmpty == true
-                                          ? user.displayName![0].toUpperCase()
-                                          : '?',
-                                      style: AppTypography.displaySmall
-                                          .copyWith(color: AppColors.primary),
-                                    )
-                                  : null,
+                    const SizedBox(height: AppSpacing.space4),
+                    Text('User not found', style: AppTypography.titleMedium),
+                    const SizedBox(height: AppSpacing.space4),
+                    OutlinedButton(
+                      onPressed: () => context.popOrGoHome(),
+                      child: const Text('Go Back'),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            // Check if user can view this profile
+            final canView = canViewAsync.valueOrNull ?? true;
+            final privacy =
+                privacyAsync.valueOrNull ?? const PrivacyPreferences();
+
+            if (!canView) {
+              return _PrivateProfileView(user: user, userId: userId);
+            }
+
+            return CustomScrollView(
+              slivers: [
+                // App bar with user name
+                SliverAppBar(
+                  expandedHeight: 200,
+                  pinned: true,
+                  actions: [
+                    _ProfileActionsMenu(
+                      userId: userId,
+                      userName: user.displayName ?? 'User',
+                    ),
+                  ],
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primary.withValues(alpha: 0.8),
+                          ],
+                        ),
+                      ),
+                      child: SafeArea(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const SizedBox(height: 40),
+                            CircleAvatar(
+                              radius: 45,
+                              backgroundColor: AppColors.white,
+                              child: CircleAvatar(
+                                radius: 42,
+                                backgroundColor: AppColors.primaryContainer,
+                                backgroundImage: user.photoUrl != null
+                                    ? CachedNetworkImageProvider(user.photoUrl!)
+                                    : null,
+                                child: user.photoUrl == null
+                                    ? Text(
+                                        user.displayName?.isNotEmpty == true
+                                            ? user.displayName![0].toUpperCase()
+                                            : '?',
+                                        style: AppTypography.displaySmall
+                                            .copyWith(color: AppColors.primary),
+                                      )
+                                    : null,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: AppSpacing.space3),
-                          Text(
-                            user.displayName ?? 'User',
-                            style: AppTypography.headlineSmall.copyWith(
-                              color: AppColors.white,
+                            const SizedBox(height: AppSpacing.space3),
+                            Text(
+                              user.displayName ?? 'User',
+                              style: AppTypography.headlineSmall.copyWith(
+                                color: AppColors.white,
+                              ),
                             ),
-                          ),
-                          if (user.location != null &&
-                              privacy.showLocation) ...[
-                            const SizedBox(height: 4),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.location_on_outlined,
-                                  size: 14,
-                                  color: AppColors.white.withValues(alpha: 0.8),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  user.location!,
-                                  style: AppTypography.bodySmall.copyWith(
+                            if (user.location != null &&
+                                privacy.showLocation) ...[
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.location_on_outlined,
+                                    size: 14,
                                     color: AppColors.white.withValues(
                                       alpha: 0.8,
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    user.location!,
+                                    style: AppTypography.bodySmall.copyWith(
+                                      color: AppColors.white.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
-                        ],
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
 
-              // Stats row
-              SliverToBoxAdapter(
-                child: Container(
-                  color: AppColors.surface,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.space4,
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      if (privacy.showListingsCount) ...[
-                        listingsAsync.when(
-                          data: (listings) {
-                            final activeCount = listings
-                                .where((l) => l.status == ListingStatus.active)
-                                .length;
-                            return _StatItem(
-                              value: activeCount.toString(),
-                              label: 'Listings',
-                            );
-                          },
+                // Stats row
+                SliverToBoxAdapter(
+                  child: Container(
+                    color: AppColors.surface,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.space4,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        if (privacy.showListingsCount) ...[
+                          listingsAsync.when(
+                            data: (listings) {
+                              final activeCount = listings
+                                  .where(
+                                    (l) => l.status == ListingStatus.active,
+                                  )
+                                  .length;
+                              return _StatItem(
+                                value: activeCount.toString(),
+                                label: 'Listings',
+                              );
+                            },
+                            loading: () =>
+                                const _StatItem(value: '-', label: 'Listings'),
+                            error: (_, _) =>
+                                const _StatItem(value: '-', label: 'Listings'),
+                          ),
+                          Container(
+                            width: 1,
+                            height: 40,
+                            color: AppColors.outline,
+                          ),
+                        ],
+                        ratingAsync.when(
+                          data: (rating) => _StatItem(
+                            value: rating.totalReviews > 0
+                                ? rating.averageRating.toStringAsFixed(1)
+                                : '-',
+                            label: '${rating.totalReviews} Reviews',
+                            icon: rating.totalReviews > 0 ? Icons.star : null,
+                            iconColor: AppColors.warning,
+                          ),
                           loading: () =>
-                              const _StatItem(value: '-', label: 'Listings'),
+                              const _StatItem(value: '-', label: 'Reviews'),
                           error: (_, _) =>
-                              const _StatItem(value: '-', label: 'Listings'),
-                        ),
-                        Container(
-                          width: 1,
-                          height: 40,
-                          color: AppColors.outline,
+                              const _StatItem(value: '-', label: 'Reviews'),
                         ),
                       ],
-                      ratingAsync.when(
-                        data: (rating) => _StatItem(
-                          value: rating.totalReviews > 0
-                              ? rating.averageRating.toStringAsFixed(1)
-                              : '-',
-                          label: '${rating.totalReviews} Reviews',
-                          icon: rating.totalReviews > 0 ? Icons.star : null,
-                          iconColor: AppColors.warning,
-                        ),
-                        loading: () =>
-                            const _StatItem(value: '-', label: 'Reviews'),
-                        error: (_, _) =>
-                            const _StatItem(value: '-', label: 'Reviews'),
-                      ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.space4),
-              ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: AppSpacing.space4),
+                ),
 
-              // Action buttons (Message, Contact, Review)
-              SliverToBoxAdapter(
-                child: Container(
-                  color: AppColors.surface,
-                  padding: AppSpacing.screenPadding,
-                  child: _ActionButtons(
-                    userId: userId,
-                    user: user,
-                    privacy: privacy,
+                // Action buttons (Message, Contact, Review)
+                SliverToBoxAdapter(
+                  child: Container(
+                    color: AppColors.surface,
+                    padding: AppSpacing.screenPadding,
+                    child: _ActionButtons(
+                      userId: userId,
+                      user: user,
+                      privacy: privacy,
+                    ),
                   ),
                 ),
-              ),
 
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.space4),
-              ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: AppSpacing.space4),
+                ),
 
-              // Member since
-              SliverToBoxAdapter(
-                child: Container(
-                  color: AppColors.surface,
-                  padding: AppSpacing.screenPadding,
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.calendar_today_outlined,
-                        size: 18,
-                        color: AppColors.onSurfaceVariant,
-                      ),
-                      const SizedBox(width: AppSpacing.space2),
-                      Text(
-                        'Member since ${_formatMemberSince(user.createdAt)}',
-                        style: AppTypography.bodyMedium.copyWith(
+                // Member since
+                SliverToBoxAdapter(
+                  child: Container(
+                    color: AppColors.surface,
+                    padding: AppSpacing.screenPadding,
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 18,
                           color: AppColors.onSurfaceVariant,
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: AppSpacing.space2),
+                        Text(
+                          'Member since ${_formatMemberSince(user.createdAt)}',
+                          style: AppTypography.bodyMedium.copyWith(
+                            color: AppColors.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.space4),
-              ),
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: AppSpacing.space4),
+                ),
 
-              // Reviews section
-              SliverToBoxAdapter(
-                child: Container(
-                  color: AppColors.surface,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Padding(
-                        padding: AppSpacing.screenPadding,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Reviews', style: AppTypography.titleMedium),
-                            TextButton(
-                              onPressed: () {
-                                context.push(
-                                  AppRoutes.reviews.replaceFirst(
-                                    ':userId',
-                                    userId,
-                                  ),
-                                  extra: user.displayName ?? 'User',
-                                );
-                              },
-                              child: const Text('See All'),
-                            ),
-                          ],
-                        ),
-                      ),
-                      reviewsAsync.when(
-                        data: (reviews) {
-                          if (reviews.isEmpty) {
-                            return Padding(
-                              padding: AppSpacing.screenPadding,
-                              child: Center(
-                                child: Column(
-                                  children: [
-                                    Icon(
-                                      Icons.rate_review_outlined,
-                                      size: 40,
-                                      color: AppColors.onSurfaceVariant,
-                                    ),
-                                    const SizedBox(height: AppSpacing.space2),
-                                    Text(
-                                      'No reviews yet',
-                                      style: AppTypography.bodyMedium.copyWith(
-                                        color: AppColors.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }
-
-                          // Show first 3 reviews
-                          final displayReviews = reviews.take(3).toList();
-                          return Column(
-                            children: displayReviews.map((review) {
-                              return _ReviewPreviewCard(review: review);
-                            }).toList(),
-                          );
-                        },
-                        loading: () => const Padding(
+                // Reviews section
+                SliverToBoxAdapter(
+                  child: Container(
+                    color: AppColors.surface,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
                           padding: AppSpacing.screenPadding,
-                          child: Center(child: CircularProgressIndicator()),
-                        ),
-                        error: (_, _) => const Padding(
-                          padding: AppSpacing.screenPadding,
-                          child: Text('Failed to load reviews'),
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.space4),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.space4),
-              ),
-
-              // Listings section
-              SliverToBoxAdapter(
-                child: Container(
-                  color: AppColors.surface,
-                  child: Padding(
-                    padding: AppSpacing.screenPadding,
-                    child: Text('Listings', style: AppTypography.titleMedium),
-                  ),
-                ),
-              ),
-
-              // Listings grid
-              listingsAsync.when(
-                data: (listings) {
-                  final activeListings = listings
-                      .where((l) => l.status == ListingStatus.active)
-                      .toList();
-
-                  if (activeListings.isEmpty) {
-                    return SliverToBoxAdapter(
-                      child: Container(
-                        color: AppColors.surface,
-                        padding: AppSpacing.screenPadding,
-                        child: Center(
-                          child: Column(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Icon(
-                                Icons.inventory_2_outlined,
-                                size: 48,
-                                color: AppColors.onSurfaceVariant,
-                              ),
-                              const SizedBox(height: AppSpacing.space2),
-                              Text(
-                                'No active listings',
-                                style: AppTypography.bodyMedium.copyWith(
-                                  color: AppColors.onSurfaceVariant,
-                                ),
+                              Text('Reviews', style: AppTypography.titleMedium),
+                              TextButton(
+                                onPressed: () {
+                                  context.push(
+                                    AppRoutes.reviews.replaceFirst(
+                                      ':userId',
+                                      userId,
+                                    ),
+                                    extra: user.displayName ?? 'User',
+                                  );
+                                },
+                                child: const Text('See All'),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                    );
-                  }
+                        reviewsAsync.when(
+                          data: (reviews) {
+                            if (reviews.isEmpty) {
+                              return Padding(
+                                padding: AppSpacing.screenPadding,
+                                child: Center(
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Icons.rate_review_outlined,
+                                        size: 40,
+                                        color: AppColors.onSurfaceVariant,
+                                      ),
+                                      const SizedBox(height: AppSpacing.space2),
+                                      Text(
+                                        'No reviews yet',
+                                        style: AppTypography.bodyMedium
+                                            .copyWith(
+                                              color: AppColors.onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            }
 
-                  return SliverPadding(
-                    padding: AppSpacing.screenPadding,
-                    sliver: SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        mainAxisSpacing: AppSpacing.space3,
-                        crossAxisSpacing: AppSpacing.space3,
-                        childAspectRatio: AppSpacing.listingCardAspectRatio,
-                      ),
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final listing = activeListings[index];
-                        return _ListingCard(
-                          listing: listing,
-                          onTap: () {
-                            context.push(
-                              AppRoutes.listingDetail.replaceFirst(
-                                ':id',
-                                listing.id,
-                              ),
+                            // Show first 3 reviews
+                            final displayReviews = reviews.take(3).toList();
+                            return Column(
+                              children: displayReviews.map((review) {
+                                return _ReviewPreviewCard(review: review);
+                              }).toList(),
                             );
                           },
-                        );
-                      }, childCount: activeListings.length),
+                          loading: () => const Padding(
+                            padding: AppSpacing.screenPadding,
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                          error: (_, _) => const Padding(
+                            padding: AppSpacing.screenPadding,
+                            child: Text('Failed to load reviews'),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.space4),
+                      ],
                     ),
-                  );
-                },
-                loading: () => const SliverToBoxAdapter(
-                  child: Center(child: CircularProgressIndicator()),
+                  ),
                 ),
-                error: (_, _) => const SliverToBoxAdapter(
-                  child: Center(child: Text('Failed to load listings')),
-                ),
-              ),
 
-              const SliverToBoxAdapter(
-                child: SizedBox(height: AppSpacing.space10),
-              ),
-            ],
-          );
-        },
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: AppSpacing.space4),
+                ),
+
+                // Listings section
+                SliverToBoxAdapter(
+                  child: Container(
+                    color: AppColors.surface,
+                    child: Padding(
+                      padding: AppSpacing.screenPadding,
+                      child: Text('Listings', style: AppTypography.titleMedium),
+                    ),
+                  ),
+                ),
+
+                // Listings grid
+                listingsAsync.when(
+                  data: (listings) {
+                    final activeListings = listings
+                        .where((l) => l.status == ListingStatus.active)
+                        .toList();
+
+                    if (activeListings.isEmpty) {
+                      return SliverToBoxAdapter(
+                        child: Container(
+                          color: AppColors.surface,
+                          padding: AppSpacing.screenPadding,
+                          child: Center(
+                            child: Column(
+                              children: [
+                                Icon(
+                                  Icons.inventory_2_outlined,
+                                  size: 48,
+                                  color: AppColors.onSurfaceVariant,
+                                ),
+                                const SizedBox(height: AppSpacing.space2),
+                                Text(
+                                  'No active listings',
+                                  style: AppTypography.bodyMedium.copyWith(
+                                    color: AppColors.onSurfaceVariant,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    return SliverPadding(
+                      padding: AppSpacing.screenPadding,
+                      sliver: SliverGrid(
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: AppSpacing.space3,
+                          crossAxisSpacing: AppSpacing.space3,
+                          childAspectRatio: AppSpacing.listingCardAspectRatio,
+                        ),
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          final listing = activeListings[index];
+                          return _ListingCard(
+                            listing: listing,
+                            onTap: () {
+                              context.push(
+                                AppRoutes.listingDetail.replaceFirst(
+                                  ':id',
+                                  listing.id,
+                                ),
+                              );
+                            },
+                          );
+                        }, childCount: activeListings.length),
+                      ),
+                    );
+                  },
+                  loading: () => const SliverToBoxAdapter(
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
+                  error: (_, _) => const SliverToBoxAdapter(
+                    child: Center(child: Text('Failed to load listings')),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: AppSpacing.space10),
+                ),
+              ],
+            );
+          },
+        ),
       ),
-    ),
     );
   }
 

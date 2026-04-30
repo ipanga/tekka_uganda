@@ -66,6 +66,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: [build-and-push]
     environment: production
+    permissions:
+      packages: read
+    env:
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GHCR_USERNAME: ${{ github.actor }}
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
@@ -75,12 +80,23 @@ jobs:
           key: ${{ secrets.VPS_SSH_KEY }}
           passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
           command_timeout: 10m
+          envs: GHCR_TOKEN,GHCR_USERNAME
           script: |
             flock -w 300 /tmp/tekka-deploy.lock bash -c '
-              set -e
+              set -euo pipefail
               cd /opt/tekka
-              git pull origin main --ff-only || true
+
+              # 1. Refresh GHCR credentials (workflow-scoped GITHUB_TOKEN)
+              echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
+
+              # 2. Sync repo to main HEAD; overwrite any local drift on the VPS
+              git fetch origin main
+              git reset --hard origin/main
+
+              # 3. Pull and roll the service
               docker compose -f infra/docker/docker-compose.prod.yml --env-file .env pull admin
               docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --force-recreate --remove-orphans admin
+
+              # 4. Cleanup
               docker image prune -f || true
             '
