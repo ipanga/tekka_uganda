@@ -7,8 +7,10 @@
 #
 # Usage: ./renew-ssl.sh
 #
-# Recommended cron entry (runs twice daily):
-#   0 0,12 * * * /opt/tekka/infra/scripts/renew-ssl.sh >> /var/log/tekka-ssl-renew.log 2>&1
+# Recommended cron entry (runs twice daily). Log path is under /opt/tekka so
+# the non-root `deploy` user can write to it; /var/log/ would need sudo to
+# create and would silently fail every cron tick.
+#   0 0,12 * * * /opt/tekka/infra/scripts/renew-ssl.sh >> /opt/tekka/.tekka-ssl-renew.log 2>&1
 # =============================================================================
 
 set -e
