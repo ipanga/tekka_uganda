@@ -78,9 +78,9 @@ class ChatActionsNotifier extends StateNotifier<ChatActionsState> {
     this.userName, {
     required OfflineQueue queue,
     required bool Function() isConnected,
-  })  : _queue = queue,
-        _isConnected = isConnected,
-        super(const ChatActionsState());
+  }) : _queue = queue,
+       _isConnected = isConnected,
+       super(const ChatActionsState());
 
   Future<void> sendMessage(
     String content, {

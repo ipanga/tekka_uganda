@@ -75,201 +75,205 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         if (!didPop) context.go(AppRoutes.home);
       },
       child: chatAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
-      error: (error, _) => Scaffold(
-        appBar: AppBar(),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: AppSpacing.space4),
-              Text('Failed to load chat', style: AppTypography.bodyLarge),
-              TextButton(
-                onPressed: () => ref.invalidate(chatProvider(widget.chatId)),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
-      ),
-      data: (chat) {
-        if (chat == null) {
-          return Scaffold(
-            appBar: AppBar(),
-            body: const Center(child: Text('Chat not found')),
-          );
-        }
-
-        final currentUserId = user?.uid ?? '';
-        final otherUserName = chat.getOtherUserName(currentUserId);
-        final otherUserPhotoUrl = chat.getOtherUserPhotoUrl(currentUserId);
-        final otherUserId = chat.getOtherUserId(currentUserId);
-
-        // Check if other user is typing
-        final isOtherTyping = typingStatus.maybeWhen(
-          data: (status) => status[otherUserId] ?? false,
-          orElse: () => false,
-        );
-
-        // Check if chat is blocked
-        final isChatBlockedAsync = ref.watch(
-          isChatBlockedProvider(otherUserId),
-        );
-        final isChatBlocked = isChatBlockedAsync.maybeWhen(
-          data: (blocked) => blocked,
-          orElse: () => false,
-        );
-
-        return Scaffold(
-          backgroundColor: AppColors.background,
-          appBar: AppBar(
-            titleSpacing: 0,
-            title: Row(
+        loading: () =>
+            const Scaffold(body: Center(child: CircularProgressIndicator())),
+        error: (error, _) => Scaffold(
+          appBar: AppBar(),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppColors.primaryContainer,
-                  backgroundImage: otherUserPhotoUrl != null
-                      ? CachedNetworkImageProvider(otherUserPhotoUrl)
-                      : null,
-                  child: otherUserPhotoUrl == null
-                      ? Icon(Icons.person, color: AppColors.primary, size: 20)
-                      : null,
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppColors.error,
                 ),
-                const SizedBox(width: AppSpacing.space3),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(otherUserName, style: AppTypography.labelLarge),
-                      if (isOtherTyping)
-                        Text(
-                          'typing...',
-                          style: AppTypography.bodySmall.copyWith(
-                            color: AppColors.primary,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                    ],
-                  ),
+                const SizedBox(height: AppSpacing.space4),
+                Text('Failed to load chat', style: AppTypography.bodyLarge),
+                TextButton(
+                  onPressed: () => ref.invalidate(chatProvider(widget.chatId)),
+                  child: const Text('Retry'),
                 ),
               ],
             ),
-            actions: [
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert),
-                onSelected: (value) =>
-                    _handleMenuAction(value, chat, otherUserId),
-                itemBuilder: (context) => [
-                  const PopupMenuItem(
-                    value: 'view_listing',
-                    child: Text('View Listing'),
+          ),
+        ),
+        data: (chat) {
+          if (chat == null) {
+            return Scaffold(
+              appBar: AppBar(),
+              body: const Center(child: Text('Chat not found')),
+            );
+          }
+
+          final currentUserId = user?.uid ?? '';
+          final otherUserName = chat.getOtherUserName(currentUserId);
+          final otherUserPhotoUrl = chat.getOtherUserPhotoUrl(currentUserId);
+          final otherUserId = chat.getOtherUserId(currentUserId);
+
+          // Check if other user is typing
+          final isOtherTyping = typingStatus.maybeWhen(
+            data: (status) => status[otherUserId] ?? false,
+            orElse: () => false,
+          );
+
+          // Check if chat is blocked
+          final isChatBlockedAsync = ref.watch(
+            isChatBlockedProvider(otherUserId),
+          );
+          final isChatBlocked = isChatBlockedAsync.maybeWhen(
+            data: (blocked) => blocked,
+            orElse: () => false,
+          );
+
+          return Scaffold(
+            backgroundColor: AppColors.background,
+            appBar: AppBar(
+              titleSpacing: 0,
+              title: Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: AppColors.primaryContainer,
+                    backgroundImage: otherUserPhotoUrl != null
+                        ? CachedNetworkImageProvider(otherUserPhotoUrl)
+                        : null,
+                    child: otherUserPhotoUrl == null
+                        ? Icon(Icons.person, color: AppColors.primary, size: 20)
+                        : null,
                   ),
-                  const PopupMenuItem(value: 'report', child: Text('Report')),
-                  const PopupMenuItem(
-                    value: 'block',
-                    child: Text('Block User'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Text('Delete Chat'),
+                  const SizedBox(width: AppSpacing.space3),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(otherUserName, style: AppTypography.labelLarge),
+                        if (isOtherTyping)
+                          Text(
+                            'typing...',
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.primary,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),
-            ],
-          ),
-          body: Column(
-            children: [
-              // Listing context bar
-              _ListingContextBar(chat: chat),
-              const Divider(height: 1),
-
-              // Blocked banner
-              if (isChatBlocked) _BlockedBanner(otherUserName: otherUserName),
-
-              // Review banner for sold listings
-              if (!isChatBlocked)
-                _ReviewBanner(
-                  chat: chat,
-                  currentUserId: currentUserId,
-                  otherUserId: otherUserId,
-                  otherUserName: otherUserName,
+              actions: [
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_vert),
+                  onSelected: (value) =>
+                      _handleMenuAction(value, chat, otherUserId),
+                  itemBuilder: (context) => [
+                    const PopupMenuItem(
+                      value: 'view_listing',
+                      child: Text('View Listing'),
+                    ),
+                    const PopupMenuItem(value: 'report', child: Text('Report')),
+                    const PopupMenuItem(
+                      value: 'block',
+                      child: Text('Block User'),
+                    ),
+                    const PopupMenuItem(
+                      value: 'delete',
+                      child: Text('Delete Chat'),
+                    ),
+                  ],
                 ),
+              ],
+            ),
+            body: Column(
+              children: [
+                // Listing context bar
+                _ListingContextBar(chat: chat),
+                const Divider(height: 1),
 
-              // Messages list
-              Expanded(
-                child: messagesAsync.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, _) =>
-                      const Center(child: Text('Failed to load messages')),
-                  data: (messages) {
-                    if (messages.isEmpty) {
-                      return _buildEmptyMessages();
-                    }
+                // Blocked banner
+                if (isChatBlocked) _BlockedBanner(otherUserName: otherUserName),
 
-                    return ListView.builder(
-                      controller: _scrollController,
-                      padding: AppSpacing.screenPadding,
-                      reverse: false,
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) {
-                        final message = messages[index];
-                        final showDateSeparator =
-                            index == 0 ||
-                            messages[index].dateGroup !=
-                                messages[index - 1].dateGroup;
+                // Review banner for sold listings
+                if (!isChatBlocked)
+                  _ReviewBanner(
+                    chat: chat,
+                    currentUserId: currentUserId,
+                    otherUserId: otherUserId,
+                    otherUserName: otherUserName,
+                  ),
 
-                        return Column(
-                          children: [
-                            if (showDateSeparator) ...[
-                              if (index > 0)
+                // Messages list
+                Expanded(
+                  child: messagesAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (error, _) =>
+                        const Center(child: Text('Failed to load messages')),
+                    data: (messages) {
+                      if (messages.isEmpty) {
+                        return _buildEmptyMessages();
+                      }
+
+                      return ListView.builder(
+                        controller: _scrollController,
+                        padding: AppSpacing.screenPadding,
+                        reverse: false,
+                        itemCount: messages.length,
+                        itemBuilder: (context, index) {
+                          final message = messages[index];
+                          final showDateSeparator =
+                              index == 0 ||
+                              messages[index].dateGroup !=
+                                  messages[index - 1].dateGroup;
+
+                          return Column(
+                            children: [
+                              if (showDateSeparator) ...[
+                                if (index > 0)
+                                  const SizedBox(height: AppSpacing.space4),
+                                _DateSeparator(date: message.dateGroup),
                                 const SizedBox(height: AppSpacing.space4),
-                              _DateSeparator(date: message.dateGroup),
-                              const SizedBox(height: AppSpacing.space4),
+                              ],
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.space3,
+                                ),
+                                child: _MessageBubble(
+                                  message: message,
+                                  isMe: message.isFromMe(currentUserId),
+                                ),
+                              ),
                             ],
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                bottom: AppSpacing.space3,
-                              ),
-                              child: _MessageBubble(
-                                message: message,
-                                isMe: message.isFromMe(currentUserId),
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  },
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
-              ),
 
-              // Quick actions (hide when blocked)
-              if (!isChatBlocked)
-                _QuickActionsBar(onQuickMessage: _sendQuickMessage),
+                // Quick actions (hide when blocked)
+                if (!isChatBlocked)
+                  _QuickActionsBar(onQuickMessage: _sendQuickMessage),
 
-              // Message input or blocked message
-              if (isChatBlocked)
-                _BlockedMessageInput()
-              else
-                _MessageInput(
-                  controller: _messageController,
-                  isSending: chatActions.isSending,
-                  onSend: _sendMessage,
-                  onTyping: () {
-                    ref
-                        .read(chatActionsProvider(widget.chatId).notifier)
-                        .setTyping(true);
-                  },
-                ),
-            ],
-          ),
-        );
-      },
-    ),
+                // Message input or blocked message
+                if (isChatBlocked)
+                  _BlockedMessageInput()
+                else
+                  _MessageInput(
+                    controller: _messageController,
+                    isSending: chatActions.isSending,
+                    onSend: _sendMessage,
+                    onTyping: () {
+                      ref
+                          .read(chatActionsProvider(widget.chatId).notifier)
+                          .setTyping(true);
+                    },
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 

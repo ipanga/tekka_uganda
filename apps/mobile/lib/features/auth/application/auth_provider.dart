@@ -55,8 +55,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
   final PushNotificationService _pushService;
 
-  AuthNotifier(this._repository, this._pushService)
-    : super(const AuthState());
+  AuthNotifier(this._repository, this._pushService) : super(const AuthState());
 
   /// Send OTP to phone number
   Future<void> sendOtp(String phoneNumber) async {

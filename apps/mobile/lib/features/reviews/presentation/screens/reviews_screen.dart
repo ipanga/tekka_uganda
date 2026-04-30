@@ -31,76 +31,76 @@ class ReviewsScreen extends ConsumerWidget {
         if (!didPop) context.go(AppRoutes.home);
       },
       child: Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('$userName\'s Reviews'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.popOrGoHome(),
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          title: Text('$userName\'s Reviews'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => context.popOrGoHome(),
+          ),
+        ),
+        body: reviewsAsync.when(
+          data: (reviews) {
+            if (reviews.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.rate_review_outlined,
+                      size: 64,
+                      color: AppColors.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: AppSpacing.space4),
+                    Text(
+                      'No reviews yet',
+                      style: AppTypography.titleMedium.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.space2),
+                    Text(
+                      'Reviews from transactions will appear here',
+                      style: AppTypography.bodyMedium.copyWith(
+                        color: AppColors.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return CustomScrollView(
+              slivers: [
+                // Rating summary header
+                SliverToBoxAdapter(
+                  child: ratingAsync.when(
+                    data: (rating) => _RatingSummary(rating: rating),
+                    loading: () => const SizedBox(
+                      height: 150,
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                    error: (_, _) => const SizedBox.shrink(),
+                  ),
+                ),
+
+                // Reviews list
+                SliverPadding(
+                  padding: AppSpacing.screenPadding,
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final review = reviews[index];
+                      return _ReviewCard(review: review);
+                    }, childCount: reviews.length),
+                  ),
+                ),
+              ],
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error loading reviews: $e')),
         ),
       ),
-      body: reviewsAsync.when(
-        data: (reviews) {
-          if (reviews.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.rate_review_outlined,
-                    size: 64,
-                    color: AppColors.onSurfaceVariant,
-                  ),
-                  const SizedBox(height: AppSpacing.space4),
-                  Text(
-                    'No reviews yet',
-                    style: AppTypography.titleMedium.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.space2),
-                  Text(
-                    'Reviews from transactions will appear here',
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return CustomScrollView(
-            slivers: [
-              // Rating summary header
-              SliverToBoxAdapter(
-                child: ratingAsync.when(
-                  data: (rating) => _RatingSummary(rating: rating),
-                  loading: () => const SizedBox(
-                    height: 150,
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                  error: (_, _) => const SizedBox.shrink(),
-                ),
-              ),
-
-              // Reviews list
-              SliverPadding(
-                padding: AppSpacing.screenPadding,
-                sliver: SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final review = reviews[index];
-                    return _ReviewCard(review: review);
-                  }, childCount: reviews.length),
-                ),
-              ),
-            ],
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error loading reviews: $e')),
-      ),
-    ),
     );
   }
 }

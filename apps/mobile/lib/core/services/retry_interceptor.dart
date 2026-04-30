@@ -22,8 +22,8 @@ class RetryInterceptor extends Interceptor {
     this.baseDelay = const Duration(milliseconds: 500),
     this.maxDelay = const Duration(seconds: 8),
     FutureOr<void> Function(Duration)? sleeper,
-  })  : _dio = dio,
-        _sleeper = sleeper ?? Future<void>.delayed;
+  }) : _dio = dio,
+       _sleeper = sleeper ?? Future<void>.delayed;
 
   final Dio _dio;
   final int maxRetries;
@@ -39,8 +39,7 @@ class RetryInterceptor extends Interceptor {
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
-    if (!isTransientError(err) ||
-        !shouldRetryMethod(err.requestOptions)) {
+    if (!isTransientError(err) || !shouldRetryMethod(err.requestOptions)) {
       return handler.next(err);
     }
 
@@ -60,10 +59,7 @@ class RetryInterceptor extends Interceptor {
 
     try {
       final clonedOptions = err.requestOptions.copyWith(
-        extra: {
-          ...err.requestOptions.extra,
-          _retryCountKey: attempt + 1,
-        },
+        extra: {...err.requestOptions.extra, _retryCountKey: attempt + 1},
       );
       // Re-fire on the same Dio so every interceptor (auth, retry, logging)
       // applies exactly once more — and this interceptor sees the bumped

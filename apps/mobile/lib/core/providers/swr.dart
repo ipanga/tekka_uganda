@@ -63,7 +63,9 @@ Future<T> fetchWithCache<T>({
     // Offline / server fallback: return stale data if we have any.
     if (stale != null) {
       try {
-        final value = fromJson(jsonDecode(stale.dataJson) as Map<String, dynamic>);
+        final value = fromJson(
+          jsonDecode(stale.dataJson) as Map<String, dynamic>,
+        );
         debugPrint('SWR: serving stale cache for $key after fetch failed: $e');
         ref.read(_staleMarker(key).notifier).state = true;
         return value;

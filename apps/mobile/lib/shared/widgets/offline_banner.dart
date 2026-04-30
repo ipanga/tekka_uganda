@@ -62,11 +62,7 @@ class _OfflineBannerState extends ConsumerState<OfflineBanner> {
 }
 
 class _Banner extends StatelessWidget {
-  const _Banner({
-    required this.color,
-    required this.icon,
-    required this.text,
-  });
+  const _Banner({required this.color, required this.icon, required this.text});
 
   final Color color;
   final IconData icon;

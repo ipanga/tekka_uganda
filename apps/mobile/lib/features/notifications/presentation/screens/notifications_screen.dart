@@ -95,10 +95,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               style: AppTypography.bodyLarge,
             ),
             const SizedBox(height: AppSpacing.space2),
-            TextButton(
-              onPressed: _onRefresh,
-              child: const Text('Retry'),
-            ),
+            TextButton(onPressed: _onRefresh, child: const Text('Retry')),
           ],
         ),
       );
@@ -139,8 +136,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           return _NotificationTile(
             notification: notification,
             onTap: () => _handleNotificationTap(context, ref, notification),
-            onDismiss: () =>
-                _deleteNotification(context, ref, notification.id),
+            onDismiss: () => _deleteNotification(context, ref, notification.id),
           );
         },
       ),
