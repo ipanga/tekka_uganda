@@ -33,6 +33,9 @@ RUN adduser --system --uid 1001 nestjs
 # Copy package files and install production-only dependencies
 COPY --from=builder /app/package*.json ./
 COPY --from=builder /app/prisma ./prisma
+# prisma.config.ts holds the datasource URL for Prisma 7. `prisma migrate
+# deploy` reads it at runtime, so it must be present in the prod image.
+COPY --from=builder /app/prisma.config.ts ./prisma.config.ts
 RUN npm ci --omit=dev && npx prisma generate
 
 # Copy built application
