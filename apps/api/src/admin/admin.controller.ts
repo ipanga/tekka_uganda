@@ -338,41 +338,6 @@ export class AdminController {
     return this.adminService.rejectVerification(id, reason, admin.id);
   }
 
-  // ===== NOTIFICATIONS =====
-  @Get('notifications')
-  async getNotifications(
-    @Query('page') page?: number,
-    @Query('limit') limit?: number,
-    @Query('status') status?: string,
-  ) {
-    return this.adminService.getAdminNotifications({ page, limit, status });
-  }
-
-  @Post('notifications/campaign')
-  async createNotificationCampaign(
-    @Body()
-    data: {
-      type: string;
-      title: string;
-      body: string;
-      targetType: string;
-      targetRole?: string;
-      targetUserIds?: string[];
-      scheduledAt?: string;
-    },
-    @CurrentUser() admin: Prisma.User,
-  ) {
-    return this.adminService.createNotificationCampaign(data, admin.id);
-  }
-
-  @Post('notifications/campaign/:id/send')
-  sendNotificationCampaign(
-    @Param('id') id: string,
-    @CurrentUser() admin: Prisma.User,
-  ) {
-    return this.adminService.sendNotificationCampaign(id, admin.id);
-  }
-
   // ===== ADMIN USERS =====
   @Get('admins')
   async getAdmins(

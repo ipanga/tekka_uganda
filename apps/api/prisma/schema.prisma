@@ -110,6 +110,7 @@ model User {
   notifications         Notification[]
   fcmTokens             FcmToken[]
   purchases             Purchase[]
+  broadcastsCreated     Broadcast[] @relation("BroadcastsCreated")
 
   @@map("users")
 }
@@ -675,11 +676,14 @@ model Notification {
   data        Json?
   isRead      Boolean          @default(false) @map("is_read")
   createdAt   DateTime         @default(now()) @map("created_at")
+  broadcastId String?          @map("broadcast_id")
 
   user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  broadcast   Broadcast?       @relation(fields: [broadcastId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([createdAt])
+  @@index([broadcastId])
   @@map("notifications")
 }
 
@@ -702,6 +706,29 @@ enum NotificationType {
   MEETUP_CANCELLED
   MEETUP_NO_SHOW
   SYSTEM
+}
+
+// Admin-initiated broadcast (one row per send). Per-user delivery rows live
+// in `Notification` with `broadcastId` set; read-rate is a count-aggregate
+// over those rows. `listingId` is a soft link (no FK) — matches how
+// `Notification.data.listingId` is stored today.
+model Broadcast {
+  id             String         @id @default(cuid())
+  title          String
+  body           String
+  audience       String         // 'ALL' | 'ROLE' | 'SPECIFIC'
+  role           UserRole?
+  listingId      String?        @map("listing_id")
+  createdById    String         @map("created_by_id")
+  recipientCount Int            @default(0) @map("recipient_count")
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  createdBy      User           @relation("BroadcastsCreated", fields: [createdById], references: [id], onDelete: Cascade)
+  notifications  Notification[]
+
+  @@index([createdAt])
+  @@index([createdById])
+  @@map("broadcasts")
 }
 
 // ============================================

@@ -76,6 +76,12 @@ describe('NotificationsService.buildDeepLink', () => {
     );
   });
 
+  it('SYSTEM with listingId -> /listing/:id (admin product-linked broadcast)', () => {
+    expect(
+      buildDeepLink(NotificationType.SYSTEM, { listingId: 'L42' }),
+    ).toBe('https://tekka.ug/listing/L42');
+  });
+
   it('OFFER types (deprecated) -> null', () => {
     expect(buildDeepLink(NotificationType.OFFER, { listingId: 'x' })).toBeNull();
   });
