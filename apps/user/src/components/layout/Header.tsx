@@ -62,9 +62,42 @@ export function Header() {
       }
     };
 
-    if (isAuthenticated) {
-      loadCounts();
-    }
+    if (!isAuthenticated) return;
+
+    loadCounts();
+
+    // Poll every 60s so admin broadcasts and other updates surface in the
+    // header without a full page refresh. Pause while the tab is hidden to
+    // avoid wasted requests on backgrounded tabs; refresh on visibility
+    // change so the count is current the moment the user returns.
+    const POLL_MS = 60_000;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const start = () => {
+      if (intervalId !== null) return;
+      intervalId = setInterval(loadCounts, POLL_MS);
+    };
+    const stop = () => {
+      if (intervalId === null) return;
+      clearInterval(intervalId);
+      intervalId = null;
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        loadCounts();
+        start();
+      } else {
+        stop();
+      }
+    };
+
+    if (document.visibilityState === 'visible') start();
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      stop();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [isAuthenticated, setNotificationCount, setChatCount, logout]);
 
   const handleSearch = (e: React.FormEvent) => {

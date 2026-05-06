@@ -185,27 +185,25 @@ export type VerificationType = 'PHONE' | 'EMAIL' | 'IDENTITY' | 'ADDRESS';
 
 export type VerificationStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
 
-// Notification types for admin
-export interface AdminNotification {
+// Admin broadcast (one row per send; per-user delivery rows live in
+// notifications with broadcastId set). Mirrors the Prisma Broadcast model.
+export interface Broadcast {
   id: string;
-  type: AdminNotificationType;
   title: string;
   body: string;
-  targetType: 'ALL' | 'ROLE' | 'USER' | 'SEGMENT';
-  targetRole?: 'USER' | 'ADMIN' | 'MODERATOR';
-  targetUserIds?: string[];
-  sentAt?: string;
-  sentBy: string;
-  status: NotificationStatus;
+  audience: BroadcastAudience;
+  role: BroadcastRole | null;
+  listingId: string | null;
+  createdById: string;
   recipientCount: number;
   readCount: number;
   createdAt: string;
-  sentByUser?: User;
+  createdBy?: { id: string; displayName: string | null; email: string | null };
 }
 
-export type AdminNotificationType = 'ANNOUNCEMENT' | 'PROMOTION' | 'SYSTEM' | 'ALERT';
+export type BroadcastAudience = 'ALL' | 'ROLE' | 'SPECIFIC';
 
-export type NotificationStatus = 'DRAFT' | 'SCHEDULED' | 'SENT' | 'FAILED';
+export type BroadcastRole = 'USER' | 'ADMIN' | 'MODERATOR';
 
 // Analytics types
 export interface AnalyticsData {

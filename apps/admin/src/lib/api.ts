@@ -1,3 +1,5 @@
+import type { Broadcast } from '@/types';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 
 export interface AdminUser {
@@ -392,38 +394,50 @@ class ApiClient {
     return this.request(`/admin/analytics/top-sellers?limit=${limit}`);
   }
 
-  // Admin Notifications Management
-  async getAdminNotifications(params?: {
-    page?: number;
-    limit?: number;
-    status?: string;
-  }): Promise<{ data?: any[]; totalPages?: number } | any[]> {
-    const query = new URLSearchParams();
-    if (params?.page) query.set('page', params.page.toString());
-    if (params?.limit) query.set('limit', params.limit.toString());
-    if (params?.status) query.set('status', params.status);
-    return this.request(`/admin/notifications?${query.toString()}`);
-  }
-
-  async createNotificationCampaign(data: {
-    type: string;
+  // Admin Broadcasts
+  async broadcastNotification(data: {
     title: string;
     body: string;
-    targetType: string;
-    targetRole?: string;
-    targetUserIds?: string[];
-    scheduledAt?: string;
+    audience: 'ALL' | 'ROLE' | 'SPECIFIC';
+    role?: 'USER' | 'ADMIN' | 'MODERATOR';
+    userIds?: string[];
+    listingId?: string;
   }) {
-    return this.request('/admin/notifications/campaign', {
+    return this.request('/notifications/admin/broadcast', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async sendNotificationCampaign(id: string) {
-    return this.request(`/admin/notifications/campaign/${id}/send`, {
-      method: 'POST',
-    });
+  async getBroadcasts(params?: { limit?: number; cursor?: string }): Promise<{
+    data: Broadcast[];
+    nextCursor: string | null;
+    hasMore: boolean;
+  }> {
+    const query = new URLSearchParams();
+    if (params?.limit) query.set('limit', params.limit.toString());
+    if (params?.cursor) query.set('cursor', params.cursor);
+    return this.request(`/notifications/admin/broadcasts?${query.toString()}`);
+  }
+
+  async getBroadcastAudienceCount(
+    audience: 'ALL' | 'ROLE',
+    role?: 'USER' | 'ADMIN' | 'MODERATOR',
+  ): Promise<{ count: number }> {
+    const query = new URLSearchParams({ audience });
+    if (role) query.set('role', role);
+    return this.request(
+      `/notifications/admin/broadcasts/audience-count?${query.toString()}`,
+    );
+  }
+
+  // Lightweight title-search against the public listings endpoint, used by
+  // the broadcast modal's product picker.
+  async searchListingsForBroadcast(search: string, limit = 10) {
+    const query = new URLSearchParams({ search, limit: String(limit) });
+    return this.request<{ data: Array<{ id: string; title: string; price: number }> }>(
+      `/listings?${query.toString()}`,
+    );
   }
 
   // Admin Users

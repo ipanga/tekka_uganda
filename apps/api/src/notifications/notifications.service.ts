@@ -2,8 +2,13 @@ import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import { getFirebaseMessaging } from '../auth/firebase-admin';
-import { SendNotificationDto, SendBulkNotificationDto } from './dto';
-import { NotificationType } from '@prisma/client';
+import {
+  SendNotificationDto,
+  SendBulkNotificationDto,
+  BroadcastNotificationDto,
+  BroadcastAudience,
+} from './dto';
+import { NotificationType, UserRole, Prisma } from '@prisma/client';
 
 const WEB_ORIGIN = 'https://tekka.ug';
 
@@ -40,6 +45,7 @@ export class NotificationsService {
         title: dto.title,
         body: dto.body,
         data: dto.data || {},
+        broadcastId: dto.broadcastId ?? null,
       },
     });
 
@@ -301,8 +307,15 @@ export class NotificationsService {
           ? `${WEB_ORIGIN}/meetups/${meetupId}`
           : `${WEB_ORIGIN}/meetups`;
       }
-      case NotificationType.SYSTEM:
-        return `${WEB_ORIGIN}/notifications`;
+      case NotificationType.SYSTEM: {
+        // Admin broadcasts use SYSTEM. Product-linked ones carry data.listingId
+        // so the recipient deep-links straight to the listing instead of the
+        // notifications list.
+        const listingId = pick('listingId');
+        return listingId
+          ? `${WEB_ORIGIN}/listing/${listingId}`
+          : `${WEB_ORIGIN}/notifications`;
+      }
       default:
         return null;
     }
@@ -438,5 +451,174 @@ export class NotificationsService {
       body: `Your listing "${listingTitle}" has been marked as sold. Nice work!`,
       data: { listingId, type: 'listing_sold' },
     });
+  }
+
+  // ============================================
+  // Admin broadcasts
+  // ============================================
+
+  /**
+   * Resolve a broadcast audience to a list of recipient user IDs.
+   * Suspended users are skipped for ALL/ROLE audiences (they can't act on the
+   * notification anyway). SPECIFIC respects whatever the admin explicitly
+   * picked — no implicit filtering.
+   */
+  private async resolveAudience(
+    audience: BroadcastAudience,
+    role: UserRole | undefined,
+    userIds: string[] | undefined,
+  ): Promise<string[]> {
+    if (audience === BroadcastAudience.SPECIFIC) {
+      return userIds ?? [];
+    }
+    const where: Prisma.UserWhereInput = { isSuspended: false };
+    if (audience === BroadcastAudience.ROLE) {
+      if (!role) return [];
+      where.role = role;
+    }
+    const users = await this.prisma.user.findMany({
+      where,
+      select: { id: true },
+    });
+    return users.map((u) => u.id);
+  }
+
+  /** Cheap preview count for the admin "will reach N users" affordance. */
+  async getAudienceCount(
+    audience: BroadcastAudience,
+    role?: UserRole,
+  ): Promise<number> {
+    if (audience === BroadcastAudience.SPECIFIC) return 0;
+    const where: Prisma.UserWhereInput = { isSuspended: false };
+    if (audience === BroadcastAudience.ROLE) {
+      if (!role) return 0;
+      where.role = role;
+    }
+    return this.prisma.user.count({ where });
+  }
+
+  /**
+   * Create a Broadcast row and fan out per-user Notification rows + FCM
+   * pushes via the existing send() path. Returns the broadcast plus the
+   * per-recipient succeeded/failed/total breakdown.
+   *
+   * Uses NotificationType.SYSTEM for both general and product-linked
+   * broadcasts; the buildDeepLink() SYSTEM branch routes to /listing/:id
+   * when data.listingId is set, otherwise to /notifications.
+   */
+  async broadcast(dto: BroadcastNotificationDto, createdById: string) {
+    const recipientIds = await this.resolveAudience(
+      dto.audience,
+      dto.role,
+      dto.userIds,
+    );
+
+    const broadcast = await this.prisma.broadcast.create({
+      data: {
+        title: dto.title,
+        body: dto.body,
+        audience: dto.audience,
+        role: dto.audience === BroadcastAudience.ROLE ? dto.role ?? null : null,
+        listingId: dto.listingId ?? null,
+        createdById,
+        recipientCount: 0,
+      },
+    });
+
+    // For product-linked broadcasts include `type: 'listing'` so the Flutter
+    // notification-detail screen renders a "View Listing" action button
+    // (notification_detail_screen.dart:328 switches on data.type, treating it
+    // as the targetType). data.listingId alone is enough for the FCM
+    // tap-routing path (deep_link), but the in-app detail screen needs the
+    // type hint to know what kind of target this is.
+    const data: Record<string, unknown> = {};
+    if (dto.listingId) {
+      data.listingId = dto.listingId;
+      data.type = 'listing';
+    }
+
+    const results = await Promise.allSettled(
+      recipientIds.map((userId) =>
+        this.send({
+          userId,
+          type: NotificationType.SYSTEM,
+          title: dto.title,
+          body: dto.body,
+          data,
+          broadcastId: broadcast.id,
+        }),
+      ),
+    );
+
+    const succeeded = results.filter((r) => r.status === 'fulfilled').length;
+    const failed = results.filter((r) => r.status === 'rejected').length;
+
+    // recipientCount = how many users we actually wrote a Notification row
+    // for. Per-user FCM dispatch can still fail downstream; that's tracked
+    // by FcmToken pruning, not here.
+    if (succeeded > 0) {
+      await this.prisma.broadcast.update({
+        where: { id: broadcast.id },
+        data: { recipientCount: succeeded },
+      });
+    }
+
+    return {
+      broadcast: { ...broadcast, recipientCount: succeeded },
+      result: { succeeded, failed, total: recipientIds.length },
+    };
+  }
+
+  /**
+   * Paginated broadcast history with read-rate aggregate.
+   * readCount = how many of the per-user notifications have isRead=true.
+   */
+  async listBroadcasts(limit = 20, cursor?: string) {
+    const broadcasts = await this.prisma.broadcast.findMany({
+      take: limit,
+      ...(cursor && { skip: 1, cursor: { id: cursor } }),
+      orderBy: { createdAt: 'desc' },
+      include: {
+        createdBy: { select: { id: true, displayName: true, email: true } },
+      },
+    });
+
+    const ids = broadcasts.map((b) => b.id);
+    const readCounts = ids.length
+      ? await this.prisma.notification.groupBy({
+          by: ['broadcastId'],
+          where: { broadcastId: { in: ids }, isRead: true },
+          _count: { _all: true },
+        })
+      : [];
+    const readByBroadcast = new Map(
+      readCounts.map((r) => [r.broadcastId as string, r._count._all]),
+    );
+
+    return {
+      data: broadcasts.map((b) => ({
+        ...b,
+        readCount: readByBroadcast.get(b.id) ?? 0,
+      })),
+      nextCursor:
+        broadcasts.length === limit ? broadcasts[broadcasts.length - 1].id : null,
+      hasMore: broadcasts.length === limit,
+    };
+  }
+
+  async getBroadcast(id: string) {
+    const broadcast = await this.prisma.broadcast.findUnique({
+      where: { id },
+      include: {
+        createdBy: { select: { id: true, displayName: true, email: true } },
+      },
+    });
+    if (!broadcast) {
+      throw new NotFoundException('Broadcast not found');
+    }
+    const readCount = await this.prisma.notification.count({
+      where: { broadcastId: id, isRead: true },
+    });
+    return { ...broadcast, readCount };
   }
 }
