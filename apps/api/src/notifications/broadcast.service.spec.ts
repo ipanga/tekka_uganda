@@ -104,7 +104,7 @@ describe('NotificationsService.broadcast', () => {
     });
     prisma.notification.create.mockImplementation(
       ({ data }: { data: Record<string, unknown> }) =>
-        Promise.resolve({ id: `n-${data.userId}`, ...data }),
+        Promise.resolve({ id: `n-${String(data.userId)}`, ...data }),
     );
     prisma.broadcast.update.mockResolvedValue(undefined);
 
