@@ -40,7 +40,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=sha
+            type=sha,format=long,prefix=sha-
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
@@ -63,6 +63,7 @@ jobs:
     env:
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       GHCR_USERNAME: ${{ github.actor }}
+      IMAGE_TAG: sha-${{ github.sha }}
     steps:
       - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.2.0
@@ -71,25 +72,57 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           passphrase: ${{ secrets.VPS_SSH_PASSPHRASE }}
-          command_timeout: 10m
-          envs: GHCR_TOKEN,GHCR_USERNAME
+          command_timeout: 15m
+          envs: GHCR_TOKEN,GHCR_USERNAME,IMAGE_TAG
           script: |
             flock -w 300 /tmp/tekka-deploy.lock bash -c '
               set -euo pipefail
               cd /opt/tekka
 
-              # 1. Refresh GHCR credentials (workflow-scoped GITHUB_TOKEN)
+              SERVICE=api
+              LAST_GOOD_FILE="/opt/tekka/.last-good-${SERVICE}"
+              PREVIOUS_TAG="$(cat "$LAST_GOOD_FILE" 2>/dev/null || true)"
+              SMOKE_URL="https://api.tekka.ug/api/v1/"
+              export API_IMAGE_TAG="$IMAGE_TAG"
+
+              # 1. Refresh GHCR credentials
               echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
-              # 2. Sync repo to main HEAD; overwrite any local drift on the VPS
+              # 2. Sync repo to main HEAD; wipe any local drift
               git fetch origin main
               git reset --hard origin/main
 
-              # 3. Pull and roll the service
-              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env pull api
-              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env run --rm api npx prisma migrate deploy
-              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --force-recreate --remove-orphans api
+              # 3. Pull pinned tag, migrate DB, roll service
+              echo "Deploying $SERVICE @ $IMAGE_TAG (previous: ${PREVIOUS_TAG:-none})"
+              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env pull $SERVICE
+              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env run --rm $SERVICE npx prisma migrate deploy
+              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --force-recreate --remove-orphans $SERVICE
 
-              # 4. Cleanup
+              # 4. Wait for container to report healthy (max ~60s)
+              STATUS=unknown
+              for i in {1..30}; do
+                STATUS=$(docker inspect --format="{{.State.Health.Status}}" tekka-$SERVICE 2>/dev/null || echo "unknown")
+                [ "$STATUS" = "healthy" ] && break
+                sleep 2
+              done
+              echo "Container health: $STATUS"
+
+              # 5. Smoke test through public URL
+              if curl -fsS --max-time 10 "$SMOKE_URL" > /dev/null; then
+                echo "Smoke test passed."
+                echo "$IMAGE_TAG" > "$LAST_GOOD_FILE"
+              else
+                echo "Smoke test FAILED for $SMOKE_URL"
+                if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$IMAGE_TAG" ]; then
+                  echo "Rolling back to $PREVIOUS_TAG"
+                  export API_IMAGE_TAG="$PREVIOUS_TAG"
+                  docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --force-recreate $SERVICE
+                else
+                  echo "No previous tag recorded; manual intervention required."
+                fi
+                exit 1
+              fi
+
+              # 6. Cleanup
               docker image prune -f || true
             '

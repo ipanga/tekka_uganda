@@ -23,9 +23,17 @@ jobs:
   analyze:
     name: Analyze
     runs-on: ubuntu-latest
+    permissions:
+      contents: write       # so the auto-commit step can push format fixes on PRs
+      pull-requests: write  # so the auto-commit action can post a status comment
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          # On a pull_request event, default checkout is a detached merge commit.
+          # We need the PR head ref so format fixes land on the contributor's branch.
+          ref: ${{ github.event.pull_request.head.ref || github.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -47,9 +55,28 @@ jobs:
         working-directory: ${{ env.WORKING_DIRECTORY }}
         run: flutter analyze --no-fatal-infos
 
-      - name: Check formatting
+      - name: Apply dart format
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: dart format --set-exit-if-changed lib/
+        run: dart format lib/
+
+      - name: Auto-commit format fixes (pull_request only)
+        if: github.event_name == 'pull_request'
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: 'chore: dart format'
+          file_pattern: 'apps/mobile/lib/**/*.dart'
+          commit_user_name: github-actions[bot]
+          commit_user_email: 41898282+github-actions[bot]@users.noreply.github.com
+
+      - name: Fail if formatting changed on a non-PR run
+        if: github.event_name != 'pull_request'
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          if [ -n "$(git diff --name-only lib/)" ]; then
+            echo "::error::dart format produced changes. Run 'dart format apps/mobile/lib/' locally and commit before pushing to ${{ github.ref_name }}."
+            git diff --name-only lib/
+            exit 1
+          fi
 
   test:
     name: Test
