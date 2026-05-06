@@ -32,6 +32,13 @@ export class SendNotificationDto {
   @IsObject()
   @IsOptional()
   data?: Record<string, any>;
+
+  // Internal use only: links a per-user notification to its parent Broadcast.
+  // Not exposed via Swagger; AdminGuard endpoints accept it but external
+  // callers don't need to set it.
+  @IsOptional()
+  @IsString()
+  broadcastId?: string;
 }
 
 export class SendBulkNotificationDto {

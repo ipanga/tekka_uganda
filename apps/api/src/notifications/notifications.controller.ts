@@ -18,11 +18,17 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { NotificationsService } from './notifications.service';
-import { SendNotificationDto, SendBulkNotificationDto } from './dto';
+import {
+  SendNotificationDto,
+  SendBulkNotificationDto,
+  BroadcastNotificationDto,
+  BroadcastAudience,
+} from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import * as Prisma from '@prisma/client';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('notifications')
 @ApiBearerAuth()
@@ -106,5 +112,55 @@ export class NotificationsController {
   @ApiResponse({ status: 201, description: 'Notifications sent' })
   adminSendBulk(@Body() dto: SendBulkNotificationDto) {
     return this.notificationsService.sendBulk(dto);
+  }
+
+  // ============================================
+  // Admin broadcasts (server-resolves audience, stores history)
+  // ============================================
+
+  @Post('admin/broadcast')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Admin: Send a broadcast notification' })
+  @ApiResponse({ status: 201, description: 'Broadcast sent' })
+  adminBroadcast(
+    @Body() dto: BroadcastNotificationDto,
+    @CurrentUser() user: Prisma.User,
+  ) {
+    return this.notificationsService.broadcast(dto, user.id);
+  }
+
+  @Get('admin/broadcasts')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Admin: List broadcast history' })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'cursor', required: false })
+  @ApiResponse({ status: 200, description: 'Paginated broadcast history' })
+  adminListBroadcasts(
+    @Query('limit') limit?: number,
+    @Query('cursor') cursor?: string,
+  ) {
+    return this.notificationsService.listBroadcasts(limit, cursor);
+  }
+
+  @Get('admin/broadcasts/audience-count')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Admin: Preview audience size before broadcasting' })
+  @ApiQuery({ name: 'audience', enum: BroadcastAudience })
+  @ApiQuery({ name: 'role', required: false, enum: UserRole })
+  @ApiResponse({ status: 200, description: 'Audience size' })
+  async adminAudienceCount(
+    @Query('audience') audience: BroadcastAudience,
+    @Query('role') role?: UserRole,
+  ) {
+    const count = await this.notificationsService.getAudienceCount(audience, role);
+    return { count };
+  }
+
+  @Get('admin/broadcasts/:id')
+  @UseGuards(AdminGuard)
+  @ApiOperation({ summary: 'Admin: Get a single broadcast (with read-rate)' })
+  @ApiResponse({ status: 200, description: 'Broadcast detail' })
+  adminGetBroadcast(@Param('id') id: string) {
+    return this.notificationsService.getBroadcast(id);
   }
 }
