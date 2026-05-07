@@ -91,16 +91,23 @@ jobs:
               LAST_GOOD_FILE="/opt/tekka/.last-good-${SERVICE}"
               PREVIOUS_TAG="$(cat "$LAST_GOOD_FILE" 2>/dev/null || true)"
               SMOKE_URL="https://tekka.ug/"
+              EXPECTED_IMAGE="ghcr.io/${GHCR_USERNAME}/tekka-${SERVICE}:${IMAGE_TAG}"
               export USER_IMAGE_TAG="$IMAGE_TAG"
+              COMPOSE="docker compose -f infra/docker/docker-compose.prod.yml --env-file .env"
 
               echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
               git fetch origin main
               git reset --hard origin/main
 
+              # --pull always forces compose to re-resolve the tag against the
+              # registry on every recreate. Without it a stale :latest cached
+              # locally can win even when USER_IMAGE_TAG points to a fresh SHA;
+              # observed once on prod where a successful-looking deploy left
+              # the API container on pre-merge code.
               echo "Deploying $SERVICE @ $IMAGE_TAG (previous: ${PREVIOUS_TAG:-none})"
-              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env pull $SERVICE
-              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --force-recreate --remove-orphans $SERVICE
+              $COMPOSE pull $SERVICE
+              $COMPOSE up -d --force-recreate --pull always --remove-orphans $SERVICE
 
               STATUS=unknown
               for i in {1..30}; do
@@ -110,6 +117,25 @@ jobs:
               done
               echo "Container health: $STATUS"
 
+              # Verify the running container is on the digest we just pulled.
+              # Catches the silent-stale-image failure mode regardless of root
+              # cause (cache, env-var scoping, compose quirk).
+              EXPECTED_DIGEST=$(docker image inspect --format="{{.Id}}" "$EXPECTED_IMAGE" 2>/dev/null || echo "")
+              RUNNING_DIGEST=$(docker inspect --format="{{.Image}}" tekka-$SERVICE 2>/dev/null || echo "")
+              echo "Expected image:  $EXPECTED_IMAGE -> $EXPECTED_DIGEST"
+              echo "Running digest:  $RUNNING_DIGEST"
+              if [ -z "$EXPECTED_DIGEST" ] || [ "$EXPECTED_DIGEST" != "$RUNNING_DIGEST" ]; then
+                echo "::warning::Digest mismatch after recreate -- forcing one more roll"
+                $COMPOSE up -d --force-recreate --pull always $SERVICE
+                sleep 3
+                RUNNING_DIGEST=$(docker inspect --format="{{.Image}}" tekka-$SERVICE 2>/dev/null || echo "")
+                echo "Running digest after retry: $RUNNING_DIGEST"
+                if [ "$EXPECTED_DIGEST" != "$RUNNING_DIGEST" ]; then
+                  echo "::error::Container still on $RUNNING_DIGEST after forced recreate (expected $EXPECTED_DIGEST). Aborting."
+                  exit 1
+                fi
+              fi
+
               if curl -fsS --max-time 10 "$SMOKE_URL" > /dev/null; then
                 echo "Smoke test passed."
                 echo "$IMAGE_TAG" > "$LAST_GOOD_FILE"
@@ -118,7 +144,7 @@ jobs:
                 if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$IMAGE_TAG" ]; then
                   echo "Rolling back to $PREVIOUS_TAG"
                   export USER_IMAGE_TAG="$PREVIOUS_TAG"
-                  docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --force-recreate $SERVICE
+                  $COMPOSE up -d --force-recreate --pull always $SERVICE
                 else
                   echo "No previous tag recorded; manual intervention required."
                 fi
