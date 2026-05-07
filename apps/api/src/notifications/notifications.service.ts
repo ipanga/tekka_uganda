@@ -379,7 +379,11 @@ export class NotificationsService {
       type: NotificationType.NEW_REVIEW,
       title: 'New Review',
       body: `${reviewerName} gave you ${rating} stars`,
-      data: { reviewId, type: 'review' },
+      // Echo the recipient's id back into data so buildDeepLink can resolve
+      // /reviews/:userId — buildDeepLink reads from data, not the top-level
+      // userId, so without this the deep_link comes out null and the tap
+      // falls back to type-based routing on the client.
+      data: { reviewId, userId, type: 'review' },
     });
   }
 
