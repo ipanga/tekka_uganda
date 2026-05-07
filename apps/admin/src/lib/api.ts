@@ -432,11 +432,25 @@ class ApiClient {
   }
 
   // Lightweight title-search against the public listings endpoint, used by
-  // the broadcast modal's product picker.
+  // the broadcast modal's product picker. The endpoint returns
+  // `{ listings: [...] }`; we normalize to `{ data: [...] }` so the picker
+  // can stay shape-agnostic.
   async searchListingsForBroadcast(search: string, limit = 10) {
     const query = new URLSearchParams({ search, limit: String(limit) });
-    return this.request<{ data: Array<{ id: string; title: string; price: number }> }>(
-      `/listings?${query.toString()}`,
+    const resp = await this.request<{
+      listings?: Array<{ id: string; title: string; price: number }>;
+      data?: Array<{ id: string; title: string; price: number }>;
+    }>(`/listings?${query.toString()}`);
+    return { data: resp.listings ?? resp.data ?? [] };
+  }
+
+  // Direct lookup by CUID or slug. Backend `GET /listings/:idOrSlug` resolves
+  // both — see apps/api/src/listings/listings.controller.ts. Used by the
+  // product picker when the admin pastes a URL or known identifier instead of
+  // typing a free-form title.
+  async getListingByIdOrSlug(idOrSlug: string) {
+    return this.request<{ id: string; title: string; price: number; slug?: string }>(
+      `/listings/${encodeURIComponent(idOrSlug)}`,
     );
   }
 
