@@ -63,8 +63,9 @@ export class NotificationsService {
 
     // Build canonical deep link (Universal Link / App Link URL).
     // Flutter's PushNotificationService prefers `deep_link` over legacy
-    // type/id routing for notification taps.
-    const deepLink = this.buildDeepLink(dto.type, dto.data);
+    // type/id routing for notification taps. Pass the per-user notification
+    // id so SYSTEM (broadcast) taps route to the in-app detail screen.
+    const deepLink = this.buildDeepLink(dto.type, dto.data, notification.id);
     const dataPayload: Record<string, string> = {
       ...(dto.data
         ? Object.fromEntries(
@@ -274,6 +275,7 @@ export class NotificationsService {
   private buildDeepLink(
     type: NotificationType,
     data?: Record<string, unknown>,
+    notificationId?: string,
   ): string | null {
     const pick = (key: string): string | null => {
       const v = data?.[key];
@@ -308,12 +310,15 @@ export class NotificationsService {
           : `${WEB_ORIGIN}/meetups`;
       }
       case NotificationType.SYSTEM: {
-        // Admin broadcasts use SYSTEM. Product-linked ones carry data.listingId
-        // so the recipient deep-links straight to the listing instead of the
-        // notifications list.
-        const listingId = pick('listingId');
-        return listingId
-          ? `${WEB_ORIGIN}/listing/${listingId}`
+        // Admin broadcasts use SYSTEM. Route taps to the per-user notification
+        // detail (Flutter `/notifications/:id`) so the recipient sees the
+        // broadcast title/body in-app. Product-linked broadcasts still carry
+        // data.listingId + data.type='listing', which the detail screen reads
+        // to render a "View Listing" action button.
+        // Fallback to the list if the caller hasn't passed a notification id
+        // (legacy callers / direct admin-send without persisted row).
+        return notificationId
+          ? `${WEB_ORIGIN}/notifications/${notificationId}`
           : `${WEB_ORIGIN}/notifications`;
       }
       default:
@@ -518,7 +523,8 @@ export class NotificationsService {
         title: dto.title,
         body: dto.body,
         audience: dto.audience,
-        role: dto.audience === BroadcastAudience.ROLE ? dto.role ?? null : null,
+        role:
+          dto.audience === BroadcastAudience.ROLE ? (dto.role ?? null) : null,
         listingId: dto.listingId ?? null,
         createdById,
         recipientCount: 0,
@@ -601,7 +607,9 @@ export class NotificationsService {
         readCount: readByBroadcast.get(b.id) ?? 0,
       })),
       nextCursor:
-        broadcasts.length === limit ? broadcasts[broadcasts.length - 1].id : null,
+        broadcasts.length === limit
+          ? broadcasts[broadcasts.length - 1].id
+          : null,
       hasMore: broadcasts.length === limit,
     };
   }
