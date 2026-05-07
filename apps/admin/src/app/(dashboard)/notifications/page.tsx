@@ -484,6 +484,49 @@ function CreateBroadcastModal({
   );
 }
 
+// Pull a listing identifier out of whatever the admin pasted. Recognizes:
+//   - Full URLs:    https://tekka.ug/listing/<cat>/<slug>, https://tekka.ug/listing/<idOrSlug>
+//   - Schemeless:   tekka.ug/listing/...  (we prepend https:// for parsing)
+//   - Bare CUIDs:   c<24 alphanum>
+//   - Bare slugs:   lowercase-alphanumeric-with-hyphens
+// Returns null when the input doesn't look like any of the above and should
+// fall through to free-form title search.
+function parseListingIdentifier(raw: string): string | null {
+  const input = raw.trim();
+  if (!input) return null;
+
+  // CUID — Prisma's default ID format
+  if (/^c[a-z0-9]{24}$/.test(input)) return input;
+
+  // URL (with or without scheme)
+  const looksLikeUrl =
+    /^https?:\/\//i.test(input) ||
+    /^(?:www\.)?tekka\.ug\//i.test(input);
+  if (looksLikeUrl) {
+    const withScheme = /^https?:\/\//i.test(input) ? input : `https://${input}`;
+    try {
+      const url = new URL(withScheme);
+      const segments = url.pathname.split('/').filter(Boolean);
+      // /listing/<idOrSlug> or /listing/<cat>/<slug> — last segment is the
+      // canonical id/slug per the user-dashboard route handler at
+      // apps/user/src/app/listing/[...params]/page.tsx.
+      const listingIdx = segments.indexOf('listing');
+      if (listingIdx >= 0 && segments.length > listingIdx + 1) {
+        return segments[segments.length - 1];
+      }
+    } catch {
+      // Not a parseable URL — fall through.
+    }
+    return null;
+  }
+
+  // Bare slug — lowercase letters, digits, single hyphens between segments.
+  // At least 3 chars to avoid matching free-form short queries like "abc".
+  if (/^[a-z0-9]+(?:-[a-z0-9]+){2,}$/.test(input)) return input;
+
+  return null;
+}
+
 function ProductPicker({
   selected,
   onChange,
@@ -494,14 +537,34 @@ function ProductPicker({
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<ListingHit[]>([]);
   const [searching, setSearching] = useState(false);
+  const [resolveError, setResolveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (selected || query.trim().length < 2) return;
     let cancelled = false;
     const t = setTimeout(() => {
       setSearching(true);
-      api
-        .searchListingsForBroadcast(query.trim(), 8)
+      setResolveError(null);
+      const identifier = parseListingIdentifier(query);
+      const resolve = identifier
+        ? api
+            .getListingByIdOrSlug(identifier)
+            .then((listing) => ({ data: [listing] }))
+            .catch((err: unknown) => {
+              // 404 means the URL/slug/CUID didn't resolve; fall back to a
+              // free-text search (admin may have pasted something unusual).
+              const msg = err instanceof Error ? err.message : '';
+              if (!cancelled) {
+                setResolveError(
+                  /404|not found/i.test(msg)
+                    ? 'No listing matches that URL or identifier.'
+                    : null,
+                );
+              }
+              return api.searchListingsForBroadcast(query.trim(), 8);
+            })
+        : api.searchListingsForBroadcast(query.trim(), 8);
+      resolve
         .then((r) => {
           if (!cancelled) setResults(r.data ?? []);
         })
@@ -551,14 +614,16 @@ function ProductPicker({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="Search by listing title…"
+            placeholder="Paste a listing URL, or search by title…"
           />
           {query.trim().length >= 2 && (
             <div className="mt-2 border border-gray-200 rounded-lg max-h-40 overflow-y-auto">
               {searching ? (
                 <p className="px-3 py-2 text-sm text-gray-500">Searching…</p>
               ) : resultsToShow.length === 0 ? (
-                <p className="px-3 py-2 text-sm text-gray-500">No matches.</p>
+                <p className="px-3 py-2 text-sm text-gray-500">
+                  {resolveError ?? 'No matches.'}
+                </p>
               ) : (
                 resultsToShow.map((r) => (
                   <button
