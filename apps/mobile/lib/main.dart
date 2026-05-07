@@ -10,6 +10,7 @@ import 'core/providers/connectivity_provider.dart';
 import 'core/providers/deep_link_provider.dart';
 import 'core/providers/push_notification_provider.dart';
 import 'core/services/offline_queue/queue_executor.dart';
+import 'core/services/push_notification_service.dart' show primeInitialMessage;
 import 'core/theme/theme.dart';
 import 'features/auth/application/auth_provider.dart';
 import 'router/app_router.dart';
@@ -28,6 +29,11 @@ void main() async {
   if (EnvironmentConfig.isProd) {
     try {
       await Firebase.initializeApp();
+      // Capture any cold-start tap message NOW, before runApp + auth gating.
+      // iOS drops the launch message if getInitialMessage() is called too
+      // late (we'd otherwise call it from PushNotificationService.initialize
+      // which is gated on auth resolution and can take a few seconds).
+      await primeInitialMessage();
     } catch (e) {
       debugPrint('Firebase init failed: $e');
     }

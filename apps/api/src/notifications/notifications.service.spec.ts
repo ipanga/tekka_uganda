@@ -8,18 +8,17 @@ import { NotificationsService } from './notifications.service';
 type BuildDeepLink = (
   type: NotificationType,
   data?: Record<string, unknown>,
+  notificationId?: string,
 ) => string | null;
 
 describe('NotificationsService.buildDeepLink', () => {
   // Construct the instance without real dependencies — buildDeepLink is pure.
-  const service = new NotificationsService(
-    null as never,
-    null as never,
-  );
-  const buildDeepLink: BuildDeepLink = (type, data) =>
+  const service = new NotificationsService(null as never, null as never);
+  const buildDeepLink: BuildDeepLink = (type, data, notificationId) =>
     (service as unknown as { buildDeepLink: BuildDeepLink }).buildDeepLink(
       type,
       data,
+      notificationId,
     );
 
   it('MESSAGE -> /chat/:id', () => {
@@ -70,25 +69,39 @@ describe('NotificationsService.buildDeepLink', () => {
     );
   });
 
-  it('SYSTEM -> /notifications', () => {
+  it('SYSTEM with notificationId -> /notifications/:id (admin broadcast detail)', () => {
+    expect(buildDeepLink(NotificationType.SYSTEM, {}, 'n_abc123')).toBe(
+      'https://tekka.ug/notifications/n_abc123',
+    );
+  });
+
+  it('SYSTEM with notificationId AND listingId -> still /notifications/:id (detail screen renders View Listing button)', () => {
+    expect(
+      buildDeepLink(
+        NotificationType.SYSTEM,
+        { listingId: 'L42', type: 'listing' },
+        'n_abc123',
+      ),
+    ).toBe('https://tekka.ug/notifications/n_abc123');
+  });
+
+  it('SYSTEM without notificationId -> /notifications (legacy fallback)', () => {
     expect(buildDeepLink(NotificationType.SYSTEM, {})).toBe(
       'https://tekka.ug/notifications',
     );
   });
 
-  it('SYSTEM with listingId -> /listing/:id (admin product-linked broadcast)', () => {
-    expect(
-      buildDeepLink(NotificationType.SYSTEM, { listingId: 'L42' }),
-    ).toBe('https://tekka.ug/listing/L42');
-  });
-
   it('OFFER types (deprecated) -> null', () => {
-    expect(buildDeepLink(NotificationType.OFFER, { listingId: 'x' })).toBeNull();
+    expect(
+      buildDeepLink(NotificationType.OFFER, { listingId: 'x' }),
+    ).toBeNull();
   });
 
   it('ignores non-string id fields', () => {
     expect(
-      buildDeepLink(NotificationType.MESSAGE, { chatId: 123 as unknown as string }),
+      buildDeepLink(NotificationType.MESSAGE, {
+        chatId: 123 as unknown as string,
+      }),
     ).toBeNull();
   });
 });
