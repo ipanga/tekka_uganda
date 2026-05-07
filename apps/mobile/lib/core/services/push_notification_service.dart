@@ -30,11 +30,27 @@ RemoteMessage? _bootInitialMessage;
 /// Capture the cold-start tap message as early as possible. Safe to call
 /// before any user is signed in — the message is just held in memory.
 /// Idempotent: only the first non-null result wins; subsequent calls are
-/// no-ops. Returns the cached message (whatever's currently stored).
+/// no-ops.
+///
+/// **Never call with `await` from `main()`.** `getInitialMessage()` can
+/// block on iOS if APNs setup hasn't completed yet (no APNs token, slow
+/// boot, certain low-network conditions); awaiting it from `main` would
+/// stall before `runApp` and leave the user staring at a blank screen.
+/// Fire-and-forget instead: this populates the top-level cache when (and
+/// if) the platform answers, and the auth-gated `_doInitialize()` reads
+/// it later (or falls back to a fresh call if the prime hadn't completed
+/// in time).
+///
+/// A defensive 5-second timeout caps the worst case so this future
+/// resolves even when the platform never answers. Returns the cached
+/// message at resolution time.
 Future<RemoteMessage?> primeInitialMessage() async {
   if (_bootInitialMessage != null) return _bootInitialMessage;
   try {
-    final msg = await FirebaseMessaging.instance.getInitialMessage();
+    final msg = await FirebaseMessaging.instance.getInitialMessage().timeout(
+      const Duration(seconds: 5),
+      onTimeout: () => null,
+    );
     if (msg != null) {
       _bootInitialMessage = msg;
       debugPrint('Primed cold-start tap: ${msg.messageId}');

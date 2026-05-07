@@ -29,11 +29,14 @@ void main() async {
   if (EnvironmentConfig.isProd) {
     try {
       await Firebase.initializeApp();
-      // Capture any cold-start tap message NOW, before runApp + auth gating.
-      // iOS drops the launch message if getInitialMessage() is called too
-      // late (we'd otherwise call it from PushNotificationService.initialize
-      // which is gated on auth resolution and can take a few seconds).
-      await primeInitialMessage();
+      // Kick off cold-start tap capture in the background. NEVER await this
+      // here — `getInitialMessage()` can block on iOS while APNs sets up,
+      // and stalling main() before runApp() shows the user a blank screen.
+      // The prime caches into a top-level static which the auth-gated
+      // `PushNotificationService.initialize()` reads later (or falls back
+      // to a fresh call). See primeInitialMessage's docstring.
+      // ignore: discarded_futures
+      primeInitialMessage();
     } catch (e) {
       debugPrint('Firebase init failed: $e');
     }
