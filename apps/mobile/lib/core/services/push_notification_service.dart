@@ -14,6 +14,37 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   debugPrint('Background message: ${message.messageId}');
 }
 
+/// Cold-start tap message captured at app boot, before auth has resolved.
+///
+/// Why a top-level cache: on iOS, `FirebaseMessaging.getInitialMessage()`
+/// can silently return null if it isn't called soon after `runApp`. The
+/// service's `initialize()` runs only after the user is authenticated
+/// (gated in `main.dart`), which on a cold launch with stored creds can
+/// take several seconds — long enough for the launch message to be lost.
+///
+/// `primeInitialMessage()` (invoked from `main()` right after Firebase init)
+/// pulls the message immediately and stashes it here. The service replays
+/// it from `_doInitialize()` once the auth-gated init runs.
+RemoteMessage? _bootInitialMessage;
+
+/// Capture the cold-start tap message as early as possible. Safe to call
+/// before any user is signed in — the message is just held in memory.
+/// Idempotent: only the first non-null result wins; subsequent calls are
+/// no-ops. Returns the cached message (whatever's currently stored).
+Future<RemoteMessage?> primeInitialMessage() async {
+  if (_bootInitialMessage != null) return _bootInitialMessage;
+  try {
+    final msg = await FirebaseMessaging.instance.getInitialMessage();
+    if (msg != null) {
+      _bootInitialMessage = msg;
+      debugPrint('Primed cold-start tap: ${msg.messageId}');
+    }
+  } catch (e) {
+    debugPrint('primeInitialMessage failed: $e');
+  }
+  return _bootInitialMessage;
+}
+
 /// Android notification channels — must match ids used by backend
 /// (`apps/api/src/notifications/notifications.service.ts :: getChannelId`).
 const _androidChannels = <AndroidNotificationChannel>[
@@ -155,8 +186,13 @@ class PushNotificationService {
         );
       }
 
-      // Check if app was opened from a terminated state notification
-      final initialMessage = await messaging.getInitialMessage();
+      // Check if app was opened from a terminated-state notification.
+      // Prefer the message captured at boot (see _bootInitialMessage docs):
+      // on iOS the late getInitialMessage call can return null after auth
+      // takes a few seconds to resolve, dropping the cold-start tap.
+      final initialMessage =
+          _bootInitialMessage ?? await messaging.getInitialMessage();
+      _bootInitialMessage = null;
       if (initialMessage != null) {
         _handleNotificationTap(initialMessage);
       }
