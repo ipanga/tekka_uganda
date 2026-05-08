@@ -172,6 +172,22 @@ class PushNotificationService {
       FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
+      // Dispatch any cold-start tap NOW — before the iOS APNs poll below.
+      // That poll can block this method for up to 30s; if we wait until after
+      // it to navigate, the user sits on the home screen for many seconds
+      // after tapping a push and concludes the tap was ignored. Prefer the
+      // message captured at boot by primeInitialMessage (see its docstring) —
+      // on iOS, calling getInitialMessage this late can return null because
+      // the launch message has already been consumed. onNotificationTap is
+      // wired in TekkaApp.build() before runApp returns control, so it is
+      // guaranteed to be set by the time _doInitialize runs.
+      final initialMessage =
+          _bootInitialMessage ?? await messaging.getInitialMessage();
+      _bootInitialMessage = null;
+      if (initialMessage != null) {
+        _handleNotificationTap(initialMessage);
+      }
+
       // iOS requires an APNs token before FCM can mint one. Poll for up to
       // 30s — first-launch registration on slow networks can take 10-20s.
       // onTokenRefresh will still deliver it if the poll times out.
@@ -200,17 +216,6 @@ class PushNotificationService {
         debugPrint(
           'Initial FCM token fetch failed (will retry via onTokenRefresh): $e',
         );
-      }
-
-      // Check if app was opened from a terminated-state notification.
-      // Prefer the message captured at boot (see _bootInitialMessage docs):
-      // on iOS the late getInitialMessage call can return null after auth
-      // takes a few seconds to resolve, dropping the cold-start tap.
-      final initialMessage =
-          _bootInitialMessage ?? await messaging.getInitialMessage();
-      _bootInitialMessage = null;
-      if (initialMessage != null) {
-        _handleNotificationTap(initialMessage);
       }
 
       _initialized = true;
