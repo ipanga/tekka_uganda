@@ -19,6 +19,11 @@ abstract class NotificationRepository {
   /// Get all notifications for a user
   Future<List<AppNotification>> getNotifications(String userId);
 
+  /// Fetch a single notification by id. Returns null if the server replies
+  /// 404 (notification was deleted, never existed, or belongs to another
+  /// user). Throws on transport / 5xx errors.
+  Future<AppNotification?> getNotification(String notificationId);
+
   /// Get one page of notifications. Used by the infinite-scroll notifier;
   /// pass the previous page's `nextCursor` to fetch the next page.
   Future<NotificationPage> getNotificationsPage(

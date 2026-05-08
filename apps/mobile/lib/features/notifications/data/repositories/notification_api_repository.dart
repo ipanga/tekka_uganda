@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/services/api_client.dart';
 import '../../domain/entities/app_notification.dart';
 import '../../domain/repositories/notification_repository.dart';
@@ -25,6 +26,22 @@ class NotificationApiRepository implements NotificationRepository {
     return notifications
         .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  @override
+  Future<AppNotification?> getNotification(String notificationId) async {
+    try {
+      final response = await _apiClient.get<Map<String, dynamic>>(
+        '/notifications/$notificationId',
+      );
+      return AppNotification.fromJson(response);
+    } on ApiException catch (e) {
+      // 404 → notification was deleted, never existed, or belongs to another
+      // user. Surface as null so the UI shows the "not found" empty state
+      // instead of an error banner. Re-throw anything else (5xx, network).
+      if (e.code == 'NOT_FOUND') return null;
+      rethrow;
+    }
   }
 
   @override
