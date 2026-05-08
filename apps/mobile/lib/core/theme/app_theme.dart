@@ -41,7 +41,18 @@ abstract class AppTheme {
           color: colorScheme.onSurface,
           size: AppSpacing.iconMedium,
         ),
-        systemOverlayStyle: SystemUiOverlayStyle.dark,
+        // Edge-to-edge friendly: only set brightness, leave the bar colors
+        // transparent so the framework doesn't invoke the deprecated
+        // setStatusBarColor / setNavigationBarColor on Android 15. The dark
+        // icon brightness pairs with the white AppBar background.
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarIconBrightness: Brightness.dark,
+          systemNavigationBarDividerColor: null,
+        ),
       ),
 
       // Bottom Navigation
