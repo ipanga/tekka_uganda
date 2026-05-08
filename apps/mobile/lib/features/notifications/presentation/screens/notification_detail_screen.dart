@@ -8,15 +8,22 @@ import '../../../../router/app_router.dart';
 import '../../application/notification_provider.dart';
 import '../../domain/entities/app_notification.dart';
 
-/// Single notification provider
+/// Single notification provider.
+///
+/// First scan the cached notifications list (avoids a second round-trip when
+/// the user tapped a row they're already looking at). Fall back to a direct
+/// `GET /notifications/:id` when the id isn't in the cached page — covers:
+///   * cold-start from a push tap (provider hasn't run yet)
+///   * the notification falls outside the first 50 cached on the list page
+///   * the notification arrived after the last list refresh
 final singleNotificationProvider =
     FutureProvider.family<AppNotification?, String>((ref, id) async {
-      final notifications = await ref.watch(notificationsProvider.future);
-      try {
-        return notifications.firstWhere((n) => n.id == id);
-      } catch (_) {
-        return null;
+      final cached = await ref.watch(notificationsProvider.future);
+      for (final n in cached) {
+        if (n.id == id) return n;
       }
+      final repository = ref.read(notificationRepositoryProvider);
+      return repository.getNotification(id);
     });
 
 /// Screen showing notification details
