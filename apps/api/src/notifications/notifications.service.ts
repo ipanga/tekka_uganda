@@ -93,14 +93,49 @@ export class NotificationsService {
             },
           },
           apns: {
+            // Headers control APNs delivery on Apple's side. `apns-push-type`
+            // is required by APNs HTTP/2; without it some iOS versions drop
+            // the message. Priority 10 = deliver immediately; 5 = defer/
+            // throttle, used for low-urgency SYSTEM broadcasts so we don't
+            // burn the per-app priority-10 budget.
+            headers: {
+              'apns-push-type': 'alert',
+              'apns-priority':
+                dto.type === NotificationType.SYSTEM ? '5' : '10',
+            },
             payload: {
               aps: {
+                // Explicit alert — firebase-admin's auto-mapping from the
+                // top-level `notification` block is unreliable when an
+                // `apns.payload.aps` is also present, which produced silent
+                // pushes on iOS. Spelling it out here removes the ambiguity.
+                alert: { title: dto.title, body: dto.body },
                 badge: await this.getUnreadCount(dto.userId),
                 sound: 'default',
+                'mutable-content': 1,
               },
             },
           },
         });
+        // Surface multicast outcome so we can tell from logs whether iOS
+        // tokens are being rejected by FCM (e.g. APNs key missing in
+        // Firebase Console → every iOS token returns "registration-token-
+        // not-registered"). Token prefixes only — never log full tokens.
+        const failures = response.responses
+          .map((r, i) => ({
+            ok: r.success,
+            tokenPrefix: tokens[i].slice(0, 12),
+            code: r.error?.code,
+            message: r.error?.message,
+          }))
+          .filter((r) => !r.ok);
+        this.logger.log(
+          `FCM multicast type=${dto.type} userId=${dto.userId} ` +
+            `success=${response.successCount} failure=${response.failureCount}` +
+            (failures.length > 0
+              ? ` failures=${JSON.stringify(failures)}`
+              : ''),
+        );
         // Prune any tokens FCM reports as permanently dead (app uninstalled,
         // token rotated, etc.) so the FcmToken table stays honest and future
         // sends don't keep shipping to ghosts.

@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -289,13 +290,18 @@ class _ListingCard extends ConsumerWidget {
                                 child: CircularProgressIndicator(),
                               ),
                             ),
-                            errorWidget: (context, url, error) => Container(
-                              color: AppColors.gray100,
-                              child: const Icon(
-                                Icons.broken_image,
-                                color: AppColors.gray400,
-                              ),
-                            ),
+                            errorWidget: (context, url, error) {
+                              if (kDebugMode) {
+                                debugPrint('[img] $url -> $error');
+                              }
+                              return Container(
+                                color: AppColors.gray100,
+                                child: const Icon(
+                                  Icons.broken_image,
+                                  color: AppColors.gray400,
+                                ),
+                              );
+                            },
                           )
                         : Container(
                             color: AppColors.gray100,

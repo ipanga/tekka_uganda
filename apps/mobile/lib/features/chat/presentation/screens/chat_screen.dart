@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -636,6 +637,20 @@ class _MessageBubble extends StatelessWidget {
                   width: 200,
                   height: 150,
                   fit: BoxFit.cover,
+                  errorWidget: (context, url, error) {
+                    if (kDebugMode) {
+                      debugPrint('[img] $url -> $error');
+                    }
+                    return Container(
+                      width: 200,
+                      height: 150,
+                      color: AppColors.gray100,
+                      child: const Icon(
+                        Icons.broken_image,
+                        color: AppColors.gray400,
+                      ),
+                    );
+                  },
                 ),
               ),
             if (message.content.isNotEmpty) ...[

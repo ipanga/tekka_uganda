@@ -1,3 +1,5 @@
+import '../../../../core/utils/image_url.dart';
+
 /// Listing status
 enum ListingStatus {
   draft,
@@ -118,7 +120,7 @@ class SellerInfo {
     return SellerInfo(
       id: json['id'] as String,
       displayName: json['displayName'] as String?,
-      photoUrl: json['photoUrl'] as String?,
+      photoUrl: toHttpsOrNull(json['photoUrl'] as String?),
       location: json['location'] as String?,
       isVerified: json['isVerified'] as bool? ?? false,
     );
@@ -364,7 +366,9 @@ class Listing {
     final sellerId = seller?['id'] ?? json['sellerId'] as String;
     final sellerName =
         seller?['displayName'] ?? json['sellerName'] ?? 'Unknown';
-    final sellerPhotoUrl = seller?['photoUrl'] ?? json['sellerPhotoUrl'];
+    final sellerPhotoUrl = toHttpsOrNull(
+      (seller?['photoUrl'] ?? json['sellerPhotoUrl']) as String?,
+    );
     final sellerIsVerified = seller?['isVerified'] ?? json['sellerIsVerified'];
     final sellerRating = (seller?['rating'] as num?)?.toDouble() ?? 0.0;
     final sellerReviewCount = seller?['reviewCount'] as int? ?? 0;
@@ -400,7 +404,7 @@ class Listing {
       id: json['id'] as String,
       sellerId: sellerId,
       sellerName: sellerName as String,
-      sellerPhotoUrl: sellerPhotoUrl as String?,
+      sellerPhotoUrl: sellerPhotoUrl,
       sellerIsVerified: sellerIsVerified as bool?,
       sellerRating: sellerRating,
       sellerReviewCount: sellerReviewCount,
@@ -417,7 +421,9 @@ class Listing {
       occasion: json['occasion'] != null
           ? Occasion.fromApi(json['occasion'] as String)
           : null,
-      imageUrls: List<String>.from(json['imageUrls'] as List? ?? []),
+      imageUrls: ((json['imageUrls'] as List?) ?? const [])
+          .map((e) => toHttps(e as String))
+          .toList(),
       location: json['location'] as String?,
       status: ListingStatus.fromApi(json['status'] as String? ?? 'DRAFT'),
       rejectionReason: json['rejectionReason'] as String?,
@@ -482,7 +488,9 @@ class Listing {
         (e) => e.name == map['condition'],
         orElse: () => ItemCondition.used,
       ),
-      imageUrls: List<String>.from(map['imageUrls'] as List? ?? []),
+      imageUrls: ((map['imageUrls'] as List?) ?? const [])
+          .map((e) => toHttps(e as String))
+          .toList(),
       location: map['location'] as String?,
       status: ListingStatus.values.firstWhere(
         (e) => e.name == map['status'],

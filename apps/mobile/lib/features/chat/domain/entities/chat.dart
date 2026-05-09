@@ -1,3 +1,5 @@
+import '../../../../core/utils/image_url.dart';
+
 /// Message status
 enum MessageStatus {
   sending,
@@ -188,21 +190,25 @@ class Chat {
       id: json['id'] as String,
       listingId: listing?['id'] ?? json['listingId'] as String,
       listingTitle: listing?['title'] ?? json['listingTitle'] as String?,
-      listingImageUrl:
-          listing?['imageUrls']?[0] ?? json['listingImageUrl'] as String?,
+      listingImageUrl: toHttpsOrNull(
+        listing?['imageUrls']?[0] ?? json['listingImageUrl'],
+      ),
       listingPrice: listing?['price'] ?? json['listingPrice'] as int?,
       buyerId: buyer?['id'] ?? json['buyerId'] as String,
       buyerName: buyer?['displayName'] ?? json['buyerName'] as String?,
-      buyerPhotoUrl: buyer?['photoUrl'] ?? json['buyerPhotoUrl'] as String?,
+      buyerPhotoUrl: toHttpsOrNull(
+        buyer?['photoUrl'] ?? json['buyerPhotoUrl'],
+      ),
       sellerId: seller?['id'] ?? json['sellerId'] as String,
       sellerName:
           seller?['displayName'] ??
           otherUser?['displayName'] ??
           json['sellerName'] as String?,
-      sellerPhotoUrl:
-          seller?['photoUrl'] ??
-          otherUser?['photoUrl'] ??
-          json['sellerPhotoUrl'] as String?,
+      sellerPhotoUrl: toHttpsOrNull(
+        seller?['photoUrl'] ??
+            otherUser?['photoUrl'] ??
+            json['sellerPhotoUrl'],
+      ),
       lastMessageText: lastMessageText,
       lastMessageAt: json['lastMessageAt'] != null
           ? DateTime.parse(json['lastMessageAt'] as String)
@@ -334,10 +340,12 @@ class Message {
       chatId: json['chatId'] as String,
       senderId: sender?['id'] ?? json['senderId'] as String,
       senderName: sender?['displayName'] ?? json['senderName'] as String?,
-      senderPhotoUrl: sender?['photoUrl'] ?? json['senderPhotoUrl'] as String?,
+      senderPhotoUrl: toHttpsOrNull(
+        sender?['photoUrl'] ?? json['senderPhotoUrl'],
+      ),
       type: MessageType.fromApi(json['type'] as String? ?? 'TEXT'),
       content: json['content'] as String,
-      imageUrl: json['imageUrl'] as String?,
+      imageUrl: toHttpsOrNull(json['imageUrl']),
       offerAmount: json['offerAmount'] as int?,
       meetupData: json['meetupData'] as Map<String, dynamic>?,
       status: MessageStatus.fromApi(json['status'] as String? ?? 'SENT'),
