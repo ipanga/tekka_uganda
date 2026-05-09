@@ -196,7 +196,9 @@ class PushNotificationService {
           final apns = await messaging.getAPNSToken();
           if (apns != null) {
             if (kDebugMode) {
-              debugPrint('[push] APNs token ready after ${i * 500}ms (len=${apns.length})');
+              debugPrint(
+                '[push] APNs token ready after ${i * 500}ms (len=${apns.length})',
+              );
             }
             break;
           }
@@ -272,7 +274,9 @@ class PushNotificationService {
     final platform = Platform.isIOS ? 'ios' : 'android';
     try {
       await _userApiRepository.registerFcmToken(token, platform);
-      debugPrint('FCM token registered (platform=$platform, len=${token.length})');
+      debugPrint(
+        'FCM token registered (platform=$platform, len=${token.length})',
+      );
     } catch (e) {
       debugPrint('FCM token registration failed: $e');
     }

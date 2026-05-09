@@ -196,18 +196,14 @@ class Chat {
       listingPrice: listing?['price'] ?? json['listingPrice'] as int?,
       buyerId: buyer?['id'] ?? json['buyerId'] as String,
       buyerName: buyer?['displayName'] ?? json['buyerName'] as String?,
-      buyerPhotoUrl: toHttpsOrNull(
-        buyer?['photoUrl'] ?? json['buyerPhotoUrl'],
-      ),
+      buyerPhotoUrl: toHttpsOrNull(buyer?['photoUrl'] ?? json['buyerPhotoUrl']),
       sellerId: seller?['id'] ?? json['sellerId'] as String,
       sellerName:
           seller?['displayName'] ??
           otherUser?['displayName'] ??
           json['sellerName'] as String?,
       sellerPhotoUrl: toHttpsOrNull(
-        seller?['photoUrl'] ??
-            otherUser?['photoUrl'] ??
-            json['sellerPhotoUrl'],
+        seller?['photoUrl'] ?? otherUser?['photoUrl'] ?? json['sellerPhotoUrl'],
       ),
       lastMessageText: lastMessageText,
       lastMessageAt: json['lastMessageAt'] != null
