@@ -93,26 +93,14 @@ export class NotificationsService {
             },
           },
           apns: {
-            // Headers control APNs delivery on Apple's side. `apns-push-type`
-            // is required by APNs HTTP/2; without it some iOS versions drop
-            // the message. Priority 10 = deliver immediately; 5 = defer/
-            // throttle, used for low-urgency SYSTEM broadcasts so we don't
-            // burn the per-app priority-10 budget.
-            headers: {
-              'apns-push-type': 'alert',
-              'apns-priority':
-                dto.type === NotificationType.SYSTEM ? '5' : '10',
-            },
             payload: {
               aps: {
                 // Explicit alert — firebase-admin's auto-mapping from the
                 // top-level `notification` block is unreliable when an
-                // `apns.payload.aps` is also present, which produced silent
-                // pushes on iOS. Spelling it out here removes the ambiguity.
+                // `apns.payload.aps` is also present.
                 alert: { title: dto.title, body: dto.body },
                 badge: await this.getUnreadCount(dto.userId),
                 sound: 'default',
-                'mutable-content': 1,
               },
             },
           },
