@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -129,7 +130,10 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                       imageUrl: imageUrl,
                       fit: BoxFit.cover,
                       placeholder: (context, url) => _ImagePlaceholder(),
-                      errorWidget: (context, url, error) => _ImagePlaceholder(),
+                      errorWidget: (context, url, error) {
+                        if (kDebugMode) debugPrint('[img] $url -> $error');
+                        return _ImagePlaceholder();
+                      },
                     )
                   else
                     _ImagePlaceholder(),

@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -859,14 +860,17 @@ class _ImageGallery extends StatelessWidget {
                   color: AppColors.gray100,
                   child: const Center(child: CircularProgressIndicator()),
                 ),
-                errorWidget: (context, url, error) => Container(
-                  color: AppColors.gray100,
-                  child: const Icon(
-                    Icons.broken_image,
-                    size: 64,
-                    color: AppColors.gray400,
-                  ),
-                ),
+                errorWidget: (context, url, error) {
+                  if (kDebugMode) debugPrint('[img] $url -> $error');
+                  return Container(
+                    color: AppColors.gray100,
+                    child: const Icon(
+                      Icons.broken_image,
+                      size: 64,
+                      color: AppColors.gray400,
+                    ),
+                  );
+                },
               ),
             );
           },
@@ -1003,11 +1007,16 @@ class _FullScreenImageGalleryState extends State<_FullScreenImageGallery> {
                         placeholder: (context, url) => const Center(
                           child: CircularProgressIndicator(color: Colors.white),
                         ),
-                        errorWidget: (context, url, error) => const Icon(
-                          Icons.broken_image,
-                          size: 64,
-                          color: AppColors.gray400,
-                        ),
+                        errorWidget: (context, url, error) {
+                          if (kDebugMode) {
+                            debugPrint('[img] $url -> $error');
+                          }
+                          return const Icon(
+                            Icons.broken_image,
+                            size: 64,
+                            color: AppColors.gray400,
+                          );
+                        },
                       ),
                     ),
                   );

@@ -1,3 +1,5 @@
+import '../../../../core/utils/image_url.dart';
+
 /// Attribute type enum
 enum AttributeType {
   singleSelect('SINGLE_SELECT'),
@@ -219,7 +221,7 @@ class Category {
       slug: json['slug'] as String,
       level: json['level'] as int,
       parentId: json['parentId'] as String?,
-      imageUrl: json['imageUrl'] as String?,
+      imageUrl: toHttpsOrNull(json['imageUrl']),
       iconName: json['iconName'] as String?,
       sortOrder: json['sortOrder'] as int? ?? 0,
       isActive: json['isActive'] as bool? ?? true,

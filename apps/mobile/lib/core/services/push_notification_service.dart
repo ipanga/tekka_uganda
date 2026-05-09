@@ -194,7 +194,15 @@ class PushNotificationService {
       if (Platform.isIOS) {
         for (var i = 0; i < 60; i++) {
           final apns = await messaging.getAPNSToken();
-          if (apns != null) break;
+          if (apns != null) {
+            if (kDebugMode) {
+              debugPrint('[push] APNs token ready after ${i * 500}ms (len=${apns.length})');
+            }
+            break;
+          }
+          if (kDebugMode && i % 4 == 0) {
+            debugPrint('[push] waiting for APNs token (poll ${i + 1}/60)');
+          }
           await Future<void>.delayed(const Duration(milliseconds: 500));
         }
       }
@@ -264,7 +272,7 @@ class PushNotificationService {
     final platform = Platform.isIOS ? 'ios' : 'android';
     try {
       await _userApiRepository.registerFcmToken(token, platform);
-      debugPrint('FCM token registered');
+      debugPrint('FCM token registered (platform=$platform, len=${token.length})');
     } catch (e) {
       debugPrint('FCM token registration failed: $e');
     }
@@ -274,7 +282,12 @@ class PushNotificationService {
     debugPrint('Foreground message: ${message.notification?.title}');
     final notification = message.notification;
     if (notification == null) {
-      // Data-only payload — nothing to render.
+      // Data-only payload — nothing to render. Logged so we can tell the
+      // difference between "no push arrived" and "push arrived but had no
+      // notification block" while debugging iOS delivery.
+      debugPrint(
+        '[push] data-only message: id=${message.messageId} data=${message.data}',
+      );
       return;
     }
 

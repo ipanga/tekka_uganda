@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -298,10 +299,15 @@ class _PriceAlertTile extends StatelessWidget {
                                   strokeWidth: 2,
                                 ),
                               ),
-                              errorWidget: (context, url, error) => const Icon(
-                                Icons.broken_image,
-                                color: AppColors.gray400,
-                              ),
+                              errorWidget: (context, url, error) {
+                                if (kDebugMode) {
+                                  debugPrint('[img] $url -> $error');
+                                }
+                                return const Icon(
+                                  Icons.broken_image,
+                                  color: AppColors.gray400,
+                                );
+                              },
                             ),
                           )
                         : const Icon(Icons.image, color: AppColors.gray400),

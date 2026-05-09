@@ -1,3 +1,5 @@
+import '../../../../core/utils/image_url.dart';
+
 /// Review entity representing a user review
 class Review {
   final String id;
@@ -38,8 +40,9 @@ class Review {
       reviewerName:
           (reviewer?['displayName'] ?? json['reviewerName']) as String? ??
           'Unknown',
-      reviewerPhotoUrl:
-          (reviewer?['photoUrl'] ?? json['reviewerPhotoUrl']) as String?,
+      reviewerPhotoUrl: toHttpsOrNull(
+        reviewer?['photoUrl'] ?? json['reviewerPhotoUrl'],
+      ),
       revieweeId: json['revieweeId'] as String? ?? '',
       listingId: (listing?['id'] ?? json['listingId']) as String?,
       listingTitle: (listing?['title'] ?? json['listingTitle']) as String?,
@@ -88,7 +91,7 @@ class Review {
       id: map['id'] as String,
       reviewerId: map['reviewerId'] as String,
       reviewerName: map['reviewerName'] as String,
-      reviewerPhotoUrl: map['reviewerPhotoUrl'] as String?,
+      reviewerPhotoUrl: toHttpsOrNull(map['reviewerPhotoUrl']),
       revieweeId: map['revieweeId'] as String,
       listingId: map['listingId'] as String?,
       listingTitle: map['listingTitle'] as String?,
