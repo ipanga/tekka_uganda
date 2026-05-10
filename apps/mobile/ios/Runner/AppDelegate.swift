@@ -1,7 +1,5 @@
 import Flutter
 import UIKit
-import FirebaseCore
-import FirebaseMessaging
 import os
 
 @main
@@ -18,17 +16,19 @@ import os
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Configure Firebase BEFORE the Flutter plugin registrant runs (super
-    // dispatches it). With FirebaseApp already initialised, FIRMessaging's
-    // UIApplicationDelegate swizzle is in place by the time APNs returns
-    // the device token. firebase_core's Dart-side `Firebase.initializeApp()`
-    // in main.dart detects the existing instance and reuses it.
-    if FirebaseApp.app() == nil {
-      FirebaseApp.configure()
-    }
-    let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    // Firebase's requestPermission() does not reliably trigger APNs
+    // registration on iOS 26 — kick it off explicitly at launch so the
+    // didRegister callback fires and FCM can mint a token.
+    //
+    // Order matches the last-known-good config (PR #53): register for
+    // remote notifications first, then forward to super (which runs
+    // GeneratedPluginRegistrant via FlutterAppDelegate). We do NOT call
+    // FirebaseApp.configure() here — Flutter's firebase_core plugin does
+    // that from Dart's `Firebase.initializeApp()`. Doing both natively and
+    // in Dart on iOS 26 has been observed to confuse FIRMessaging's
+    // UIApplicationDelegate swizzle and stall push init.
     application.registerForRemoteNotifications()
-    return result
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 
   override func application(
@@ -39,12 +39,11 @@ import os
     os_log("APNs device token received: %{public}d bytes, prefix=%{public}@",
            log: pushLog, type: .default, deviceToken.count, prefix)
     print("[APNs] device token received: \(deviceToken.count) bytes, prefix=\(prefix)")
-    // Belt-and-suspenders: hand the token to Firebase Messaging directly.
-    // FIRMessaging's swizzle does this on the super forward, but on iOS 26
-    // we've seen the swizzle miss the callback and FCM never mints a token.
-    // Setting apnsToken explicitly here guarantees Messaging has it before
-    // any subsequent `getToken()` call.
-    Messaging.messaging().apnsToken = deviceToken
+    // Forward to super so FIRMessaging's swizzled handler picks it up.
+    // Do NOT manually set Messaging.messaging().apnsToken here — that path
+    // requires importing FirebaseMessaging in this AppDelegate, which only
+    // works once FirebaseApp.configure() has run, and we've moved Firebase
+    // init back to the Flutter plugin entirely.
     super.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
   }
 
