@@ -449,6 +449,11 @@ class PushNotificationService {
   }
 
   void _handleNotificationTap(RemoteMessage message) {
+    // ignore: avoid_print
+    print(
+      '[tekka.push] tap received: messageId=${message.messageId} '
+      'data=${message.data} notification=${message.notification?.title}',
+    );
     _routeFromData(message.data);
   }
 
@@ -461,12 +466,27 @@ class PushNotificationService {
     if (deepLink != null && deepLink.isNotEmpty) {
       final uri = Uri.tryParse(deepLink);
       if (uri != null) route = mapDeepLinkUri(uri);
+      // ignore: avoid_print
+      print(
+        '[tekka.push] tap route from deep_link="$deepLink" -> route=$route',
+      );
+    } else {
+      // ignore: avoid_print
+      print('[tekka.push] tap: no deep_link in data, trying type fallback');
     }
 
     route ??= _fallbackRouteForType(data);
 
     if (route != null) {
+      // ignore: avoid_print
+      print(
+        '[tekka.push] tap dispatching route=$route '
+        '(onNotificationTap is ${onNotificationTap == null ? "NULL" : "set"})',
+      );
       onNotificationTap?.call(route, data.cast<String, dynamic>());
+    } else {
+      // ignore: avoid_print
+      print('[tekka.push] tap: no route resolved, ignoring');
     }
   }
 
