@@ -306,12 +306,8 @@ export class ListingsService {
     if (dto.imageUrls) {
       const newUrls = dto.imageUrls;
       const oldUrls = listing.imageUrls || [];
-      const removedUrls = oldUrls.filter(
-        (url) => !newUrls.includes(url),
-      );
-      const addedUrls = newUrls.filter(
-        (url) => !oldUrls.includes(url),
-      );
+      const removedUrls = oldUrls.filter((url) => !newUrls.includes(url));
+      const addedUrls = newUrls.filter((url) => !oldUrls.includes(url));
 
       if (removedUrls.length > 0) {
         this.uploadService.deleteImagesByUrls(removedUrls).catch((error) => {
@@ -430,9 +426,7 @@ export class ListingsService {
             `${result.deleted} deleted, ${result.failed} failed`,
         );
         if (result.errors.length > 0) {
-          this.logger.warn(
-            `Cloudinary errors: ${result.errors.join(', ')}`,
-          );
+          this.logger.warn(`Cloudinary errors: ${result.errors.join(', ')}`);
         }
       } catch (error) {
         // Log but don't fail the deletion - images can be cleaned up later
@@ -551,7 +545,10 @@ export class ListingsService {
 
     // If search term provided, use PostgreSQL full-text search for relevance ranking
     if (search && search.trim()) {
-      return this.fullTextSearch({ ...query, status: effectiveStatus }, viewerId);
+      return this.fullTextSearch(
+        { ...query, status: effectiveStatus },
+        viewerId,
+      );
     }
 
     const where: Prisma.ListingWhereInput = {
@@ -1167,7 +1164,10 @@ export class ListingsService {
         isSaved: savedSet.has(listing.id),
       }));
     } else {
-      data = transformedListings.map((listing) => ({ ...listing, isSaved: false }));
+      data = transformedListings.map((listing) => ({
+        ...listing,
+        isSaved: false,
+      }));
     }
 
     return {

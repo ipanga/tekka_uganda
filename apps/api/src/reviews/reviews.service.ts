@@ -97,7 +97,9 @@ export class ReviewsService {
       });
 
       if (!sellerListing) {
-        throw new BadRequestException('Cannot review a seller with no listings');
+        throw new BadRequestException(
+          'Cannot review a seller with no listings',
+        );
       }
 
       listing = sellerListing;

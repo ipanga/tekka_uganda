@@ -152,7 +152,10 @@ export class NotificationsController {
     @Query('audience') audience: BroadcastAudience,
     @Query('role') role?: UserRole,
   ) {
-    const count = await this.notificationsService.getAudienceCount(audience, role);
+    const count = await this.notificationsService.getAudienceCount(
+      audience,
+      role,
+    );
     return { count };
   }
 
