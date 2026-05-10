@@ -4,10 +4,20 @@ import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../features/auth/data/repositories/user_api_repository.dart';
 import 'deep_link_mapper.dart';
+
+/// Custom platform-channel that the iOS AppDelegate uses to forward
+/// notification-tap events to Dart. See `apps/mobile/ios/Runner/AppDelegate.swift`
+/// for why this exists (firebase_messaging's `onMessageOpenedApp` stream stops
+/// emitting on iOS 13+ Scene-Lifecycle apps because FlutterAppDelegate hijacks
+/// the UNUserNotificationCenter delegate).
+const _iosTapChannel = MethodChannel(
+  'com.tootiyesolutions.tekka/notification_tap',
+);
 
 /// Top-level handler for background messages (must be top-level function)
 @pragma('vm:entry-point')
@@ -217,6 +227,32 @@ class PushNotificationService {
       FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
       FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+      // iOS-only: also listen on our custom method channel that the native
+      // AppDelegate posts to when a notification is tapped. This is the
+      // workaround for FlutterAppDelegate hijacking the UNUserNotificationCenter
+      // delegate on iOS 13+ Scene-Lifecycle apps, which causes the FCM plugin's
+      // own onMessageOpenedApp stream to stop emitting for background-tap.
+      if (Platform.isIOS) {
+        _iosTapChannel.setMethodCallHandler((call) async {
+          // ignore: avoid_print
+          print(
+            '[tekka.push] iOS native tap channel: method=${call.method} '
+            'args=${call.arguments}',
+          );
+          if (call.method == 'notificationTap') {
+            final args = call.arguments;
+            if (args is Map) {
+              final data = <String, dynamic>{};
+              args.forEach((key, value) {
+                if (key is String) data[key] = value;
+              });
+              _routeFromData(data);
+            }
+          }
+          return null;
+        });
+      }
       // ignore: avoid_print
       print('[tekka.push] step=attachListeners END');
 
