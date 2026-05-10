@@ -132,6 +132,8 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                       fit: BoxFit.cover,
                       placeholder: (context, url) => _ImagePlaceholder(),
                       errorWidget: (context, url, error) {
+                        // ignore: avoid_print
+                        print('[tekka.image] $url -> $error');
                         developer.log(
                           'image fetch failed: $url -> $error',
                           name: 'tekka.image',

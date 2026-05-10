@@ -88,10 +88,18 @@ class TekkaApp extends ConsumerWidget {
       });
     });
 
-    // Initialize push when the auth state first goes non-null. Covers both
-    // the returning-user case (session restored at boot from secure storage)
-    // and any login path that isn't verifyOtp (e.g. Firebase email fallback).
-    // initialize() is idempotent so concurrent callers are safe.
+    // Initialize push when the user becomes non-null. Two paths:
+    //
+    // 1. Listener — fires on any future null→non-null transition (login via
+    //    OTP, Firebase email fallback, sign-out then sign-in again).
+    // 2. Immediate read — for returning users whose JWT was already restored
+    //    from secure storage by the time TekkaApp.build runs. The listener
+    //    above only fires on transitions, so a session that was non-null at
+    //    listener-attach time would never trigger push init. This is the
+    //    fix for upgrade-while-signed-in: TestFlight preserves app data, so
+    //    JWT restores synchronously and the listener never sees a transition.
+    //
+    // initialize() is idempotent so being triggered by both paths is safe.
     ref.listen<AsyncValue<Object?>>(authStateProvider, (prev, next) {
       final prevUser = prev?.valueOrNull;
       final nextUser = next.valueOrNull;
@@ -99,6 +107,9 @@ class TekkaApp extends ConsumerWidget {
         ref.read(pushNotificationServiceProvider).initialize();
       }
     });
+    if (ref.read(authStateProvider).valueOrNull != null) {
+      ref.read(pushNotificationServiceProvider).initialize();
+    }
 
     return AppLockWrapper(
       child: MaterialApp.router(

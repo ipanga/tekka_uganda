@@ -862,6 +862,8 @@ class _ImageGallery extends StatelessWidget {
                   child: const Center(child: CircularProgressIndicator()),
                 ),
                 errorWidget: (context, url, error) {
+                  // ignore: avoid_print
+                  print('[tekka.image] $url -> $error');
                   developer.log(
                     'image fetch failed: $url -> $error',
                     name: 'tekka.image',
@@ -1014,6 +1016,8 @@ class _FullScreenImageGalleryState extends State<_FullScreenImageGallery> {
                           child: CircularProgressIndicator(color: Colors.white),
                         ),
                         errorWidget: (context, url, error) {
+                          // ignore: avoid_print
+                          print('[tekka.image] $url -> $error');
                           developer.log(
                             'image fetch failed: $url -> $error',
                             name: 'tekka.image',

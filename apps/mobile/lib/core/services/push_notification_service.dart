@@ -137,6 +137,9 @@ class PushNotificationService {
   Future<void> initialize() => _initFuture ??= _doInitialize();
 
   Future<void> _doInitialize() async {
+    // ignore: avoid_print
+    print('[tekka.push] _doInitialize: starting');
+    developer.log('_doInitialize: starting', name: 'tekka.push', level: 800);
     try {
       final messaging = FirebaseMessaging.instance;
 
@@ -147,9 +150,22 @@ class PushNotificationService {
         sound: true,
         provisional: false,
       );
+      // ignore: avoid_print
+      print('[tekka.push] permission status=${settings.authorizationStatus}');
+      developer.log(
+        'permission status=${settings.authorizationStatus}',
+        name: 'tekka.push',
+        level: 800,
+      );
 
       if (settings.authorizationStatus == AuthorizationStatus.denied) {
-        debugPrint('Push notifications: permission denied');
+        // ignore: avoid_print
+        print('[tekka.push] permission denied — bailing out');
+        developer.log(
+          'permission denied — bailing out',
+          name: 'tekka.push',
+          level: 1000,
+        );
         return;
       }
 
@@ -196,6 +212,10 @@ class PushNotificationService {
         for (var i = 0; i < 60; i++) {
           final apns = await messaging.getAPNSToken();
           if (apns != null) {
+            // ignore: avoid_print
+            print(
+              '[tekka.push] APNs token ready after ${i * 500}ms (len=${apns.length})',
+            );
             developer.log(
               'APNs token ready after ${i * 500}ms (len=${apns.length})',
               name: 'tekka.push',
@@ -204,6 +224,8 @@ class PushNotificationService {
             break;
           }
           if (i % 4 == 0) {
+            // ignore: avoid_print
+            print('[tekka.push] waiting for APNs token (poll ${i + 1}/60)');
             developer.log(
               'waiting for APNs token (poll ${i + 1}/60)',
               name: 'tekka.push',
@@ -226,17 +248,38 @@ class PushNotificationService {
             debugPrint('FCM token: $token');
           }
           await _registerToken(token);
+        } else {
+          // ignore: avoid_print
+          print('[tekka.push] getToken() returned null (no FCM token minted)');
+          developer.log(
+            'getToken() returned null (no FCM token minted)',
+            name: 'tekka.push',
+            level: 1000,
+          );
         }
       } catch (e) {
-        debugPrint(
-          'Initial FCM token fetch failed (will retry via onTokenRefresh): $e',
+        // ignore: avoid_print
+        print('[tekka.push] initial FCM token fetch failed: $e');
+        developer.log(
+          'initial FCM token fetch failed (will retry via onTokenRefresh)',
+          name: 'tekka.push',
+          error: e,
+          level: 1000,
         );
       }
 
       _initialized = true;
-      debugPrint('Push notifications initialized');
+      // ignore: avoid_print
+      print('[tekka.push] push notifications initialized');
+      developer.log(
+        'push notifications initialized',
+        name: 'tekka.push',
+        level: 800,
+      );
     } catch (e) {
-      debugPrint('Push notification init failed: $e');
+      // ignore: avoid_print
+      print('[tekka.push] init failed: $e');
+      developer.log('init failed', name: 'tekka.push', error: e, level: 1000);
       // Allow a retry on transient failure (e.g. permission dialog race).
       _initFuture = null;
     }
@@ -279,12 +322,18 @@ class PushNotificationService {
     final platform = Platform.isIOS ? 'ios' : 'android';
     try {
       await _userApiRepository.registerFcmToken(token, platform);
+      // ignore: avoid_print
+      print(
+        '[tekka.push] FCM token registered (platform=$platform, len=${token.length})',
+      );
       developer.log(
         'FCM token registered (platform=$platform, len=${token.length})',
         name: 'tekka.push',
         level: 800,
       );
     } catch (e) {
+      // ignore: avoid_print
+      print('[tekka.push] FCM token registration failed: $e');
       developer.log(
         'FCM token registration failed',
         name: 'tekka.push',
