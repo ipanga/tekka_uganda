@@ -2,14 +2,15 @@ import Flutter
 import UIKit
 import FirebaseCore
 import FirebaseMessaging
-import os.log
+import os
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
-  // os.Logger is the modern unified-logging API — visible in Console.app
-  // and `idevicesyslog` on Release builds, which iOS 26 silently drops for
-  // bare `NSLog` from Swift.
-  private let pushLog = Logger(
+  // The Swift `Logger` struct is iOS 14+; the project Podfile is on iOS 13,
+  // so use the C-style OSLog/os_log API (iOS 10+). Output still routes to
+  // Console.app and `idevicesyslog` on Release builds where bare NSLog from
+  // Swift is sometimes silently dropped.
+  private let pushLog = OSLog(
     subsystem: "com.tootiyesolutions.tekka", category: "push"
   )
 
@@ -35,7 +36,8 @@ import os.log
     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data
   ) {
     let prefix = deviceToken.prefix(8).map { String(format: "%02x", $0) }.joined()
-    pushLog.notice("APNs device token received: \(deviceToken.count, privacy: .public) bytes, prefix=\(prefix, privacy: .public)")
+    os_log("APNs device token received: %{public}d bytes, prefix=%{public}@",
+           log: pushLog, type: .info, deviceToken.count, prefix)
     print("[APNs] device token received: \(deviceToken.count) bytes, prefix=\(prefix)")
     // Belt-and-suspenders: hand the token to Firebase Messaging directly.
     // FIRMessaging's swizzle does this on the super forward, but on iOS 26
@@ -50,7 +52,8 @@ import os.log
     _ application: UIApplication,
     didFailToRegisterForRemoteNotificationsWithError error: Error
   ) {
-    pushLog.error("APNs registration failed: \(error.localizedDescription, privacy: .public)")
+    os_log("APNs registration failed: %{public}@",
+           log: pushLog, type: .error, error.localizedDescription)
     print("[APNs] registration failed: \(error.localizedDescription)")
     super.application(application, didFailToRegisterForRemoteNotificationsWithError: error)
   }
