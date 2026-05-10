@@ -1,5 +1,6 @@
+import 'dart:developer' as developer;
+
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -300,9 +301,12 @@ class _PriceAlertTile extends StatelessWidget {
                                 ),
                               ),
                               errorWidget: (context, url, error) {
-                                if (kDebugMode) {
-                                  debugPrint('[img] $url -> $error');
-                                }
+                                developer.log(
+                                  'image fetch failed: $url -> $error',
+                                  name: 'tekka.image',
+                                  error: error,
+                                  level: 1000,
+                                );
                                 return const Icon(
                                   Icons.broken_image,
                                   color: AppColors.gray400,

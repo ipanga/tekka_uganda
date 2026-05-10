@@ -1,4 +1,5 @@
-import 'package:flutter/foundation.dart';
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -131,7 +132,12 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                       fit: BoxFit.cover,
                       placeholder: (context, url) => _ImagePlaceholder(),
                       errorWidget: (context, url, error) {
-                        if (kDebugMode) debugPrint('[img] $url -> $error');
+                        developer.log(
+                          'image fetch failed: $url -> $error',
+                          name: 'tekka.image',
+                          error: error,
+                          level: 1000,
+                        );
                         return _ImagePlaceholder();
                       },
                     )
