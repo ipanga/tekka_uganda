@@ -141,14 +141,14 @@ export class EmailService {
         subject,
         html,
       });
-      this.logger.log(`Email sent to ${to}: "${subject}" (id: ${result.data?.id})`);
+      this.logger.log(
+        `Email sent to ${to}: "${subject}" (id: ${result.data?.id})`,
+      );
       return true;
     } catch (error: any) {
       const errorMessage =
         error?.message || error?.statusCode || JSON.stringify(error);
-      this.logger.error(
-        `Failed to send email to ${to}: ${errorMessage}`,
-      );
+      this.logger.error(`Failed to send email to ${to}: ${errorMessage}`);
       return false;
     }
   }

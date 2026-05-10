@@ -21,9 +21,7 @@ export class UploadCleanupService {
 
     try {
       const deleted = await this.uploadService.cleanupTempImages(24);
-      this.logger.log(
-        `Cleanup complete: ${deleted} orphaned image(s) deleted`,
-      );
+      this.logger.log(`Cleanup complete: ${deleted} orphaned image(s) deleted`);
     } catch (error) {
       this.logger.error(`Cleanup task failed: ${error.message}`);
     }

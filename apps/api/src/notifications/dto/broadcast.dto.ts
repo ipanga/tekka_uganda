@@ -30,18 +30,26 @@ export class BroadcastNotificationDto {
   @IsEnum(BroadcastAudience)
   audience: BroadcastAudience;
 
-  @ApiPropertyOptional({ enum: UserRole, description: 'Required when audience=ROLE' })
+  @ApiPropertyOptional({
+    enum: UserRole,
+    description: 'Required when audience=ROLE',
+  })
   @ValidateIf((o) => o.audience === BroadcastAudience.ROLE)
   @IsEnum(UserRole)
   role?: UserRole;
 
-  @ApiPropertyOptional({ type: [String], description: 'Required when audience=SPECIFIC' })
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Required when audience=SPECIFIC',
+  })
   @ValidateIf((o) => o.audience === BroadcastAudience.SPECIFIC)
   @ArrayNotEmpty()
   @IsString({ each: true })
   userIds?: string[];
 
-  @ApiPropertyOptional({ description: 'Listing ID to deep-link to (product-linked broadcast)' })
+  @ApiPropertyOptional({
+    description: 'Listing ID to deep-link to (product-linked broadcast)',
+  })
   @IsOptional()
   @IsString()
   @IsNotEmpty()

@@ -602,7 +602,10 @@ export class AdminService {
       include: {
         attribute: {
           include: {
-            values: { where: { isActive: true }, orderBy: { sortOrder: 'asc' } },
+            values: {
+              where: { isActive: true },
+              orderBy: { sortOrder: 'asc' },
+            },
           },
         },
       },

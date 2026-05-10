@@ -101,16 +101,16 @@ export class ThinkXCloudService {
       const result: ThinkXApiResponse = await response.json();
 
       if (result.response === 'OK' && result.data?.message_reference) {
-        this.logger.log(
-          `OTP sent successfully to ${phoneNumber}`,
-        );
+        this.logger.log(`OTP sent successfully to ${phoneNumber}`);
         return {
           success: true,
           messageReference: result.data.message_reference,
         };
       }
 
-      this.logger.error(`Delivery failed: ${result.message || 'Unknown error'}`);
+      this.logger.error(
+        `Delivery failed: ${result.message || 'Unknown error'}`,
+      );
       return {
         success: false,
         error: result.message || 'SMS delivery failed',
@@ -149,7 +149,10 @@ export class ThinkXCloudService {
         return { success: true, status: result.data.status };
       }
 
-      return { success: false, error: result.message || 'Failed to get status' };
+      return {
+        success: false,
+        error: result.message || 'Failed to get status',
+      };
     } catch (error: any) {
       return { success: false, error: error?.message || 'Request failed' };
     }
@@ -158,7 +161,11 @@ export class ThinkXCloudService {
   /**
    * Check account credit balance
    */
-  async getBalance(): Promise<{ success: boolean; balance?: string; error?: string }> {
+  async getBalance(): Promise<{
+    success: boolean;
+    balance?: string;
+    error?: string;
+  }> {
     if (!this._isConfigured) {
       return { success: false, error: 'ThinkX Cloud not configured' };
     }
@@ -180,7 +187,10 @@ export class ThinkXCloudService {
         return { success: true, balance: result.data.message_credit_balance };
       }
 
-      return { success: false, error: result.message || 'Failed to get balance' };
+      return {
+        success: false,
+        error: result.message || 'Failed to get balance',
+      };
     } catch (error: any) {
       return { success: false, error: error?.message || 'Request failed' };
     }
