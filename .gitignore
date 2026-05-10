@@ -41,6 +41,7 @@ coverage/
 .cache/
 .turbo/
 .eslintcache
+*.tsbuildinfo
 
 # Temporary files
 tmp/
