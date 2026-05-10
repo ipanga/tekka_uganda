@@ -639,6 +639,8 @@ class _MessageBubble extends StatelessWidget {
                   height: 150,
                   fit: BoxFit.cover,
                   errorWidget: (context, url, error) {
+                    // ignore: avoid_print
+                    print('[tekka.image] $url -> $error');
                     developer.log(
                       'image fetch failed: $url -> $error',
                       name: 'tekka.image',

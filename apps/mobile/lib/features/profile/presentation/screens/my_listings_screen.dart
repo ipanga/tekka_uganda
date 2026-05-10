@@ -292,6 +292,8 @@ class _ListingCard extends ConsumerWidget {
                               ),
                             ),
                             errorWidget: (context, url, error) {
+                              // ignore: avoid_print
+                              print('[tekka.image] $url -> $error');
                               developer.log(
                                 'image fetch failed: $url -> $error',
                                 name: 'tekka.image',
