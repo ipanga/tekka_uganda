@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -195,15 +196,19 @@ class PushNotificationService {
         for (var i = 0; i < 60; i++) {
           final apns = await messaging.getAPNSToken();
           if (apns != null) {
-            if (kDebugMode) {
-              debugPrint(
-                '[push] APNs token ready after ${i * 500}ms (len=${apns.length})',
-              );
-            }
+            developer.log(
+              'APNs token ready after ${i * 500}ms (len=${apns.length})',
+              name: 'tekka.push',
+              level: 800,
+            );
             break;
           }
-          if (kDebugMode && i % 4 == 0) {
-            debugPrint('[push] waiting for APNs token (poll ${i + 1}/60)');
+          if (i % 4 == 0) {
+            developer.log(
+              'waiting for APNs token (poll ${i + 1}/60)',
+              name: 'tekka.push',
+              level: 800,
+            );
           }
           await Future<void>.delayed(const Duration(milliseconds: 500));
         }
@@ -274,23 +279,36 @@ class PushNotificationService {
     final platform = Platform.isIOS ? 'ios' : 'android';
     try {
       await _userApiRepository.registerFcmToken(token, platform);
-      debugPrint(
+      developer.log(
         'FCM token registered (platform=$platform, len=${token.length})',
+        name: 'tekka.push',
+        level: 800,
       );
     } catch (e) {
-      debugPrint('FCM token registration failed: $e');
+      developer.log(
+        'FCM token registration failed',
+        name: 'tekka.push',
+        error: e,
+        level: 1000,
+      );
     }
   }
 
   void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('Foreground message: ${message.notification?.title}');
+    developer.log(
+      'foreground message: ${message.notification?.title}',
+      name: 'tekka.push',
+      level: 800,
+    );
     final notification = message.notification;
     if (notification == null) {
       // Data-only payload — nothing to render. Logged so we can tell the
       // difference between "no push arrived" and "push arrived but had no
       // notification block" while debugging iOS delivery.
-      debugPrint(
-        '[push] data-only message: id=${message.messageId} data=${message.data}',
+      developer.log(
+        'data-only message: id=${message.messageId} data=${message.data}',
+        name: 'tekka.push',
+        level: 800,
       );
       return;
     }

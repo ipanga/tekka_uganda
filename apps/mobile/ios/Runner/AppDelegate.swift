@@ -37,7 +37,7 @@ import os
   ) {
     let prefix = deviceToken.prefix(8).map { String(format: "%02x", $0) }.joined()
     os_log("APNs device token received: %{public}d bytes, prefix=%{public}@",
-           log: pushLog, type: .info, deviceToken.count, prefix)
+           log: pushLog, type: .default, deviceToken.count, prefix)
     print("[APNs] device token received: \(deviceToken.count) bytes, prefix=\(prefix)")
     // Belt-and-suspenders: hand the token to Firebase Messaging directly.
     // FIRMessaging's swizzle does this on the super forward, but on iOS 26
