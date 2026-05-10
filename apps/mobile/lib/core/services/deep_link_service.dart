@@ -52,7 +52,10 @@ class DeepLinkService {
     if (_lastHandledUri == uri) return;
     _lastHandledUri = uri;
     debugPrint('DeepLinkService: navigating to $route (from $uri)');
-    router.go(route);
+    // Use `push`, not `go` — deep-link targets are top-level routes outside the
+    // shell, and we want the AppBar back arrow to return the user to whatever
+    // was on screen (typically /home) before they tapped the link.
+    router.push(route);
   }
 
   Future<void> dispose() async {

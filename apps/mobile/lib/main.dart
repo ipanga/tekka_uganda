@@ -62,8 +62,15 @@ class TekkaApp extends ConsumerWidget {
     // Wire notification taps + incoming universal/app links to the router.
     // Safe to re-wire on rebuild — both are idempotent.
     // Push init itself fires from the auth flow once the user is signed in.
+    //
+    // Use `push`, not `go`: deep-link target screens (chat / listing / review
+    // detail / etc.) are top-level routes outside the shell. `go` REPLACES the
+    // stack so the user lands on a page with no back button; `push` adds the
+    // detail on top of whatever was there (typically /home), so the AppBar
+    // back arrow returns the user where they were before the tap. Same applies
+    // to Universal-Link arrivals routed by deep_link_service.
     ref.read(pushNotificationServiceProvider).onNotificationTap = (route, _) =>
-        router.go(route);
+        router.push(route);
     ref.read(deepLinkServiceProvider).initialize(router);
 
     // Prime the cache + offline queue and teach the queue how to replay
