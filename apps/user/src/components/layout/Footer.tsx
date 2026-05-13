@@ -30,6 +30,32 @@ const SOCIALS = [
     href: 'https://www.snapchat.com/add/tekkauganda',
     path: 'M12.166.001a6.484 6.484 0 0 0-5.5 2.965c-1.187 1.83-.748 4.81-.566 6.04-.135.075-.42.165-.78.075-.766-.21-1.561.255-1.876.945-.255.555-.066 1.245.45 1.78.51.555 1.275 1.005 2.16 1.305.124.39-.151 1.155-.451 1.785-.795 1.71-2.13 3.886-4.62 4.291-.39.06-.661.405-.616.795 0 .03.03.09.045.135.226.51.96.945 2.581 1.215.105.18.225.794.39 1.215.105.27.27.39.51.39.36 0 .886-.15 1.681-.27.435-.075 1.005-.135 1.516-.135.916 0 1.215.15 1.846.6 1.05.766 2.28 1.605 4.246 1.605.045 0 .12-.015.18-.015.06 0 .136.015.181.015 1.95 0 3.18-.84 4.245-1.605.63-.45.93-.6 1.846-.6.51 0 1.08.075 1.515.135.795.135 1.31.224 1.681.27.345 0 .525-.18.615-.435.165-.42.27-1.005.39-1.215 1.621-.27 2.355-.705 2.581-1.215.045-.075.06-.135.06-.21.045-.39-.225-.735-.615-.795-2.476-.405-3.826-2.58-4.62-4.291-.286-.63-.586-1.395-.451-1.785.9-.3 1.65-.75 2.16-1.305.526-.555.706-1.245.45-1.78a1.443 1.443 0 0 0-1.876-.945c-.345.09-.615 0-.78-.075.181-1.245.621-4.21-.555-6.025A6.434 6.434 0 0 0 12.166.001Z',
   },
+  {
+    name: 'TikTok',
+    href: 'https://www.tiktok.com/@tekkauganda',
+    path: 'M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.1Z',
+  },
+];
+
+const STORE_BADGES = [
+  {
+    name: 'App Store',
+    href: 'https://apps.apple.com/ug/app/tekka-uganda/id6759387476',
+    src: '/images/store-badges/app-store.svg',
+    alt: 'Download on the App Store',
+    aria: 'Download Tekka Uganda on the App Store',
+    width: 120,
+    height: 40,
+  },
+  {
+    name: 'Google Play',
+    href: 'https://play.google.com/store/apps/details?id=com.tootiye.tekka',
+    src: '/images/store-badges/google-play.png',
+    alt: 'Get it on Google Play',
+    aria: 'Get Tekka Uganda on Google Play',
+    width: 135,
+    height: 40,
+  },
 ];
 
 export function Footer() {
@@ -45,6 +71,37 @@ export function Footer() {
             <p className="mt-4 text-sm">
               Uganda&apos;s premier marketplace for pre-loved fashion. Buy and sell with confidence.
             </p>
+
+            {/* App store badges. Apple/Google brand-guidelines comply: official
+                badges, unmodified, with a "Download/Get" verb. */}
+            <div className="mt-6">
+              <p className="text-white font-semibold text-sm mb-3">Get the app</p>
+              <div className="flex flex-wrap items-center gap-3">
+                {STORE_BADGES.map((b) => (
+                  <a
+                    key={b.name}
+                    href={b.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={b.aria}
+                    className="inline-flex transition-opacity hover:opacity-80 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-gray-900 rounded"
+                  >
+                    {/* Plain <img> — these are tiny static brand assets;
+                        next/image's optimisation pipeline doesn't help here
+                        and would add a runtime fetch + LQIP. */}
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={b.src}
+                      alt={b.alt}
+                      width={b.width}
+                      height={b.height}
+                      loading="lazy"
+                      className="h-10 w-auto"
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Tekka */}
