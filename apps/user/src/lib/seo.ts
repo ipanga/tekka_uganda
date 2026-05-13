@@ -260,6 +260,7 @@ export function buildOrganizationJsonLd() {
       'https://x.com/tekkauganda',
       'https://www.threads.net/@tekkauganda',
       'https://www.tiktok.com/@tekkauganda',
+      'https://www.snapchat.com/add/tekkauganda',
     ],
     contactPoint: {
       '@type': 'ContactPoint',
