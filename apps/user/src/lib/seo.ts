@@ -19,6 +19,27 @@ export function absoluteUrl(path: string): string {
 }
 
 /**
+ * For og:image / twitter:image. WhatsApp/FB/X cards want a landscape image
+ * (1.91:1) and WhatsApp specifically rejects portrait images even when small.
+ * Raw listing uploads are usually portrait (e.g. 800×1000 phone photos).
+ * Insert a Cloudinary transformation that:
+ *   - c_fill,g_auto: center-fill, content-aware gravity (keeps the garment in frame)
+ *   - w_1200,h_630: canonical OG dimensions
+ *   - q_auto: Cloudinary picks optimal quality for the dimensions
+ *   - f_jpg: force JPEG so scrapers without webp/avif support work
+ *
+ * Non-Cloudinary URLs pass through unchanged.
+ */
+export function ogImage(url: string): string {
+  if (!url || !url.includes('res.cloudinary.com/') || !url.includes('/upload/')) {
+    return url;
+  }
+  // Avoid double-transform if already present.
+  if (/\/upload\/[^/]*c_fill/.test(url)) return url;
+  return url.replace('/upload/', '/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/');
+}
+
+/**
  * Build page metadata with sensible defaults and OG/Twitter tags.
  *
  * Next.js 16 validates `openGraph.type` against a preset list (website, article,
@@ -48,7 +69,9 @@ export function buildMetadata({
   // Let the root layout template append "| Tekka Uganda" — don't duplicate it here
   const ogTitle = title.includes('Tekka') ? title : `${title} | Tekka Uganda`;
 
-  const allImages = (images && images.length > 0 ? images : image ? [image] : []).filter(Boolean);
+  const allImages = (images && images.length > 0 ? images : image ? [image] : [])
+    .filter(Boolean)
+    .map(ogImage);
 
   // For product pages, openGraph is rendered as JSX by the page component
   // because Next.js's openGraph API rejects og:type=product. Setting it to
@@ -116,7 +139,7 @@ export function buildProductOgTags(opts: {
     ogTitle,
     description: opts.description,
     siteName: SITE_NAME,
-    images: opts.images.filter(Boolean),
+    images: opts.images.filter(Boolean).map(ogImage),
     price: String(opts.price),
     currency: opts.currency,
     availability: opts.availability,
