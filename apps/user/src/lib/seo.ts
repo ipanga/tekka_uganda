@@ -3,6 +3,7 @@ import { getListingHref } from './utils';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://tekka.ug';
 const SITE_NAME = 'Tekka Uganda';
+const TWITTER_HANDLE = '@tekkauganda';
 
 /**
  * Generate a listing URL from its data.
@@ -19,12 +20,19 @@ export function absoluteUrl(path: string): string {
 
 /**
  * Build page metadata with sensible defaults and OG/Twitter tags.
+ *
+ * Next.js 16 validates `openGraph.type` against a preset list (website, article,
+ * book, profile, music.*, video.*) and rejects others — including 'product'.
+ * For product pages, pass `type: 'product'` here to SUPPRESS Next.js's
+ * openGraph emission, then render the og:* and product:* tags from the page
+ * component as JSX <meta property="..."> (see buildProductOgTags below).
  */
 export function buildMetadata({
   title,
   description,
   path = '/',
   image,
+  images,
   type = 'website',
   noIndex = false,
 }: {
@@ -32,12 +40,39 @@ export function buildMetadata({
   description: string;
   path?: string;
   image?: string;
-  type?: 'website' | 'article';
+  images?: string[];
+  type?: 'website' | 'article' | 'product';
   noIndex?: boolean;
 }): Metadata {
   const url = absoluteUrl(path);
   // Let the root layout template append "| Tekka Uganda" — don't duplicate it here
   const ogTitle = title.includes('Tekka') ? title : `${title} | Tekka Uganda`;
+
+  const allImages = (images && images.length > 0 ? images : image ? [image] : []).filter(Boolean);
+
+  // For product pages, openGraph is rendered as JSX by the page component
+  // because Next.js's openGraph API rejects og:type=product. Setting it to
+  // null here opts out of inheriting the root layout's site-wide openGraph
+  // (Next.js's metadata-interface.d.ts: `openGraph?: null | OpenGraph`).
+  const openGraph: Metadata['openGraph'] =
+    type === 'product'
+      ? null
+      : {
+          title: ogTitle,
+          description,
+          url,
+          siteName: SITE_NAME,
+          type,
+          locale: 'en_UG',
+          ...(allImages.length && {
+            images: allImages.map((url) => ({
+              url,
+              width: 1200,
+              height: 630,
+              alt: title,
+            })),
+          }),
+        };
 
   return {
     title,
@@ -45,31 +80,47 @@ export function buildMetadata({
     alternates: {
       canonical: url,
     },
-    openGraph: {
-      title: ogTitle,
-      description,
-      url,
-      siteName: SITE_NAME,
-      type,
-      locale: 'en_UG',
-      ...(image && {
-        images: [
-          {
-            url: image,
-            width: 1200,
-            height: 630,
-            alt: title,
-          },
-        ],
-      }),
-    },
+    openGraph,
     twitter: {
-      card: image ? 'summary_large_image' : 'summary',
+      card: allImages.length ? 'summary_large_image' : 'summary',
+      site: TWITTER_HANDLE,
+      creator: TWITTER_HANDLE,
       title: ogTitle,
       description,
-      ...(image && { images: [image] }),
+      ...(allImages.length && { images: allImages }),
     },
     ...(noIndex && { robots: { index: false, follow: false } }),
+  };
+}
+
+/**
+ * Open Graph tags for a product page, rendered as JSX <meta property="...">.
+ * Used in place of Next.js's openGraph config because Next.js rejects
+ * og:type=product. Render at the top of the page component's returned tree
+ * so the tags land in <head>.
+ */
+export function buildProductOgTags(opts: {
+  title: string;
+  description: string;
+  path: string;
+  images: string[];
+  price: number | string;
+  currency: string;
+  availability: 'instock' | 'oos' | 'pending';
+  condition: 'new' | 'used' | 'refurbished';
+}) {
+  const url = absoluteUrl(opts.path);
+  const ogTitle = opts.title.includes('Tekka') ? opts.title : `${opts.title} | Tekka Uganda`;
+  return {
+    url,
+    ogTitle,
+    description: opts.description,
+    siteName: SITE_NAME,
+    images: opts.images.filter(Boolean),
+    price: String(opts.price),
+    currency: opts.currency,
+    availability: opts.availability,
+    condition: opts.condition,
   };
 }
 
@@ -180,7 +231,13 @@ export function buildOrganizationJsonLd() {
       '@type': 'Country',
       name: 'Uganda',
     },
-    sameAs: [],
+    sameAs: [
+      'https://www.facebook.com/tekkauganda',
+      'https://www.instagram.com/tekkauganda',
+      'https://x.com/tekkauganda',
+      'https://www.threads.net/@tekkauganda',
+      'https://www.tiktok.com/@tekkauganda',
+    ],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
