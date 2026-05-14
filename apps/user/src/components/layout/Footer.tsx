@@ -37,6 +37,10 @@ const SOCIALS = [
   },
 ];
 
+// Both badges from a matching-design SVG set with identical 3.375:1 aspect
+// ratios so they render at the same width when given the same height —
+// avoids the App-Store-vs-Google-Play visual imbalance you get with the
+// official assets straight from Apple and Google (different proportions).
 const STORE_BADGES = [
   {
     name: 'App Store',
@@ -44,13 +48,13 @@ const STORE_BADGES = [
     src: '/images/store-badges/app-store.svg',
     alt: 'Download on the App Store',
     aria: 'Download Tekka Uganda on the App Store',
-    width: 120,
+    width: 135,
     height: 40,
   },
   {
     name: 'Google Play',
     href: 'https://play.google.com/store/apps/details?id=com.tootiye.tekka',
-    src: '/images/store-badges/google-play.png',
+    src: '/images/store-badges/google-play.svg',
     alt: 'Get it on Google Play',
     aria: 'Get Tekka Uganda on Google Play',
     width: 135,
