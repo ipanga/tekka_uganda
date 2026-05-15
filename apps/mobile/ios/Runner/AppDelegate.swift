@@ -17,6 +17,13 @@ import os
 /// though all other init steps complete successfully.
 private let tapChannelName = "com.tootiyesolutions.tekka/notification_tap"
 
+/// Method channel used by IosBadgeService (Dart) to set the home-screen icon
+/// badge. The server already sets `aps.badge` on every push so the count is
+/// accurate at delivery, but iOS never decrements the badge on its own — the
+/// app has to call setBadgeCount() after mark-as-read / mark-all-as-read /
+/// delete / etc. Without that the icon stays stuck at the last-pushed value.
+private let badgeChannelName = "com.tootiyesolutions.tekka/badge"
+
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
   // The Swift `Logger` struct is iOS 14+; the project Podfile is on iOS 13,
@@ -30,6 +37,9 @@ private let tapChannelName = "com.tootiyesolutions.tekka/notification_tap"
   /// Method channel used to forward notification-tap userInfo to Dart.
   /// Created lazily once the FlutterEngine is available.
   private var tapChannel: FlutterMethodChannel?
+
+  /// Method channel for setting the home-screen icon badge from Dart.
+  private var badgeChannel: FlutterMethodChannel?
 
   override func application(
     _ application: UIApplication,
@@ -88,6 +98,53 @@ private let tapChannelName = "com.tootiyesolutions.tekka/notification_tap"
         name: tapChannelName,
         binaryMessenger: registrar.messenger()
       )
+    }
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "TekkaBadgeChannel") {
+      let channel = FlutterMethodChannel(
+        name: badgeChannelName,
+        binaryMessenger: registrar.messenger()
+      )
+      channel.setMethodCallHandler { [weak self] call, result in
+        self?.handleBadgeCall(call, result: result)
+      }
+      badgeChannel = channel
+    }
+  }
+
+  // MARK: - Badge channel
+
+  private func handleBadgeCall(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "setBadgeCount":
+      let args = call.arguments as? [String: Any]
+      let raw = args?["count"]
+      // Accept Int or NSNumber from Dart; clamp negatives to 0.
+      let count = max(0, (raw as? Int) ?? (raw as? NSNumber)?.intValue ?? 0)
+      setBadgeCount(count) { error in
+        if let error = error {
+          os_log(
+            "setBadgeCount(%d) failed: %{public}@",
+            log: self.pushLog, type: .error, count, error.localizedDescription)
+          result(FlutterError(code: "badge_set_failed", message: error.localizedDescription, details: nil))
+        } else {
+          result(nil)
+        }
+      }
+    default:
+      result(FlutterMethodNotImplemented)
+    }
+  }
+
+  private func setBadgeCount(_ count: Int, completion: @escaping (Error?) -> Void) {
+    // iOS 16+ replaces UIApplication.applicationIconBadgeNumber (still
+    // functional but deprecated) with an async UNUserNotificationCenter API.
+    if #available(iOS 16.0, *) {
+      UNUserNotificationCenter.current().setBadgeCount(count, withCompletionHandler: completion)
+    } else {
+      DispatchQueue.main.async {
+        UIApplication.shared.applicationIconBadgeNumber = count
+        completion(nil)
+      }
     }
   }
 
