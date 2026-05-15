@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 
@@ -71,7 +72,7 @@ export default function PrivacyPage() {
                   <ul className="list-disc pl-5 space-y-1">
                     <li>Authentication tokens (JWT) stored in local storage for session management</li>
                     <li>User preferences and settings</li>
-                    <li>See our <a href="/cookies" className="text-primary-500 hover:text-primary-600">Cookie Policy</a> for full details</li>
+                    <li>See our <Link href="/cookies" className="text-primary-500 hover:text-primary-600">Cookie Policy</Link> for full details</li>
                   </ul>
                 </div>
               </div>
@@ -168,7 +169,7 @@ export default function PrivacyPage() {
                     <li>After the grace period (or immediately if you opt out of it), your personal data is permanently removed</li>
                     <li>Some data may be retained for legal compliance</li>
                     <li>Anonymized data may be retained for analytics</li>
-                    <li>See <a href="/account-deletion" className="text-primary-500 hover:text-primary-600">Delete your account</a> for the full process</li>
+                    <li>See <Link href="/account-deletion" className="text-primary-500 hover:text-primary-600">Delete your account</Link> for the full process</li>
                   </ul>
                 </div>
               </div>
