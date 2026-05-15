@@ -948,7 +948,11 @@ export class ListingsService {
     }));
   }
 
-  async getMyListings(sellerId: string, status?: string) {
+  async getMyListings(
+    sellerId: string,
+    status?: string,
+    pagination?: { cursor?: string; limit?: number },
+  ) {
     const where: Prisma.ListingWhereInput = { sellerId };
 
     // Validate and apply status filter if provided
@@ -960,48 +964,131 @@ export class ListingsService {
       }
     }
 
-    const [listings, total] = await Promise.all([
-      this.prisma.listing.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
+    const include = {
+      categoryRef: {
         include: {
-          // Include category hierarchy for new category system
-          categoryRef: {
+          parent: {
             include: {
-              parent: {
-                include: {
-                  parent: true, // Include grandparent (main category)
-                },
-              },
+              parent: true, // Include grandparent (main category)
             },
           },
-          // Include location references
-          cityRef: true,
-          divisionRef: true,
         },
+      },
+      cityRef: true,
+      divisionRef: true,
+    } as const;
+
+    // Stable ordering: createdAt is the primary sort but it isn't unique, so
+    // ties get a deterministic id tie-breaker. Without this a cursor built
+    // from `createdAt` alone can skip or duplicate rows on page boundaries
+    // when multiple listings share the same `createdAt` (bulk-inserted seeds,
+    // or rapid submissions).
+    const orderBy: Prisma.ListingOrderByWithRelationInput[] = [
+      { createdAt: 'desc' },
+      { id: 'desc' },
+    ];
+
+    // Legacy path — older clients call this endpoint without paging params
+    // and expect the whole list back. Keep that contract intact.
+    const isPaginating = !!pagination?.cursor || !!pagination?.limit;
+    if (!isPaginating) {
+      const [listings, total] = await Promise.all([
+        this.prisma.listing.findMany({ where, orderBy, include }),
+        this.prisma.listing.count({ where }),
+      ]);
+      return {
+        data: listings.map(this.transformMyListing),
+        total,
+        page: 1,
+        limit: total,
+        totalPages: 1,
+        hasMore: false,
+        nextCursor: null,
+      };
+    }
+
+    const limit = pagination.limit ?? 20;
+    const cursor = pagination.cursor
+      ? this.decodeMyListingsCursor(pagination.cursor)
+      : null;
+
+    // Cursor predicate: tuple-after (createdAt, id) DESC ordering means the
+    // next page is rows where `createdAt < cursor.createdAt`, OR
+    // `createdAt == cursor.createdAt AND id < cursor.id`. Composed under the
+    // existing seller+status filters with AND.
+    const cursorClause: Prisma.ListingWhereInput | null = cursor
+      ? {
+          OR: [
+            { createdAt: { lt: cursor.createdAt } },
+            { createdAt: cursor.createdAt, id: { lt: cursor.id } },
+          ],
+        }
+      : null;
+    const pagedWhere: Prisma.ListingWhereInput = cursorClause
+      ? { AND: [where, cursorClause] }
+      : where;
+
+    // Fetch one extra row to detect hasMore without a second count query.
+    const [rows, total] = await Promise.all([
+      this.prisma.listing.findMany({
+        where: pagedWhere,
+        orderBy,
+        include,
+        take: limit + 1,
       }),
       this.prisma.listing.count({ where }),
     ]);
 
-    // Transform listings to include properly named category/location data
-    const transformedListings = listings.map((listing) => {
-      const { categoryRef, cityRef, divisionRef, ...rest } = listing as any;
-      return {
-        ...rest,
-        // Map Prisma relations to frontend expected names
-        categoryData: categoryRef,
-        city: cityRef,
-        division: divisionRef,
-      };
-    });
+    const hasMore = rows.length > limit;
+    const pageRows = hasMore ? rows.slice(0, limit) : rows;
+    const last = pageRows[pageRows.length - 1];
+    const nextCursor =
+      hasMore && last
+        ? this.encodeMyListingsCursor(last.createdAt, last.id)
+        : null;
 
     return {
-      data: transformedListings,
+      data: pageRows.map(this.transformMyListing),
       total,
-      page: 1,
-      limit: total,
+      page: 1, // Page-number paging not supported in cursor mode.
+      limit,
       totalPages: 1,
+      hasMore,
+      nextCursor,
     };
+  }
+
+  private transformMyListing = (listing: any) => {
+    const { categoryRef, cityRef, divisionRef, ...rest } = listing;
+    return {
+      ...rest,
+      categoryData: categoryRef,
+      city: cityRef,
+      division: divisionRef,
+    };
+  };
+
+  // Cursor = base64("<iso-createdAt>|<id>"). Pipe separator instead of colon
+  // because cuid ids can contain neither; keeps decoding unambiguous.
+  private encodeMyListingsCursor(createdAt: Date, id: string): string {
+    return Buffer.from(`${createdAt.toISOString()}|${id}`, 'utf8').toString(
+      'base64url',
+    );
+  }
+
+  private decodeMyListingsCursor(
+    raw: string,
+  ): { createdAt: Date; id: string } | null {
+    try {
+      const decoded = Buffer.from(raw, 'base64url').toString('utf8');
+      const [iso, id] = decoded.split('|');
+      if (!iso || !id) return null;
+      const createdAt = new Date(iso);
+      if (Number.isNaN(createdAt.getTime())) return null;
+      return { createdAt, id };
+    } catch {
+      return null;
+    }
   }
 
   // Saved items

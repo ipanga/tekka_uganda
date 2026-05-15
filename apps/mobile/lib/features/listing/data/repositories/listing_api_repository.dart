@@ -1,6 +1,25 @@
 import '../../../../core/services/api_client.dart';
 import '../../domain/entities/listing.dart';
 
+/// One page of my-listings + the cursor to request the next page.
+/// `nextCursor` is null when there are no more rows. `total` is the count
+/// of all matching listings on the server (server-side filtered, useful
+/// for tab title counts) — independent of how many items have been
+/// pulled into [items] so far.
+class MyListingsPage {
+  final List<Listing> items;
+  final String? nextCursor;
+  final bool hasMore;
+  final int total;
+
+  const MyListingsPage({
+    required this.items,
+    required this.nextCursor,
+    required this.hasMore,
+    required this.total,
+  });
+}
+
 /// Paginated response from API
 class PaginatedListings {
   final List<Listing> listings;
@@ -94,7 +113,10 @@ class ListingApiRepository {
     return PaginatedListings.fromJson(response);
   }
 
-  /// Get current user's listings
+  /// Get current user's listings. Without paging args this issues the
+  /// legacy "give me everything" request — kept for any remaining caller
+  /// that wants the whole list (e.g. background sync). For UI use
+  /// [getMyListingsPage] instead.
   Future<List<Listing>> getMyListings({ListingStatus? status}) async {
     final queryParams = <String, dynamic>{};
     if (status != null) queryParams['status'] = status.apiValue;
@@ -103,11 +125,40 @@ class ListingApiRepository {
       '/listings/my',
       queryParameters: queryParams.isNotEmpty ? queryParams : null,
     );
-    // Backend returns { data: [...], total, ... }
     final data = response['data'] as List<dynamic>? ?? [];
     return data
         .map((e) => Listing.fromJson(e as Map<String, dynamic>))
         .toList();
+  }
+
+  /// Cursor-paginated fetch for the My Listings screen. Server returns
+  /// up to [limit] rows ordered by createdAt DESC with an id tie-breaker;
+  /// when more rows exist [MyListingsPage.nextCursor] is non-null and can
+  /// be passed back here to fetch the next page.
+  Future<MyListingsPage> getMyListingsPage({
+    ListingStatus? status,
+    int limit = 20,
+    String? cursor,
+  }) async {
+    final queryParams = <String, dynamic>{
+      'limit': limit.toString(),
+    };
+    if (status != null) queryParams['status'] = status.apiValue;
+    if (cursor != null && cursor.isNotEmpty) queryParams['cursor'] = cursor;
+
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/listings/my',
+      queryParameters: queryParams,
+    );
+    final data = response['data'] as List<dynamic>? ?? const [];
+    return MyListingsPage(
+      items: data
+          .map((e) => Listing.fromJson(e as Map<String, dynamic>))
+          .toList(growable: false),
+      nextCursor: response['nextCursor'] as String?,
+      hasMore: response['hasMore'] as bool? ?? false,
+      total: response['total'] as int? ?? data.length,
+    );
   }
 
   /// Get saved/favorited listings
