@@ -255,10 +255,28 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                           const SizedBox(height: AppSpacing.space3),
                         ],
 
-                        // Price
-                        Text(
-                          listing.formattedPrice,
-                          style: AppTypography.price,
+                        // Price (+ compare-at + discount badge when applicable)
+                        Wrap(
+                          spacing: AppSpacing.space2,
+                          runSpacing: AppSpacing.space1,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              listing.formattedPrice,
+                              style: AppTypography.price,
+                            ),
+                            if (listing.formattedOriginalPrice != null) ...[
+                              Text(
+                                listing.formattedOriginalPrice!,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.gray500,
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationColor: AppColors.gray500,
+                                ),
+                              ),
+                              _DiscountBadge(percent: listing.priceDropPercent),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: AppSpacing.space2),
 
@@ -1344,6 +1362,36 @@ class _DetailRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Light-green percent-off pill rendered next to the price when the
+/// listing's originalPrice is higher than the current price. Mirrors the
+/// web detail-page badge (bg-green-50 text-green-700).
+class _DiscountBadge extends StatelessWidget {
+  final int percent;
+
+  const _DiscountBadge({required this.percent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.space2,
+        vertical: AppSpacing.space1,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.successContainer,
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        '$percent% off',
+        style: AppTypography.labelSmall.copyWith(
+          color: AppColors.success,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }
