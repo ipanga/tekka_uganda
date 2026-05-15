@@ -257,6 +257,17 @@ class NotificationsListNotifier extends StateNotifier<NotificationsListState> {
     state = state.copyWith(items: updated);
   }
 
+  /// Flip every item in the current page to read so the list updates instantly
+  /// when the user taps "Mark all as read". Without this the screen has to
+  /// wait on a refresh() round-trip and items briefly stay shown as unread.
+  void markAllReadLocally() {
+    if (state.items.isEmpty) return;
+    final updated = state.items
+        .map((n) => n.isRead ? n : n.copyWith(isRead: true))
+        .toList(growable: false);
+    state = state.copyWith(items: updated);
+  }
+
   /// Remove a deleted notification from local state.
   void removeLocally(String notificationId) {
     state = state.copyWith(
