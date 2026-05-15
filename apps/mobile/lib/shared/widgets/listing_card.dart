@@ -266,7 +266,13 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                         const SizedBox(width: 2),
                         Expanded(
                           child: Text(
-                            listing.displayLocation!,
+                            // Drop redundant trailing segments
+                            // ("Kampala Central, Kampala" -> "Kampala
+                            // Central"). The most-specific segment is
+                            // first and is what matters in a list view;
+                            // the wider context is restored on the
+                            // detail screen.
+                            listing.displayLocation!.split(',').first.trim(),
                             style: AppTypography.metadata,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,

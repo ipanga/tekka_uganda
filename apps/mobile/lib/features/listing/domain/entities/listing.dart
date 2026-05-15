@@ -556,10 +556,13 @@ class Listing {
   /// Get formatted price
   String get formattedPrice => 'UGX ${_formatNumber(price)}';
 
-  /// Get formatted original price (compare-at). Null when no drop applies —
-  /// callers should gate on [hasPriceDrop] before rendering.
+  /// Compact original-price label intended to render next to
+  /// [formattedPrice] (e.g. on the listing card). The `UGX ` prefix is
+  /// dropped because it would duplicate the current-price prefix and
+  /// overflow narrow grid cells. Null when no drop applies — callers
+  /// should gate on [hasPriceDrop] before rendering.
   String? get formattedOriginalPrice =>
-      hasPriceDrop ? 'UGX ${_formatNumber(originalPrice!)}' : null;
+      hasPriceDrop ? _formatNumber(originalPrice!) : null;
 
   /// Check if price dropped
   bool get hasPriceDrop => originalPrice != null && originalPrice! > price;
