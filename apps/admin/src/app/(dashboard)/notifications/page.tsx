@@ -507,12 +507,20 @@ function parseListingIdentifier(raw: string): string | null {
     try {
       const url = new URL(withScheme);
       const segments = url.pathname.split('/').filter(Boolean);
-      // /listing/<idOrSlug> or /listing/<cat>/<slug> — last segment is the
-      // canonical id/slug per the user-dashboard route handler at
-      // apps/user/src/app/listing/[...params]/page.tsx.
+      // Legacy: /listing/<idOrSlug> or /listing/<cat>/<slug>.
       const listingIdx = segments.indexOf('listing');
       if (listingIdx >= 0 && segments.length > listingIdx + 1) {
         return segments[segments.length - 1];
+      }
+      // Canonical (post-2026-05): /<categorySlug>/<productSlug>. Heuristic —
+      // exactly 2 segments, last segment matches the slug pattern (3+
+      // hyphenated alphanumeric tokens). Avoids false positives like
+      // /about/team or /help/contact.
+      if (
+        segments.length === 2 &&
+        /^[a-z0-9]+(?:-[a-z0-9]+){2,}$/.test(segments[1])
+      ) {
+        return segments[1];
       }
     } catch {
       // Not a parseable URL — fall through.

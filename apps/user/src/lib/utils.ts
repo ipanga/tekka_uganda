@@ -436,8 +436,9 @@ export function getErrorMessage(error: unknown): string {
 
 /**
  * Generate the frontend URL path for a listing.
- * Uses SEO-friendly format: /listing/{categorySlug}/{listingSlug}
- * Falls back to /listing/{id} if slug data is unavailable.
+ * Canonical format: /{categorySlug}/{listingSlug}
+ * Falls back to /listing/{id} if slug data is unavailable — the legacy route
+ * resolves it server-side and 308-redirects to the canonical URL.
  */
 export function getListingHref(listing: {
   id: string;
@@ -449,7 +450,7 @@ export function getListingHref(listing: {
   const cat = listing.categoryData;
   const categorySlug = cat?.slug || cat?.parent?.slug || cat?.parent?.parent?.slug || 'item';
 
-  return `/listing/${categorySlug}/${listing.slug}`;
+  return `/${categorySlug}/${listing.slug}`;
 }
 
 export function buildQueryString(params: Record<string, string | number | boolean | undefined>): string {
