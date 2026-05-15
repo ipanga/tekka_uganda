@@ -9,10 +9,12 @@ import 'core/providers/cache_providers.dart';
 import 'core/providers/connectivity_provider.dart';
 import 'core/providers/deep_link_provider.dart';
 import 'core/providers/push_notification_provider.dart';
+import 'core/services/ios_badge_service.dart';
 import 'core/services/offline_queue/queue_executor.dart';
 import 'core/services/push_notification_service.dart' show primeInitialMessage;
 import 'core/theme/theme.dart';
 import 'features/auth/application/auth_provider.dart';
+import 'features/notifications/application/notification_provider.dart';
 import 'router/app_router.dart';
 import 'shared/services/tab_data_refresh.dart';
 import 'shared/widgets/app_lock_wrapper.dart';
@@ -93,6 +95,17 @@ class TekkaApp extends ConsumerWidget {
         ref.read(offlineQueueProvider).flush();
         refreshTabDataAfterResume(ref);
       });
+    });
+
+    // Keep the iOS home-screen icon badge in sync with the unread-notification
+    // count. The server sets `aps.badge` on every push so the count is correct
+    // at delivery, but iOS never decrements it on its own — without this
+    // listener the badge stays stuck after the user reads notifications in-app.
+    // The polling stream + post-action invalidations in NotificationActions
+    // feed every change through here. Logout drops user to null which emits 0
+    // and clears the badge.
+    ref.listen<AsyncValue<int>>(unreadNotificationsStreamProvider, (_, next) {
+      next.whenData(IosBadgeService.setBadgeCount);
     });
 
     // Initialize push when the user becomes non-null. Two paths:
