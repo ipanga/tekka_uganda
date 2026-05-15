@@ -178,6 +178,8 @@ export interface ListingQueryParams {
   status?: ListingStatus;
   page?: number;
   limit?: number;
+  /** Cursor returned by a previous paginated `getMyListings` response. */
+  cursor?: string;
   sortBy?: 'createdAt' | 'price' | 'viewCount';
   sortOrder?: 'asc' | 'desc';
 }
@@ -492,6 +494,10 @@ export interface PaginatedResponse<T> {
   page: number;
   limit: number;
   totalPages: number;
+  /** Present on cursor-paginated endpoints (e.g. `/listings/my`). */
+  hasMore?: boolean;
+  /** Opaque cursor for the next page; null/undefined when no more rows. */
+  nextCursor?: string | null;
 }
 
 export interface ApiResponse<T> {

@@ -9,11 +9,68 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/providers/repository_providers.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../router/app_router.dart';
-import '../../../auth/application/auth_provider.dart';
 import '../../../listing/application/listing_provider.dart';
 import '../../../listing/domain/entities/listing.dart';
 
-/// My listings screen - shows all user's listings with filters
+/// One tab on the My Listings screen — server-side status filter, a
+/// dedicated paginated notifier, and (via _ListingsTab) its own scroll
+/// controller so the position is preserved across tab switches.
+class _TabSpec {
+  final String label;
+  final ListingStatus? status; // null == "All"
+  final String emptyMessage;
+  final String? emptyAction;
+  final bool showDraftActions;
+
+  const _TabSpec({
+    required this.label,
+    required this.status,
+    required this.emptyMessage,
+    this.emptyAction,
+    this.showDraftActions = false,
+  });
+}
+
+const _tabs = <_TabSpec>[
+  _TabSpec(
+    label: 'All',
+    status: null,
+    emptyMessage: 'No listings yet',
+    emptyAction: 'Create your first listing',
+  ),
+  _TabSpec(
+    label: 'Active',
+    status: ListingStatus.active,
+    emptyMessage: 'No active listings',
+    emptyAction: 'Create a new listing',
+  ),
+  _TabSpec(
+    label: 'Drafts',
+    status: ListingStatus.draft,
+    emptyMessage: 'No drafts',
+    emptyAction: 'Create a listing',
+    showDraftActions: true,
+  ),
+  _TabSpec(
+    label: 'Under Review',
+    status: ListingStatus.pending,
+    emptyMessage: 'No listings under review',
+  ),
+  _TabSpec(
+    label: 'Rejected',
+    status: ListingStatus.rejected,
+    emptyMessage: 'No rejected listings',
+  ),
+  _TabSpec(
+    label: 'Sold',
+    status: ListingStatus.sold,
+    emptyMessage: 'No sold listings yet',
+  ),
+];
+
+/// My listings screen — one paginated tab per status filter. Each tab
+/// owns its scroll position and pagination state via
+/// [myListingsListProvider].
 class MyListingsScreen extends ConsumerStatefulWidget {
   const MyListingsScreen({super.key});
 
@@ -23,12 +80,12 @@ class MyListingsScreen extends ConsumerStatefulWidget {
 
 class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
     with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+  late final TabController _tabController;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: _tabs.length, vsync: this);
   }
 
   @override
@@ -39,136 +96,21 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final user = ref.watch(currentUserProvider);
-    final userId = user?.uid ?? '';
-    final listingsAsync = ref.watch(userListingsProvider(userId));
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('My Listings'),
-        bottom:
-            listingsAsync.whenOrNull(
-              data: (listings) {
-                final activeCt = listings
-                    .where((l) => l.status == ListingStatus.active)
-                    .length;
-                final draftCt = listings
-                    .where((l) => l.status == ListingStatus.draft)
-                    .length;
-                final reviewCt = listings
-                    .where(
-                      (l) =>
-                          l.status == ListingStatus.pending ||
-                          l.status == ListingStatus.rejected,
-                    )
-                    .length;
-                final soldCt = listings
-                    .where((l) => l.status == ListingStatus.sold)
-                    .length;
-
-                return TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  tabs: [
-                    Tab(text: 'All (${listings.length})'),
-                    Tab(text: 'Active ($activeCt)'),
-                    Tab(text: 'Drafts ($draftCt)'),
-                    Tab(text: 'Under Review ($reviewCt)'),
-                    Tab(text: 'Sold ($soldCt)'),
-                  ],
-                );
-              },
-            ) ??
-            TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabs: const [
-                Tab(text: 'All'),
-                Tab(text: 'Active'),
-                Tab(text: 'Drafts'),
-                Tab(text: 'Under Review'),
-                Tab(text: 'Sold'),
-              ],
-            ),
-      ),
-      body: listingsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.error_outline, size: 48, color: AppColors.error),
-              const SizedBox(height: AppSpacing.space4),
-              Text('Failed to load listings', style: AppTypography.bodyLarge),
-              const SizedBox(height: AppSpacing.space2),
-              TextButton(
-                onPressed: () => ref.invalidate(userListingsProvider(userId)),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
+        bottom: TabBar(
+          controller: _tabController,
+          isScrollable: true,
+          tabs: _tabs.map((t) => _CountedTab(spec: t)).toList(growable: false),
         ),
-        data: (listings) {
-          final activeListings = listings
-              .where((l) => l.status == ListingStatus.active)
-              .toList();
-          final draftListings = listings
-              .where((l) => l.status == ListingStatus.draft)
-              .toList();
-          final underReviewListings = listings
-              .where(
-                (l) =>
-                    l.status == ListingStatus.pending ||
-                    l.status == ListingStatus.rejected,
-              )
-              .toList();
-          final soldListings = listings
-              .where((l) => l.status == ListingStatus.sold)
-              .toList();
-
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              _ListingsGrid(
-                listings: listings,
-                emptyMessage: 'No listings yet',
-                emptyAction: 'Create your first listing',
-                onEmptyAction: () => context.push(AppRoutes.createListing),
-                onRefresh: () => ref.invalidate(userListingsProvider(userId)),
-              ),
-              _ListingsGrid(
-                listings: activeListings,
-                emptyMessage: 'No active listings',
-                emptyAction: 'Create a new listing',
-                onEmptyAction: () => context.push(AppRoutes.createListing),
-                onRefresh: () => ref.invalidate(userListingsProvider(userId)),
-              ),
-              _ListingsGrid(
-                listings: draftListings,
-                emptyMessage: 'No drafts',
-                emptyAction: 'Create a listing',
-                onEmptyAction: () => context.push(AppRoutes.createListing),
-                onRefresh: () => ref.invalidate(userListingsProvider(userId)),
-                showDraftActions: true,
-              ),
-              _ListingsGrid(
-                listings: underReviewListings,
-                emptyMessage: 'No listings under review',
-                emptyAction: null,
-                onEmptyAction: null,
-                onRefresh: () => ref.invalidate(userListingsProvider(userId)),
-              ),
-              _ListingsGrid(
-                listings: soldListings,
-                emptyMessage: 'No sold listings yet',
-                emptyAction: null,
-                onEmptyAction: null,
-                onRefresh: () => ref.invalidate(userListingsProvider(userId)),
-              ),
-            ],
-          );
-        },
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: _tabs
+            .map((t) => _ListingsTab(key: ValueKey(t.label), spec: t))
+            .toList(growable: false),
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push(AppRoutes.createListing),
@@ -179,71 +121,129 @@ class _MyListingsScreenState extends ConsumerState<MyListingsScreen>
   }
 }
 
-class _ListingsGrid extends StatelessWidget {
-  const _ListingsGrid({
-    required this.listings,
-    required this.emptyMessage,
-    this.emptyAction,
-    this.onEmptyAction,
-    this.onRefresh,
-    this.showDraftActions = false,
-  });
+/// Tab title that subscribes to the server-reported total via .select so the
+/// label only rebuilds when the count actually changes.
+class _CountedTab extends ConsumerWidget {
+  const _CountedTab({required this.spec});
 
-  final List<Listing> listings;
-  final String emptyMessage;
-  final String? emptyAction;
-  final VoidCallback? onEmptyAction;
-  final VoidCallback? onRefresh;
-  final bool showDraftActions;
+  final _TabSpec spec;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final total = ref.watch(
+      myListingsListProvider(spec.status).select((s) => s.total),
+    );
+    final isInitial = ref.watch(
+      myListingsListProvider(spec.status).select((s) => s.isInitialLoading),
+    );
+    final suffix = (!isInitial && total > 0) ? ' ($total)' : '';
+    return Tab(text: '${spec.label}$suffix');
+  }
+}
+
+class _ListingsTab extends ConsumerStatefulWidget {
+  const _ListingsTab({super.key, required this.spec});
+
+  final _TabSpec spec;
+
+  @override
+  ConsumerState<_ListingsTab> createState() => _ListingsTabState();
+}
+
+class _ListingsTabState extends ConsumerState<_ListingsTab>
+    with AutomaticKeepAliveClientMixin {
+  final _scrollController = ScrollController();
+
+  /// Fire loadMore when the user is within this many pixels of the end of
+  /// the list. Larger threshold = earlier prefetch = smoother feel.
+  static const double _loadMoreThresholdPx = 600;
+
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final position = _scrollController.position;
+    if (position.maxScrollExtent - position.pixels <= _loadMoreThresholdPx) {
+      ref
+          .read(myListingsListProvider(widget.spec.status).notifier)
+          .loadMore();
+    }
+  }
+
+  Future<void> _refresh() {
+    return ref
+        .read(myListingsListProvider(widget.spec.status).notifier)
+        .refresh();
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (listings.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                showDraftActions
-                    ? Icons.edit_note_outlined
-                    : Icons.inventory_2_outlined,
-                size: 64,
-                color: AppColors.onSurfaceVariant,
-              ),
-              const SizedBox(height: AppSpacing.space4),
-              Text(emptyMessage, style: AppTypography.titleMedium),
-              if (emptyAction != null && onEmptyAction != null) ...[
-                const SizedBox(height: AppSpacing.space4),
-                ElevatedButton(
-                  onPressed: onEmptyAction,
-                  child: Text(emptyAction!),
-                ),
-              ],
-            ],
-          ),
+    super.build(context); // Required by AutomaticKeepAliveClientMixin.
+    final state = ref.watch(myListingsListProvider(widget.spec.status));
+
+    if (state.isInitialLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (state.error != null && state.items.isEmpty) {
+      return _ErrorView(error: state.error!, onRetry: _refresh);
+    }
+
+    if (state.items.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _refresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            const SizedBox(height: 64),
+            _EmptyView(spec: widget.spec),
+          ],
         ),
       );
     }
 
+    // hasMore drives a trailing "loading more" cell. Showing it as a
+    // grid-spanning row would require SliverGrid + SliverList; we use the
+    // simpler pattern of an extra item at the end of the grid and let it
+    // render as a centered tile.
+    final showTrailingLoader = state.hasMore || state.isLoadingMore;
+    final itemCount = state.items.length + (showTrailingLoader ? 1 : 0);
+
     return RefreshIndicator(
-      onRefresh: () async {
-        onRefresh?.call();
-      },
+      onRefresh: _refresh,
       child: GridView.builder(
+        controller: _scrollController,
         padding: AppSpacing.screenPadding,
+        physics: const AlwaysScrollableScrollPhysics(),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
           childAspectRatio: 0.65,
           crossAxisSpacing: AppSpacing.space3,
           mainAxisSpacing: AppSpacing.space3,
         ),
-        itemCount: listings.length,
+        itemCount: itemCount,
         itemBuilder: (context, index) {
+          if (index >= state.items.length) {
+            return const _GridLoadingTile();
+          }
           return _ListingCard(
-            listing: listings[index],
-            showDraftActions: showDraftActions,
+            listing: state.items[index],
+            status: widget.spec.status,
+            showDraftActions: widget.spec.showDraftActions,
           );
         },
       ),
@@ -251,10 +251,111 @@ class _ListingsGrid extends StatelessWidget {
   }
 }
 
+class _GridLoadingTile extends StatelessWidget {
+  const _GridLoadingTile();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyView extends StatelessWidget {
+  const _EmptyView({required this.spec});
+
+  final _TabSpec spec;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              spec.showDraftActions
+                  ? Icons.edit_note_outlined
+                  : Icons.inventory_2_outlined,
+              size: 64,
+              color: AppColors.onSurfaceVariant,
+            ),
+            const SizedBox(height: AppSpacing.space4),
+            Text(spec.emptyMessage, style: AppTypography.titleMedium),
+            if (spec.emptyAction != null) ...[
+              const SizedBox(height: AppSpacing.space4),
+              ElevatedButton(
+                onPressed: () =>
+                    GoRouter.of(context).push(AppRoutes.createListing),
+                child: Text(spec.emptyAction!),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.error, required this.onRetry});
+
+  final String error;
+  final Future<void> Function() onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 48, color: AppColors.error),
+            const SizedBox(height: AppSpacing.space4),
+            Text('Failed to load listings', style: AppTypography.bodyLarge),
+            const SizedBox(height: AppSpacing.space2),
+            Text(
+              error,
+              style: AppTypography.bodySmall.copyWith(
+                color: AppColors.onSurfaceVariant,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: AppSpacing.space4),
+            TextButton(
+              onPressed: onRetry,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _ListingCard extends ConsumerWidget {
-  const _ListingCard({required this.listing, this.showDraftActions = false});
+  const _ListingCard({
+    required this.listing,
+    required this.status,
+    this.showDraftActions = false,
+  });
 
   final Listing listing;
+  // The status filter of the tab this card lives in. Used to invalidate the
+  // *right* tab when a draft is published and disappears from this tab.
+  final ListingStatus? status;
   final bool showDraftActions;
 
   @override
@@ -419,8 +520,7 @@ class _ListingCard extends ConsumerWidget {
                           child: SizedBox(
                             height: 32,
                             child: FilledButton(
-                              onPressed: () =>
-                                  _publishDraft(context, ref, listing),
+                              onPressed: () => _publishDraft(context, ref),
                               style: FilledButton.styleFrom(
                                 padding: EdgeInsets.zero,
                                 textStyle: AppTypography.labelSmall,
@@ -441,11 +541,7 @@ class _ListingCard extends ConsumerWidget {
     );
   }
 
-  Future<void> _publishDraft(
-    BuildContext context,
-    WidgetRef ref,
-    Listing listing,
-  ) async {
+  Future<void> _publishDraft(BuildContext context, WidgetRef ref) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -466,30 +562,42 @@ class _ListingCard extends ConsumerWidget {
       ),
     );
 
-    if (confirm == true && context.mounted) {
-      try {
-        final repository = ref.read(listingApiRepositoryProvider);
-        await repository.publishDraft(listing.id);
+    if (confirm != true || !context.mounted) return;
 
-        ref.invalidate(listingProvider(listing.id));
-        final user = ref.read(currentUserProvider);
-        ref.invalidate(userListingsProvider(user?.uid ?? ''));
+    try {
+      final repository = ref.read(listingApiRepositoryProvider);
+      await repository.publishDraft(listing.id);
 
-        if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Listing submitted for review!')),
-          );
-        }
-      } catch (e) {
-        if (context.mounted) {
-          final errorStr = e is AppException ? e.message : e.toString();
-          final errorMsg = errorStr.contains('must have')
-              ? 'Please complete all required fields before publishing.'
-              : errorStr;
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(errorMsg)));
-        }
+      // Refresh the detail-screen cache so the next nav reflects the new
+      // status.
+      ref.invalidate(listingProvider(listing.id));
+
+      // Drop the now-pending listing from the Drafts tab instantly. The
+      // Under Review + All tabs refetch in the background so they pick up
+      // the new pending row in correct order. The other tabs (Active /
+      // Rejected / Sold) are unaffected.
+      ref
+          .read(myListingsListProvider(ListingStatus.draft).notifier)
+          .removeLocally(listing.id);
+      ref
+          .read(myListingsListProvider(ListingStatus.pending).notifier)
+          .refresh();
+      ref.read(myListingsListProvider(null).notifier).refresh();
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Listing submitted for review!')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        final errorStr = e is AppException ? e.message : e.toString();
+        final errorMsg = errorStr.contains('must have')
+            ? 'Please complete all required fields before publishing.'
+            : errorStr;
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMsg)));
       }
     }
   }
