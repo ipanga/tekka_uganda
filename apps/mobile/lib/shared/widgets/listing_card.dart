@@ -179,13 +179,16 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                     ),
                   ),
 
-                  // Status badge (only for non-active)
-                  if (listing.status != ListingStatus.active)
-                    Positioned(
-                      top: 8,
-                      left: 8,
-                      child: _StatusBadge(status: listing.status),
-                    ),
+                  // Top-left chip: status badge for non-active listings
+                  // (SOLD / DRAFT / etc. — higher information value), else
+                  // the condition pill (NEW/USED), mirroring the web card.
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    child: listing.status != ListingStatus.active
+                        ? _StatusBadge(status: listing.status)
+                        : _ConditionPill(condition: listing.condition),
+                  ),
 
                   // Featured badge
                   if (listing.isFeatured)
@@ -229,7 +232,28 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 4),
-                  Text(listing.formattedPrice, style: AppTypography.price),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(listing.formattedPrice, style: AppTypography.price),
+                      if (listing.formattedOriginalPrice != null) ...[
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            listing.formattedOriginalPrice!,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.gray500,
+                              decoration: TextDecoration.lineThrough,
+                              decorationColor: AppColors.gray500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                   if (listing.displayLocation != null) ...[
                     const SizedBox(height: 4),
                     Row(
@@ -328,6 +352,34 @@ class _StatusBadge extends StatelessWidget {
         label,
         style: AppTypography.labelSmall.copyWith(
           color: textColor,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+/// Top-left pill that mirrors the website's condition chip. Rendered when
+/// the listing is ACTIVE; non-active listings show a [_StatusBadge] in the
+/// same slot. White, slightly translucent so the product photo shows
+/// through the edge — matches the bg-white/90 styling on the web card.
+class _ConditionPill extends StatelessWidget {
+  final ItemCondition condition;
+
+  const _ConditionPill({required this.condition});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.white.withValues(alpha: 0.9),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        condition.displayName,
+        style: AppTypography.labelSmall.copyWith(
+          color: AppColors.onSurface,
           fontWeight: FontWeight.w600,
         ),
       ),

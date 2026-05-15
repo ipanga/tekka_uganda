@@ -556,6 +556,11 @@ class Listing {
   /// Get formatted price
   String get formattedPrice => 'UGX ${_formatNumber(price)}';
 
+  /// Get formatted original price (compare-at). Null when no drop applies —
+  /// callers should gate on [hasPriceDrop] before rendering.
+  String? get formattedOriginalPrice =>
+      hasPriceDrop ? 'UGX ${_formatNumber(originalPrice!)}' : null;
+
   /// Check if price dropped
   bool get hasPriceDrop => originalPrice != null && originalPrice! > price;
 
