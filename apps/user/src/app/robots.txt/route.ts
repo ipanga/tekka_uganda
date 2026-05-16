@@ -35,10 +35,13 @@ const PRIVATE_PATHS = [
 export function GET() {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tekka.ug';
 
-  const socialBlock = [
-    ...SOCIAL_CRAWLERS.map((ua) => `User-agent: ${ua}`),
-    'Disallow:',
-  ].join('\n');
+  // Emit one record per UA (rather than stacking many `User-agent` lines under
+  // a single `Disallow:`). Same intent per the 1994 spec, but FB's parser has
+  // been observed to mishandle the stacked syntax — a sister site's identical
+  // 403 cleared the day we split it into per-UA blocks.
+  const socialBlock = SOCIAL_CRAWLERS.map((ua) =>
+    [`User-agent: ${ua}`, 'Disallow:'].join('\n'),
+  ).join('\n\n');
 
   const defaultBlock = [
     'User-agent: *',
