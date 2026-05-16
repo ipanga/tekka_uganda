@@ -119,7 +119,15 @@ export default async function ListingPage({ params }: PageProps) {
 
   return (
     <>
-      <meta property="og:type" content="product" />
+      {/*
+        og:type=website is required for Facebook. FB silently rejects og:type
+        values it does not register (it dropped first-class `product` support
+        years ago) and falls back to `type=website` with every other OG field
+        nulled out — so a `product` value broke FB previews entirely while
+        looking fine in curl. The `product:*` tags below are kept because
+        Pinterest, Slack, and some other crawlers still consume them.
+      */}
+      <meta property="og:type" content="website" />
       <meta property="og:title" content={og.ogTitle} />
       <meta property="og:description" content={og.description} />
       <meta property="og:url" content={og.url} />
