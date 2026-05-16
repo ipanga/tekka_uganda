@@ -178,9 +178,7 @@ class _ListingsTabState extends ConsumerState<_ListingsTab>
     if (!_scrollController.hasClients) return;
     final position = _scrollController.position;
     if (position.maxScrollExtent - position.pixels <= _loadMoreThresholdPx) {
-      ref
-          .read(myListingsListProvider(widget.spec.status).notifier)
-          .loadMore();
+      ref.read(myListingsListProvider(widget.spec.status).notifier).loadMore();
     }
   }
 
@@ -334,10 +332,7 @@ class _ErrorView extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: AppSpacing.space4),
-            TextButton(
-              onPressed: onRetry,
-              child: const Text('Retry'),
-            ),
+            TextButton(onPressed: onRetry, child: const Text('Retry')),
           ],
         ),
       ),
