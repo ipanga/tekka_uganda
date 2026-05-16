@@ -10,6 +10,12 @@ import {
 } from '@/lib/seo';
 import ListingDetailClient from '@/components/listings/ListingDetailClient';
 
+// ISR: emit a cacheable `s-maxage` header so social-card crawlers (Facebook in
+// particular) can cache the parsed OG metadata. Without this, Next.js 16 marks
+// the route dynamic and sends `Cache-Control: private, no-cache, no-store`,
+// which makes FB's scraper refuse to persist og_object even on a 200 response.
+export const revalidate = 300;
+
 interface PageProps {
   params: Promise<{ category: string; slug: string }>;
 }
