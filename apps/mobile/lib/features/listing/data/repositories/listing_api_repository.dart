@@ -140,9 +140,7 @@ class ListingApiRepository {
     int limit = 20,
     String? cursor,
   }) async {
-    final queryParams = <String, dynamic>{
-      'limit': limit.toString(),
-    };
+    final queryParams = <String, dynamic>{'limit': limit.toString()};
     if (status != null) queryParams['status'] = status.apiValue;
     if (cursor != null && cursor.isNotEmpty) queryParams['cursor'] = cursor;
 

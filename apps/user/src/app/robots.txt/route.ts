@@ -40,7 +40,7 @@ export function GET() {
   // been observed to mishandle the stacked syntax — a sister site's identical
   // 403 cleared the day we split it into per-UA blocks.
   const socialBlock = SOCIAL_CRAWLERS.map((ua) =>
-    [`User-agent: ${ua}`, 'Disallow:'].join('\n'),
+    [`User-agent: ${ua}`, 'Allow: /', 'Disallow:'].join('\n'),
   ).join('\n\n');
 
   const defaultBlock = [

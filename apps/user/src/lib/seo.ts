@@ -59,7 +59,7 @@ export function socialImageUrl(url: string): string {
   if (!transformed) return transformed;
   if (transformed.startsWith('/')) return absoluteUrl(transformed);
   if (shouldProxySocialImage(transformed)) {
-    return absoluteUrl(`/api/og-image?src=${encodeURIComponent(transformed)}`);
+    return absoluteUrl(`/og-image?src=${encodeURIComponent(transformed)}`);
   }
 
   return transformed;
