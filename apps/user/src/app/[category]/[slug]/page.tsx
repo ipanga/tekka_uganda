@@ -136,8 +136,12 @@ export default async function ListingPage({ params }: PageProps) {
       {og.images.map((img) => (
         <meta key={img} property="og:image" content={img} />
       ))}
+      {og.images.map((img) => (
+        <meta key={`${img}:secure`} property="og:image:secure_url" content={img} />
+      ))}
       {og.images.length > 0 && (
         <>
+          <meta property="og:image:type" content="image/jpeg" />
           <meta property="og:image:width" content="1200" />
           <meta property="og:image:height" content="630" />
           <meta property="og:image:alt" content={`${title} - ${categoryName} for Sale`} />
