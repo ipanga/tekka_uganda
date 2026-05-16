@@ -13,7 +13,9 @@ Tekka is a C2C fashion marketplace for Uganda. It is a polyglot monorepo (no wor
 | Admin dashboard | `apps/admin` | Next.js 16 + React 19 + Tailwind 4 + Zustand | 3001 | `admin.tekka.ug` |
 | Mobile | `apps/mobile` | Flutter + Riverpod 2.6 + GoRouter + Dio + Firebase | n/a | n/a |
 
-`infra/docker/` holds prod/dev compose files. `infra/nginx/` is the reverse-proxy config (single Let's Encrypt cert covers all subdomains). `infra/scripts/init-ssl.sh` and `renew-ssl.sh` manage certs. `_bmad/` contains BMAD framework artifacts (planning workflow, not runtime).
+`infra/docker/` holds prod/dev compose files. `infra/nginx/` is the reverse-proxy config (single Let's Encrypt cert covers all subdomains). `infra/scripts/init-ssl.sh` and `renew-ssl.sh` manage certs. The repo-root `tekka-website/` directory is vestigial (an empty `admin-dashboard/` from a pre-monorepo layout) — the real admin app lives at `apps/admin/`.
+
+`ARCHITECTURE.md` is partially stale: its project-tree, "Quick Start", and "Production Deployment" sections describe an older `tekka-api/` + `tekka-website/` layout that no longer exists. Only the **Deep Linking & Push Notifications** section is authoritative (URL → screen mapping).
 
 ## Common commands
 
@@ -72,10 +74,13 @@ API dev scripts pass `-e ../../.env.development` explicitly; Next.js apps read w
 
 ### Auth
 - Two parallel auth systems sharing the User table:
-  - **User app**: phone + OTP (ThinkXCloud SMS provider — migrated from AfricasTalking) → JWT (1h access + 7d refresh).
+  - **User app**: phone + OTP (ThinkXCloud SMS provider — migrated from AfricasTalking; docs at https://sms.thinkxcloud.com/documentation) → JWT (1h access + 7d refresh). Email is the **OTP fallback channel** when SMS delivery fails — the Email module sends the same code via Resend, so both paths must stay in lockstep.
   - **Admin app**: email + password (bcrypt). Legacy `firebase-admin` token verification still wired in `apps/api/src/auth/firebase-admin.ts` and `firebase-auth.guard.ts`, but not the primary path.
 - Guards live in `apps/api/src/auth/guards/`: `JwtAuthGuard`, `AdminGuard`, `FirebaseAuthGuard`. `@CurrentUser()` decorator injects the resolved user.
 - The `User` model has both `firebaseUid` and `passwordHash` columns; treat them as parallel auth identifiers, not duplicates.
+
+### Email
+- All transactional email goes through **Resend** (`resend.com`) via the `Email` module in `apps/api`. Includes the OTP fallback flow above plus any other notifications routed to email.
 
 ### Domain workflows
 - Listing status: `DRAFT → PENDING → ACTIVE → SOLD/ARCHIVED`. Pending requires admin approval before going live.
@@ -113,3 +118,5 @@ GitHub Actions in `.github/workflows/`:
 - Web (user + admin) is **light-mode only**. Dark mode lives in the Flutter app.
 - Theme tokens (orange `#F97316` family + neutrals) are documented in `THEME_TOKENS.md`. Reuse the listed values rather than introducing new shades.
 - Static OTP override (`ALLOW_REVIEW_STATIC_OTP`, `REVIEW_STATIC_PHONE`, `REVIEW_STATIC_OTP`) exists for app-store review — gated by env, off in normal prod.
+- **Branch flow**: all work lands on `develop` first; promotion to `main` happens via PR. Never push directly to `main`. Deploy workflows trigger on `main`, so a merge from `develop` is what kicks off production releases.
+- **SEO / sitemap**: when a change adds, renames, or removes a public-facing route on `apps/user` (or alters its metadata), update the sitemap and any related SEO config in the same PR. Same applies to `robots.txt` and the `.well-known/*` route handlers if their contracts shift.
