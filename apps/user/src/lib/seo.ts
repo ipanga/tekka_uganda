@@ -18,6 +18,53 @@ export function absoluteUrl(path: string): string {
 }
 
 /**
+ * For og:image / twitter:image. WhatsApp/FB/X cards want a landscape image
+ * (1.91:1) and WhatsApp specifically rejects portrait images even when small.
+ * Raw listing uploads are usually portrait (e.g. 800×1000 phone photos).
+ * Insert a Cloudinary transformation that:
+ *   - c_fill,g_auto: center-fill, content-aware gravity (keeps the garment in frame)
+ *   - w_1200,h_630: canonical OG dimensions
+ *   - q_auto: Cloudinary picks optimal quality for the dimensions
+ *   - f_jpg: force JPEG so scrapers without webp/avif support work
+ *
+ * Non-Cloudinary URLs pass through unchanged.
+ */
+export function ogImage(url: string): string {
+  if (!url || !url.includes('res.cloudinary.com/') || !url.includes('/upload/')) {
+    return url;
+  }
+  // Avoid double-transform if already present.
+  if (/\/upload\/[^/]*c_fill/.test(url)) return url;
+  return url.replace('/upload/', '/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/');
+}
+
+function shouldProxySocialImage(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && parsed.hostname === 'res.cloudinary.com';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * WhatsApp is more reliable when the preview image is served from the same
+ * origin as the shared URL. Keep Cloudinary transformations, then expose them
+ * through a guarded same-domain proxy.
+ */
+export function socialImageUrl(url: string): string {
+  const transformed = ogImage(url);
+
+  if (!transformed) return transformed;
+  if (transformed.startsWith('/')) return absoluteUrl(transformed);
+  if (shouldProxySocialImage(transformed)) {
+    return absoluteUrl(`/api/og-image?src=${encodeURIComponent(transformed)}`);
+  }
+
+  return transformed;
+}
+
+/**
  * Build page metadata with sensible defaults and OG/Twitter tags.
  */
 export function buildMetadata({
@@ -38,6 +85,7 @@ export function buildMetadata({
   const url = absoluteUrl(path);
   // Let the root layout template append "| Tekka Uganda" — don't duplicate it here
   const ogTitle = title.includes('Tekka') ? title : `${title} | Tekka Uganda`;
+  const previewImage = image ? socialImageUrl(image) : undefined;
 
   return {
     title,
@@ -52,10 +100,10 @@ export function buildMetadata({
       siteName: SITE_NAME,
       type,
       locale: 'en_UG',
-      ...(image && {
+      ...(previewImage && {
         images: [
           {
-            url: image,
+            url: previewImage,
             width: 1200,
             height: 630,
             alt: title,
@@ -64,10 +112,10 @@ export function buildMetadata({
       }),
     },
     twitter: {
-      card: image ? 'summary_large_image' : 'summary',
+      card: previewImage ? 'summary_large_image' : 'summary',
       title: ogTitle,
       description,
-      ...(image && { images: [image] }),
+      ...(previewImage && { images: [previewImage] }),
     },
     ...(noIndex && { robots: { index: false, follow: false } }),
   };
