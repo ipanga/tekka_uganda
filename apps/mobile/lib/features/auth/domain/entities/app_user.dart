@@ -1,3 +1,5 @@
+import '../../../../core/utils/image_url.dart';
+
 /// User role enum
 enum UserRole {
   user,
@@ -133,7 +135,7 @@ class AppUser {
       email: json['email'] as String?,
       emailVerified: json['isEmailVerified'] as bool? ?? false,
       displayName: json['displayName'] as String?,
-      photoUrl: json['photoUrl'] as String?,
+      photoUrl: toHttpsOrNull(json['photoUrl']),
       bio: json['bio'] as String?,
       location: json['location'] as String?,
       createdAt: json['createdAt'] != null
@@ -167,7 +169,7 @@ class AppUser {
       emailVerified:
           map['emailVerified'] ?? map['isEmailVerified'] as bool? ?? false,
       displayName: map['displayName'] as String?,
-      photoUrl: map['photoUrl'] as String?,
+      photoUrl: toHttpsOrNull(map['photoUrl']),
       bio: map['bio'] as String?,
       location: map['location'] as String?,
       createdAt: map['createdAt'] is String

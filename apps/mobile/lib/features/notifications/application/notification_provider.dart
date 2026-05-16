@@ -55,16 +55,26 @@ final unreadNotificationsCountProvider = Provider<int>((ref) {
 
 /// Notification actions notifier
 class NotificationActionsNotifier extends StateNotifier<AsyncValue<void>> {
+  final Ref _ref;
   final NotificationRepository _repository;
   final String _userId;
 
-  NotificationActionsNotifier(this._repository, this._userId)
+  NotificationActionsNotifier(this._ref, this._repository, this._userId)
     : super(const AsyncValue.data(null));
+
+  /// Force the unread-count stream to re-fetch from the server. The top-level
+  /// badge listener mirrors the next emission into the iOS app-icon badge, so
+  /// the home-screen badge tracks in-app state instead of waiting for the
+  /// 15-second polling tick to catch up.
+  void _refreshUnreadCount() {
+    _ref.invalidate(unreadNotificationsStreamProvider);
+  }
 
   Future<void> markAsRead(String notificationId) async {
     state = const AsyncValue.loading();
     try {
       await _repository.markAsRead(notificationId, _userId);
+      _refreshUnreadCount();
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -75,6 +85,7 @@ class NotificationActionsNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await _repository.markAllAsRead(_userId);
+      _refreshUnreadCount();
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -85,6 +96,7 @@ class NotificationActionsNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await _repository.deleteNotification(notificationId, _userId);
+      _refreshUnreadCount();
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -95,6 +107,7 @@ class NotificationActionsNotifier extends StateNotifier<AsyncValue<void>> {
     state = const AsyncValue.loading();
     try {
       await _repository.clearAll(_userId);
+      _refreshUnreadCount();
       state = const AsyncValue.data(null);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -107,7 +120,7 @@ final notificationActionsProvider =
       final user = ref.watch(currentUserProvider);
       final repository = ref.watch(notificationRepositoryProvider);
 
-      return NotificationActionsNotifier(repository, user?.uid ?? '');
+      return NotificationActionsNotifier(ref, repository, user?.uid ?? '');
     });
 
 // ============================================
@@ -240,6 +253,17 @@ class NotificationsListNotifier extends StateNotifier<NotificationsListState> {
   void markReadLocally(String notificationId) {
     final updated = state.items
         .map((n) => n.id == notificationId ? n.copyWith(isRead: true) : n)
+        .toList(growable: false);
+    state = state.copyWith(items: updated);
+  }
+
+  /// Flip every item in the current page to read so the list updates instantly
+  /// when the user taps "Mark all as read". Without this the screen has to
+  /// wait on a refresh() round-trip and items briefly stay shown as unread.
+  void markAllReadLocally() {
+    if (state.items.isEmpty) return;
+    final updated = state.items
+        .map((n) => n.isRead ? n : n.copyWith(isRead: true))
         .toList(growable: false);
     state = state.copyWith(items: updated);
   }

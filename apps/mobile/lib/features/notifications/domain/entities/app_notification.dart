@@ -1,3 +1,5 @@
+import '../../../../core/utils/image_url.dart';
+
 /// Notification types.
 ///
 /// Mirrors the backend `NotificationType` Prisma enum. When adding a value
@@ -111,7 +113,7 @@ class AppNotification {
       ),
       title: map['title'] as String,
       body: map['body'] as String,
-      imageUrl: map['imageUrl'] as String?,
+      imageUrl: toHttpsOrNull(map['imageUrl']),
       targetId: map['targetId'] as String?,
       targetType: map['targetType'] as String?,
       isRead: map['isRead'] as bool? ?? false,
@@ -129,7 +131,7 @@ class AppNotification {
       type: _parseNotificationType(json['type'] as String?),
       title: json['title'] as String,
       body: json['body'] as String,
-      imageUrl: data['imageUrl'] as String?,
+      imageUrl: toHttpsOrNull(data['imageUrl']),
       targetId:
           data['targetId'] as String? ??
           data['offerId'] as String? ??

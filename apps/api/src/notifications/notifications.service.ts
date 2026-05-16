@@ -95,12 +95,35 @@ export class NotificationsService {
           apns: {
             payload: {
               aps: {
+                // Explicit alert — firebase-admin's auto-mapping from the
+                // top-level `notification` block is unreliable when an
+                // `apns.payload.aps` is also present.
+                alert: { title: dto.title, body: dto.body },
                 badge: await this.getUnreadCount(dto.userId),
                 sound: 'default',
               },
             },
           },
         });
+        // Surface multicast outcome so we can tell from logs whether iOS
+        // tokens are being rejected by FCM (e.g. APNs key missing in
+        // Firebase Console → every iOS token returns "registration-token-
+        // not-registered"). Token prefixes only — never log full tokens.
+        const failures = response.responses
+          .map((r, i) => ({
+            ok: r.success,
+            tokenPrefix: tokens[i].slice(0, 12),
+            code: r.error?.code,
+            message: r.error?.message,
+          }))
+          .filter((r) => !r.ok);
+        this.logger.log(
+          `FCM multicast type=${dto.type} userId=${dto.userId} ` +
+            `success=${response.successCount} failure=${response.failureCount}` +
+            (failures.length > 0
+              ? ` failures=${JSON.stringify(failures)}`
+              : ''),
+        );
         // Prune any tokens FCM reports as permanently dead (app uninstalled,
         // token rotated, etc.) so the FcmToken table stays honest and future
         // sends don't keep shipping to ghosts.

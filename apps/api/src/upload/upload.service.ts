@@ -37,7 +37,10 @@ export class UploadService {
       const dimensions = imageSize(file.buffer);
       if (dimensions.width && dimensions.height) {
         const maxDimension = 4000; // Reject truly excessive images
-        if (dimensions.width > maxDimension || dimensions.height > maxDimension) {
+        if (
+          dimensions.width > maxDimension ||
+          dimensions.height > maxDimension
+        ) {
           throw new BadRequestException(
             `Image dimensions (${dimensions.width}x${dimensions.height}) exceed maximum allowed (${maxDimension}x${maxDimension}). Please resize before uploading.`,
           );

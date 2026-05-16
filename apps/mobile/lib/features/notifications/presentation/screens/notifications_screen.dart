@@ -194,8 +194,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   void _markAllAsRead(BuildContext context, WidgetRef ref) {
+    // Update the visible list instantly, then fire the backend write. The
+    // action notifier invalidates the unread-count stream on success so
+    // every consumer (bell badge, iOS icon badge) catches up immediately.
+    ref.read(notificationsListProvider.notifier).markAllReadLocally();
     ref.read(notificationActionsProvider.notifier).markAllAsRead();
-    ref.read(notificationsListProvider.notifier).refresh();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('All notifications marked as read')),
     );

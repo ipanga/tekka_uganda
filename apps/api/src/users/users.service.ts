@@ -813,8 +813,7 @@ export class UsersService {
           email,
           expiresAt: expiresAt.toISOString(),
           channel: 'mock' as const,
-          message:
-            'Email delivery failed — code logged to console (dev mode)',
+          message: 'Email delivery failed — code logged to console (dev mode)',
         };
       }
 

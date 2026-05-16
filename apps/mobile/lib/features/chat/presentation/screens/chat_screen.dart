@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,6 +30,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
 
+  /// Whether we've already jumped to the bottom for the initial render.
+  bool _didInitialScroll = false;
+
+  /// Last message-count seen via ref.listen — used to detect newly-appended
+  /// messages so we can auto-follow only when the user is already at the
+  /// bottom. Reading older messages above the fold should not get yanked.
+  int _lastMessageCount = 0;
+
+  /// Distance from `maxScrollExtent` (in logical px) within which a new
+  /// message will auto-scroll the view. Beyond this, we leave the user alone.
+  static const double _stickyBottomThreshold = 120;
+
   @override
   void initState() {
     super.initState();
@@ -42,6 +56,45 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  /// Jump to the bottom on the first render that has messages, then auto-
+  /// follow new messages when the user is already near the bottom.
+  void _handleMessagesUpdate(List<Message> messages) {
+    if (messages.isEmpty) {
+      _lastMessageCount = 0;
+      return;
+    }
+
+    final hasNew = messages.length > _lastMessageCount;
+    final isFirstRender = !_didInitialScroll;
+    _lastMessageCount = messages.length;
+
+    if (!isFirstRender && !hasNew) return;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_scrollController.hasClients) return;
+      final position = _scrollController.position;
+
+      if (isFirstRender) {
+        // Jump (no animation) on initial paint so the user opens the
+        // thread already at the latest message — matches WhatsApp/Telegram.
+        _scrollController.jumpTo(position.maxScrollExtent);
+        _didInitialScroll = true;
+        return;
+      }
+
+      // New message arrived. Only animate if the user is near the bottom;
+      // don't pull them away from older messages they're reading.
+      final distanceFromBottom = position.maxScrollExtent - position.pixels;
+      if (distanceFromBottom <= _stickyBottomThreshold) {
+        _scrollController.animateTo(
+          position.maxScrollExtent,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    });
   }
 
   @override
@@ -67,6 +120,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         context.popOrGoHome();
       }
     });
+
+    // Jump to bottom on initial load + auto-follow new messages when the
+    // user is already there. _handleMessagesUpdate keeps the bookkeeping.
+    ref.listen<AsyncValue<List<Message>>>(
+      messagesStreamProvider(widget.chatId),
+      (_, next) {
+        next.whenData(_handleMessagesUpdate);
+      },
+    );
 
     return PopScope(
       // Deep-linked into chat → system back should go /home, not exit.
@@ -636,6 +698,25 @@ class _MessageBubble extends StatelessWidget {
                   width: 200,
                   height: 150,
                   fit: BoxFit.cover,
+                  errorWidget: (context, url, error) {
+                    // ignore: avoid_print
+                    print('[tekka.image] $url -> $error');
+                    developer.log(
+                      'image fetch failed: $url -> $error',
+                      name: 'tekka.image',
+                      error: error,
+                      level: 1000,
+                    );
+                    return Container(
+                      width: 200,
+                      height: 150,
+                      color: AppColors.gray100,
+                      child: const Icon(
+                        Icons.broken_image,
+                        color: AppColors.gray400,
+                      ),
+                    );
+                  },
                 ),
               ),
             if (message.content.isNotEmpty) ...[

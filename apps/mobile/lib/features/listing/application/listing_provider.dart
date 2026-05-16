@@ -1491,3 +1491,163 @@ final editListingProviderV2 = StateNotifierProvider.family
         userId,
       );
     });
+
+// ============================================================================
+// MY LISTINGS — paginated, per-status, scroll-position preserving
+// ============================================================================
+
+/// State for one tab of the My Listings screen. Mirrors the shape used by
+/// NotificationsListNotifier so the screen-side bookkeeping is identical.
+class MyListingsState {
+  final List<Listing> items;
+  final String? nextCursor;
+  final bool hasMore;
+  final int total; // Server-reported count for this status filter.
+  final bool isInitialLoading;
+  final bool isLoadingMore;
+  final bool isRefreshing;
+  final String? error;
+
+  const MyListingsState({
+    this.items = const [],
+    this.nextCursor,
+    this.hasMore = true,
+    this.total = 0,
+    this.isInitialLoading = true,
+    this.isLoadingMore = false,
+    this.isRefreshing = false,
+    this.error,
+  });
+
+  MyListingsState copyWith({
+    List<Listing>? items,
+    String? nextCursor,
+    bool? hasMore,
+    int? total,
+    bool? isInitialLoading,
+    bool? isLoadingMore,
+    bool? isRefreshing,
+    String? error,
+    bool clearError = false,
+    bool clearCursor = false,
+  }) {
+    return MyListingsState(
+      items: items ?? this.items,
+      nextCursor: clearCursor ? null : (nextCursor ?? this.nextCursor),
+      hasMore: hasMore ?? this.hasMore,
+      total: total ?? this.total,
+      isInitialLoading: isInitialLoading ?? this.isInitialLoading,
+      isLoadingMore: isLoadingMore ?? this.isLoadingMore,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
+      error: clearError ? null : (error ?? this.error),
+    );
+  }
+}
+
+/// Notifier owning one tab's paginated feed. Each tab on the My Listings
+/// screen subscribes to its own family entry, so pagination state, scroll
+/// position, and error state are isolated per tab and survive tab switches.
+class MyListingsNotifier extends StateNotifier<MyListingsState> {
+  final ListingApiRepository _repository;
+  final ListingStatus? _status;
+
+  static const int _pageSize = 20;
+
+  MyListingsNotifier(this._repository, this._status)
+    : super(const MyListingsState()) {
+    _loadInitial();
+  }
+
+  Future<void> _loadInitial() async {
+    try {
+      final page = await _repository.getMyListingsPage(
+        status: _status,
+        limit: _pageSize,
+      );
+      state = MyListingsState(
+        items: page.items,
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+        total: page.total,
+        isInitialLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isInitialLoading: false, error: e.toString());
+    }
+  }
+
+  /// Pull-to-refresh: drop the current list and re-fetch page 1.
+  Future<void> refresh() async {
+    state = state.copyWith(isRefreshing: true, clearError: true);
+    try {
+      final page = await _repository.getMyListingsPage(
+        status: _status,
+        limit: _pageSize,
+      );
+      state = MyListingsState(
+        items: page.items,
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+        total: page.total,
+        isInitialLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isRefreshing: false, error: e.toString());
+    }
+  }
+
+  /// Infinite scroll: fetch the next page and append. No-op when we already
+  /// have everything, when a request is in flight, or while refreshing.
+  Future<void> loadMore() async {
+    if (!state.hasMore || state.isLoadingMore || state.isRefreshing) return;
+    if (state.nextCursor == null) return;
+    state = state.copyWith(isLoadingMore: true, clearError: true);
+    try {
+      final page = await _repository.getMyListingsPage(
+        status: _status,
+        limit: _pageSize,
+        cursor: state.nextCursor,
+      );
+      state = state.copyWith(
+        items: [...state.items, ...page.items],
+        nextCursor: page.nextCursor,
+        hasMore: page.hasMore,
+        total: page.total,
+        isLoadingMore: false,
+      );
+    } catch (e) {
+      state = state.copyWith(isLoadingMore: false, error: e.toString());
+    }
+  }
+
+  /// Drop a listing from local state (e.g. after a successful delete).
+  void removeLocally(String listingId) {
+    state = state.copyWith(
+      items: state.items
+          .where((l) => l.id != listingId)
+          .toList(growable: false),
+    );
+  }
+
+  /// Replace a single listing in-place (e.g. after marking sold).
+  void replaceLocally(Listing updated) {
+    state = state.copyWith(
+      items: state.items
+          .map((l) => l.id == updated.id ? updated : l)
+          .toList(growable: false),
+    );
+  }
+}
+
+/// Family keyed by the status filter for one tab. `null` means "All". Same
+/// notifier is reused across rebuilds (non-autoDispose), so tab switching
+/// returns to the previous scroll/load state without re-fetching.
+final myListingsListProvider =
+    StateNotifierProvider.family<
+      MyListingsNotifier,
+      MyListingsState,
+      ListingStatus?
+    >((ref, status) {
+      final repository = ref.watch(listingApiRepositoryProvider);
+      return MyListingsNotifier(repository, status);
+    });

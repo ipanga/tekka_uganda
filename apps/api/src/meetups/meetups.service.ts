@@ -100,7 +100,11 @@ export class MeetupsService {
       type: NotificationType.MEETUP_PROPOSED,
       title: 'Meetup Proposed',
       body: `A meetup has been proposed at ${locationName}`,
-      data: { meetupId: meetup.id, chatId: dto.chatId, type: 'meetup_proposed' },
+      data: {
+        meetupId: meetup.id,
+        chatId: dto.chatId,
+        type: 'meetup_proposed',
+      },
     });
 
     return meetup;

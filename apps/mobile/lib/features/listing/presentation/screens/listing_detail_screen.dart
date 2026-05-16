@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -253,10 +255,28 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                           const SizedBox(height: AppSpacing.space3),
                         ],
 
-                        // Price
-                        Text(
-                          listing.formattedPrice,
-                          style: AppTypography.price,
+                        // Price (+ compare-at + discount badge when applicable)
+                        Wrap(
+                          spacing: AppSpacing.space2,
+                          runSpacing: AppSpacing.space1,
+                          crossAxisAlignment: WrapCrossAlignment.center,
+                          children: [
+                            Text(
+                              listing.formattedPrice,
+                              style: AppTypography.price,
+                            ),
+                            if (listing.formattedOriginalPrice != null) ...[
+                              Text(
+                                listing.formattedOriginalPrice!,
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.gray500,
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationColor: AppColors.gray500,
+                                ),
+                              ),
+                              _DiscountBadge(percent: listing.priceDropPercent),
+                            ],
+                          ],
                         ),
                         const SizedBox(height: AppSpacing.space2),
 
@@ -859,14 +879,24 @@ class _ImageGallery extends StatelessWidget {
                   color: AppColors.gray100,
                   child: const Center(child: CircularProgressIndicator()),
                 ),
-                errorWidget: (context, url, error) => Container(
-                  color: AppColors.gray100,
-                  child: const Icon(
-                    Icons.broken_image,
-                    size: 64,
-                    color: AppColors.gray400,
-                  ),
-                ),
+                errorWidget: (context, url, error) {
+                  // ignore: avoid_print
+                  print('[tekka.image] $url -> $error');
+                  developer.log(
+                    'image fetch failed: $url -> $error',
+                    name: 'tekka.image',
+                    error: error,
+                    level: 1000,
+                  );
+                  return Container(
+                    color: AppColors.gray100,
+                    child: const Icon(
+                      Icons.broken_image,
+                      size: 64,
+                      color: AppColors.gray400,
+                    ),
+                  );
+                },
               ),
             );
           },
@@ -1003,11 +1033,21 @@ class _FullScreenImageGalleryState extends State<_FullScreenImageGallery> {
                         placeholder: (context, url) => const Center(
                           child: CircularProgressIndicator(color: Colors.white),
                         ),
-                        errorWidget: (context, url, error) => const Icon(
-                          Icons.broken_image,
-                          size: 64,
-                          color: AppColors.gray400,
-                        ),
+                        errorWidget: (context, url, error) {
+                          // ignore: avoid_print
+                          print('[tekka.image] $url -> $error');
+                          developer.log(
+                            'image fetch failed: $url -> $error',
+                            name: 'tekka.image',
+                            error: error,
+                            level: 1000,
+                          );
+                          return const Icon(
+                            Icons.broken_image,
+                            size: 64,
+                            color: AppColors.gray400,
+                          );
+                        },
                       ),
                     ),
                   );
@@ -1322,6 +1362,36 @@ class _DetailRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Light-green percent-off pill rendered next to the price when the
+/// listing's originalPrice is higher than the current price. Mirrors the
+/// web detail-page badge (bg-green-50 text-green-700).
+class _DiscountBadge extends StatelessWidget {
+  final int percent;
+
+  const _DiscountBadge({required this.percent});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.space2,
+        vertical: AppSpacing.space1,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.successContainer,
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        '$percent% off',
+        style: AppTypography.labelSmall.copyWith(
+          color: AppColors.success,
+          fontWeight: FontWeight.w600,
+        ),
       ),
     );
   }

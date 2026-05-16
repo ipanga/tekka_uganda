@@ -1,12 +1,23 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../../features/auth/data/repositories/user_api_repository.dart';
 import 'deep_link_mapper.dart';
+
+/// Custom platform-channel that the iOS AppDelegate uses to forward
+/// notification-tap events to Dart. See `apps/mobile/ios/Runner/AppDelegate.swift`
+/// for why this exists (firebase_messaging's `onMessageOpenedApp` stream stops
+/// emitting on iOS 13+ Scene-Lifecycle apps because FlutterAppDelegate hijacks
+/// the UNUserNotificationCenter delegate).
+const _iosTapChannel = MethodChannel(
+  'com.tootiyesolutions.tekka/notification_tap',
+);
 
 /// Top-level handler for background messages (must be top-level function)
 @pragma('vm:entry-point')
@@ -136,6 +147,9 @@ class PushNotificationService {
   Future<void> initialize() => _initFuture ??= _doInitialize();
 
   Future<void> _doInitialize() async {
+    // ignore: avoid_print
+    print('[tekka.push] _doInitialize: starting');
+    developer.log('_doInitialize: starting', name: 'tekka.push', level: 800);
     try {
       final messaging = FirebaseMessaging.instance;
 
@@ -146,31 +160,101 @@ class PushNotificationService {
         sound: true,
         provisional: false,
       );
+      // ignore: avoid_print
+      print('[tekka.push] permission status=${settings.authorizationStatus}');
+      developer.log(
+        'permission status=${settings.authorizationStatus}',
+        name: 'tekka.push',
+        level: 800,
+      );
 
       if (settings.authorizationStatus == AuthorizationStatus.denied) {
-        debugPrint('Push notifications: permission denied');
+        // ignore: avoid_print
+        print('[tekka.push] permission denied — bailing out');
+        developer.log(
+          'permission denied — bailing out',
+          name: 'tekka.push',
+          level: 1000,
+        );
         return;
       }
 
       // iOS: show alerts in-foreground too. Without this, iOS silently drops
       // banners while the app is active.
+      //
+      // Defensive timeout (5s): on iOS 26 we've seen this platform-channel
+      // call hang indefinitely on first launch, freezing the rest of init
+      // (including APNs poll → no FCM token → no pushes ever arrive). The
+      // option only affects in-foreground presentation; if it never lands,
+      // pushes still work in background/killed state, which is the bigger
+      // miss. So timing out here is strictly better than blocking forever.
       if (Platform.isIOS) {
-        await messaging.setForegroundNotificationPresentationOptions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
+        // ignore: avoid_print
+        print('[tekka.push] step=setForegroundOptions BEGIN');
+        try {
+          await messaging
+              .setForegroundNotificationPresentationOptions(
+                alert: true,
+                badge: true,
+                sound: true,
+              )
+              .timeout(const Duration(seconds: 5));
+          // ignore: avoid_print
+          print('[tekka.push] step=setForegroundOptions END');
+        } catch (e) {
+          // ignore: avoid_print
+          print('[tekka.push] step=setForegroundOptions TIMEOUT/ERROR ($e)');
+        }
       }
 
-      await _initLocalNotifications();
+      // ignore: avoid_print
+      print('[tekka.push] step=initLocalNotifications BEGIN');
+      try {
+        await _initLocalNotifications().timeout(const Duration(seconds: 8));
+        // ignore: avoid_print
+        print('[tekka.push] step=initLocalNotifications END');
+      } catch (e) {
+        // ignore: avoid_print
+        print('[tekka.push] step=initLocalNotifications TIMEOUT/ERROR ($e)');
+      }
 
       // Attach listeners FIRST. On iOS, the FCM token is only available after
       // APNs registration completes; if we wait for the token synchronously
       // we can miss it. onTokenRefresh fires once APNs is ready.
+      // ignore: avoid_print
+      print('[tekka.push] step=attachListeners BEGIN');
       messaging.onTokenRefresh.listen(_registerToken);
       FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
       FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
       FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+      // iOS-only: also listen on our custom method channel that the native
+      // AppDelegate posts to when a notification is tapped. This is the
+      // workaround for FlutterAppDelegate hijacking the UNUserNotificationCenter
+      // delegate on iOS 13+ Scene-Lifecycle apps, which causes the FCM plugin's
+      // own onMessageOpenedApp stream to stop emitting for background-tap.
+      if (Platform.isIOS) {
+        _iosTapChannel.setMethodCallHandler((call) async {
+          // ignore: avoid_print
+          print(
+            '[tekka.push] iOS native tap channel: method=${call.method} '
+            'args=${call.arguments}',
+          );
+          if (call.method == 'notificationTap') {
+            final args = call.arguments;
+            if (args is Map) {
+              final data = <String, dynamic>{};
+              args.forEach((key, value) {
+                if (key is String) data[key] = value;
+              });
+              _routeFromData(data);
+            }
+          }
+          return null;
+        });
+      }
+      // ignore: avoid_print
+      print('[tekka.push] step=attachListeners END');
 
       // Dispatch any cold-start tap NOW — before the iOS APNs poll below.
       // That poll can block this method for up to 30s; if we wait until after
@@ -181,9 +265,25 @@ class PushNotificationService {
       // the launch message has already been consumed. onNotificationTap is
       // wired in TekkaApp.build() before runApp returns control, so it is
       // guaranteed to be set by the time _doInitialize runs.
-      final initialMessage =
-          _bootInitialMessage ?? await messaging.getInitialMessage();
+      // 3s timeout: getInitialMessage has been observed to hang on iOS 26
+      // when no notification is pending; without a timeout it stalls the
+      // entire push init pipeline (including APNs poll + getToken below).
+      // ignore: avoid_print
+      print('[tekka.push] step=getInitialMessage BEGIN (3s timeout)');
+      RemoteMessage? initialMessage = _bootInitialMessage;
+      initialMessage ??= await messaging.getInitialMessage().timeout(
+        const Duration(seconds: 3),
+        onTimeout: () {
+          // ignore: avoid_print
+          print('[tekka.push] step=getInitialMessage TIMEOUT (no tap)');
+          return null;
+        },
+      );
       _bootInitialMessage = null;
+      // ignore: avoid_print
+      print(
+        '[tekka.push] step=getInitialMessage END (msg=${initialMessage?.messageId ?? "null"})',
+      );
       if (initialMessage != null) {
         _handleNotificationTap(initialMessage);
       }
@@ -192,17 +292,49 @@ class PushNotificationService {
       // 30s — first-launch registration on slow networks can take 10-20s.
       // onTokenRefresh will still deliver it if the poll times out.
       if (Platform.isIOS) {
+        // ignore: avoid_print
+        print('[tekka.push] step=apnsPoll BEGIN (max 30s)');
+        var apnsReady = false;
         for (var i = 0; i < 60; i++) {
           final apns = await messaging.getAPNSToken();
-          if (apns != null) break;
+          if (apns != null) {
+            // ignore: avoid_print
+            print(
+              '[tekka.push] APNs token ready after ${i * 500}ms (len=${apns.length})',
+            );
+            developer.log(
+              'APNs token ready after ${i * 500}ms (len=${apns.length})',
+              name: 'tekka.push',
+              level: 800,
+            );
+            apnsReady = true;
+            break;
+          }
+          if (i % 4 == 0) {
+            // ignore: avoid_print
+            print('[tekka.push] waiting for APNs token (poll ${i + 1}/60)');
+            developer.log(
+              'waiting for APNs token (poll ${i + 1}/60)',
+              name: 'tekka.push',
+              level: 800,
+            );
+          }
           await Future<void>.delayed(const Duration(milliseconds: 500));
         }
+        // ignore: avoid_print
+        print('[tekka.push] step=apnsPoll END (apnsReady=$apnsReady)');
       }
 
       // Attempt to grab the FCM token up-front. If it's not yet available
       // (common on iOS cold start), onTokenRefresh will deliver it shortly.
       try {
+        // ignore: avoid_print
+        print('[tekka.push] step=getToken BEGIN');
         final token = await messaging.getToken();
+        // ignore: avoid_print
+        print(
+          '[tekka.push] step=getToken END (token=${token == null ? "null" : "len=${token.length}"})',
+        );
         if (token != null) {
           // Print the raw token only in local debug builds so it's easy to
           // copy during testing. `debugPrint` is already debug-gated, but
@@ -211,17 +343,38 @@ class PushNotificationService {
             debugPrint('FCM token: $token');
           }
           await _registerToken(token);
+        } else {
+          // ignore: avoid_print
+          print('[tekka.push] getToken() returned null (no FCM token minted)');
+          developer.log(
+            'getToken() returned null (no FCM token minted)',
+            name: 'tekka.push',
+            level: 1000,
+          );
         }
       } catch (e) {
-        debugPrint(
-          'Initial FCM token fetch failed (will retry via onTokenRefresh): $e',
+        // ignore: avoid_print
+        print('[tekka.push] initial FCM token fetch failed: $e');
+        developer.log(
+          'initial FCM token fetch failed (will retry via onTokenRefresh)',
+          name: 'tekka.push',
+          error: e,
+          level: 1000,
         );
       }
 
       _initialized = true;
-      debugPrint('Push notifications initialized');
+      // ignore: avoid_print
+      print('[tekka.push] push notifications initialized');
+      developer.log(
+        'push notifications initialized',
+        name: 'tekka.push',
+        level: 800,
+      );
     } catch (e) {
-      debugPrint('Push notification init failed: $e');
+      // ignore: avoid_print
+      print('[tekka.push] init failed: $e');
+      developer.log('init failed', name: 'tekka.push', error: e, level: 1000);
       // Allow a retry on transient failure (e.g. permission dialog race).
       _initFuture = null;
     }
@@ -264,17 +417,43 @@ class PushNotificationService {
     final platform = Platform.isIOS ? 'ios' : 'android';
     try {
       await _userApiRepository.registerFcmToken(token, platform);
-      debugPrint('FCM token registered');
+      // ignore: avoid_print
+      print(
+        '[tekka.push] FCM token registered (platform=$platform, len=${token.length})',
+      );
+      developer.log(
+        'FCM token registered (platform=$platform, len=${token.length})',
+        name: 'tekka.push',
+        level: 800,
+      );
     } catch (e) {
-      debugPrint('FCM token registration failed: $e');
+      // ignore: avoid_print
+      print('[tekka.push] FCM token registration failed: $e');
+      developer.log(
+        'FCM token registration failed',
+        name: 'tekka.push',
+        error: e,
+        level: 1000,
+      );
     }
   }
 
   void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('Foreground message: ${message.notification?.title}');
+    developer.log(
+      'foreground message: ${message.notification?.title}',
+      name: 'tekka.push',
+      level: 800,
+    );
     final notification = message.notification;
     if (notification == null) {
-      // Data-only payload — nothing to render.
+      // Data-only payload — nothing to render. Logged so we can tell the
+      // difference between "no push arrived" and "push arrived but had no
+      // notification block" while debugging iOS delivery.
+      developer.log(
+        'data-only message: id=${message.messageId} data=${message.data}',
+        name: 'tekka.push',
+        level: 800,
+      );
       return;
     }
 
@@ -306,6 +485,11 @@ class PushNotificationService {
   }
 
   void _handleNotificationTap(RemoteMessage message) {
+    // ignore: avoid_print
+    print(
+      '[tekka.push] tap received: messageId=${message.messageId} '
+      'data=${message.data} notification=${message.notification?.title}',
+    );
     _routeFromData(message.data);
   }
 
@@ -318,12 +502,27 @@ class PushNotificationService {
     if (deepLink != null && deepLink.isNotEmpty) {
       final uri = Uri.tryParse(deepLink);
       if (uri != null) route = mapDeepLinkUri(uri);
+      // ignore: avoid_print
+      print(
+        '[tekka.push] tap route from deep_link="$deepLink" -> route=$route',
+      );
+    } else {
+      // ignore: avoid_print
+      print('[tekka.push] tap: no deep_link in data, trying type fallback');
     }
 
     route ??= _fallbackRouteForType(data);
 
     if (route != null) {
+      // ignore: avoid_print
+      print(
+        '[tekka.push] tap dispatching route=$route '
+        '(onNotificationTap is ${onNotificationTap == null ? "NULL" : "set"})',
+      );
       onNotificationTap?.call(route, data.cast<String, dynamic>());
+    } else {
+      // ignore: avoid_print
+      print('[tekka.push] tap: no route resolved, ignoring');
     }
   }
 

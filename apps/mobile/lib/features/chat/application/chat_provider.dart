@@ -9,6 +9,7 @@ import '../../../core/services/offline_queue/offline_queue.dart';
 import '../../../core/services/offline_queue/queued_action.dart';
 import '../../auth/application/auth_provider.dart';
 import '../../report/application/report_provider.dart';
+import '../../notifications/application/notification_provider.dart';
 import '../data/repositories/api_chat_repository.dart';
 import '../domain/entities/chat.dart';
 import '../domain/repositories/chat_repository.dart';
@@ -63,6 +64,7 @@ final typingStatusProvider = StreamProvider.family<Map<String, bool>, String>((
 
 /// Chat actions notifier for a specific chat
 class ChatActionsNotifier extends StateNotifier<ChatActionsState> {
+  final Ref _ref;
   final ChatRepository _repository;
   final OfflineQueue _queue;
   final bool Function() _isConnected;
@@ -72,6 +74,7 @@ class ChatActionsNotifier extends StateNotifier<ChatActionsState> {
   Timer? _typingTimer;
 
   ChatActionsNotifier(
+    this._ref,
     this._repository,
     this.chatId,
     this.userId,
@@ -149,6 +152,13 @@ class ChatActionsNotifier extends StateNotifier<ChatActionsState> {
     }
     try {
       await _repository.markAsRead(chatId, userId);
+      // The server now also sweeps MESSAGE-type notifications for this chat
+      // (chats.service.ts::markAsRead) so the notification badge stays in
+      // sync with the chat badge. Invalidate both unread streams so the
+      // shell badges + iOS app-icon badge re-poll the fresh counts instead
+      // of waiting up to 15s for the next polling tick.
+      _ref.invalidate(unreadCountProvider);
+      _ref.invalidate(unreadNotificationsStreamProvider);
     } catch (_) {
       // Silently fail
     }
@@ -257,6 +267,7 @@ final chatActionsProvider =
         final queue = ref.watch(offlineQueueProvider);
 
         return ChatActionsNotifier(
+          ref,
           repository,
           chatId,
           user?.uid ?? '',

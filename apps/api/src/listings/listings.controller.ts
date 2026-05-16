@@ -44,14 +44,24 @@ export class ListingsController {
     return this.listingsService.search(query, user?.id);
   }
 
-  // Get current user's listings
+  // Get current user's listings. Cursor + limit are optional — when both
+  // are absent the endpoint returns every listing in one response (legacy
+  // behaviour for older mobile builds).
   @Get('my')
   @UseGuards(JwtAuthGuard)
   async getMyListings(
     @CurrentUser() user: Prisma.User,
     @Query('status') status?: string,
+    @Query('cursor') cursor?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.listingsService.getMyListings(user.id, status);
+    const parsedLimit = limit
+      ? Math.max(1, Math.min(100, parseInt(limit, 10) || 0))
+      : undefined;
+    return this.listingsService.getMyListings(user.id, status, {
+      cursor,
+      limit: parsedLimit,
+    });
   }
 
   // Get saved listings

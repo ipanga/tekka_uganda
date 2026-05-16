@@ -14,7 +14,10 @@ export class CreateReviewDto {
   @IsNotEmpty()
   revieweeId: string;
 
-  @ApiPropertyOptional({ description: 'ID of the listing this review is for (optional - can review sellers without a specific listing)' })
+  @ApiPropertyOptional({
+    description:
+      'ID of the listing this review is for (optional - can review sellers without a specific listing)',
+  })
   @IsString()
   @IsOptional()
   listingId?: string;

@@ -9,10 +9,12 @@ import 'core/providers/cache_providers.dart';
 import 'core/providers/connectivity_provider.dart';
 import 'core/providers/deep_link_provider.dart';
 import 'core/providers/push_notification_provider.dart';
+import 'core/services/ios_badge_service.dart';
 import 'core/services/offline_queue/queue_executor.dart';
 import 'core/services/push_notification_service.dart' show primeInitialMessage;
 import 'core/theme/theme.dart';
 import 'features/auth/application/auth_provider.dart';
+import 'features/notifications/application/notification_provider.dart';
 import 'router/app_router.dart';
 import 'shared/services/tab_data_refresh.dart';
 import 'shared/widgets/app_lock_wrapper.dart';
@@ -62,8 +64,15 @@ class TekkaApp extends ConsumerWidget {
     // Wire notification taps + incoming universal/app links to the router.
     // Safe to re-wire on rebuild — both are idempotent.
     // Push init itself fires from the auth flow once the user is signed in.
+    //
+    // Use `push`, not `go`: deep-link target screens (chat / listing / review
+    // detail / etc.) are top-level routes outside the shell. `go` REPLACES the
+    // stack so the user lands on a page with no back button; `push` adds the
+    // detail on top of whatever was there (typically /home), so the AppBar
+    // back arrow returns the user where they were before the tap. Same applies
+    // to Universal-Link arrivals routed by deep_link_service.
     ref.read(pushNotificationServiceProvider).onNotificationTap = (route, _) =>
-        router.go(route);
+        router.push(route);
     ref.read(deepLinkServiceProvider).initialize(router);
 
     // Prime the cache + offline queue and teach the queue how to replay
@@ -88,10 +97,29 @@ class TekkaApp extends ConsumerWidget {
       });
     });
 
-    // Initialize push when the auth state first goes non-null. Covers both
-    // the returning-user case (session restored at boot from secure storage)
-    // and any login path that isn't verifyOtp (e.g. Firebase email fallback).
-    // initialize() is idempotent so concurrent callers are safe.
+    // Keep the iOS home-screen icon badge in sync with the unread-notification
+    // count. The server sets `aps.badge` on every push so the count is correct
+    // at delivery, but iOS never decrements it on its own — without this
+    // listener the badge stays stuck after the user reads notifications in-app.
+    // The polling stream + post-action invalidations in NotificationActions
+    // feed every change through here. Logout drops user to null which emits 0
+    // and clears the badge.
+    ref.listen<AsyncValue<int>>(unreadNotificationsStreamProvider, (_, next) {
+      next.whenData(IosBadgeService.setBadgeCount);
+    });
+
+    // Initialize push when the user becomes non-null. Two paths:
+    //
+    // 1. Listener — fires on any future null→non-null transition (login via
+    //    OTP, Firebase email fallback, sign-out then sign-in again).
+    // 2. Immediate read — for returning users whose JWT was already restored
+    //    from secure storage by the time TekkaApp.build runs. The listener
+    //    above only fires on transitions, so a session that was non-null at
+    //    listener-attach time would never trigger push init. This is the
+    //    fix for upgrade-while-signed-in: TestFlight preserves app data, so
+    //    JWT restores synchronously and the listener never sees a transition.
+    //
+    // initialize() is idempotent so being triggered by both paths is safe.
     ref.listen<AsyncValue<Object?>>(authStateProvider, (prev, next) {
       final prevUser = prev?.valueOrNull;
       final nextUser = next.valueOrNull;
@@ -99,6 +127,9 @@ class TekkaApp extends ConsumerWidget {
         ref.read(pushNotificationServiceProvider).initialize();
       }
     });
+    if (ref.read(authStateProvider).valueOrNull != null) {
+      ref.read(pushNotificationServiceProvider).initialize();
+    }
 
     return AppLockWrapper(
       child: MaterialApp.router(

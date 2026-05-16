@@ -1,3 +1,5 @@
+import '../../../../core/utils/image_url.dart';
+
 /// Price alert entity for tracking price drops on favorited items
 class PriceAlert {
   final String id;
@@ -111,7 +113,7 @@ class PriceAlert {
       id: map['id'] as String,
       listingId: map['listingId'] as String,
       listingTitle: map['listingTitle'] as String,
-      listingImageUrl: map['listingImageUrl'] as String?,
+      listingImageUrl: toHttpsOrNull(map['listingImageUrl']),
       sellerName: map['sellerName'] as String,
       originalPrice: map['originalPrice'] as int,
       newPrice: map['newPrice'] as int,
@@ -128,9 +130,11 @@ class PriceAlert {
     // Handle embedded listing object from API
     final listing = json['listing'] as Map<String, dynamic>?;
     final imageUrls = listing?['imageUrls'] as List<dynamic>?;
-    final listingImageUrl = imageUrls?.isNotEmpty == true
-        ? imageUrls!.first as String
-        : json['listingImageUrl'] as String?;
+    final listingImageUrl = toHttpsOrNull(
+      imageUrls?.isNotEmpty == true
+          ? imageUrls!.first
+          : json['listingImageUrl'],
+    );
 
     return PriceAlert(
       id: json['id'] as String,

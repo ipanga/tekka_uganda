@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -207,13 +209,23 @@ class _FavoriteCard extends StatelessWidget {
                                 child: CircularProgressIndicator(),
                               ),
                             ),
-                            errorWidget: (context, url, error) => Container(
-                              color: AppColors.gray100,
-                              child: const Icon(
-                                Icons.broken_image,
-                                color: AppColors.gray400,
-                              ),
-                            ),
+                            errorWidget: (context, url, error) {
+                              // ignore: avoid_print
+                              print('[tekka.image] $url -> $error');
+                              developer.log(
+                                'image fetch failed: $url -> $error',
+                                name: 'tekka.image',
+                                error: error,
+                                level: 1000,
+                              );
+                              return Container(
+                                color: AppColors.gray100,
+                                child: const Icon(
+                                  Icons.broken_image,
+                                  color: AppColors.gray400,
+                                ),
+                              );
+                            },
                           )
                         : Container(
                             color: AppColors.gray100,

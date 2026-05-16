@@ -68,6 +68,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
+    site: '@tekkauganda',
+    creator: '@tekkauganda',
     title: 'Tekka Uganda - Buy & Sell Second-Hand Clothes Online',
     description:
       'Buy and sell second-hand clothes in Uganda on Tekka. Affordable fashion in Kampala and across Uganda.',
