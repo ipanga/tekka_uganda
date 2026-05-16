@@ -39,6 +39,32 @@ export function ogImage(url: string): string {
   return url.replace('/upload/', '/upload/c_fill,g_auto,w_1200,h_630,q_auto,f_jpg/');
 }
 
+function shouldProxySocialImage(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'https:' && parsed.hostname === 'res.cloudinary.com';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * WhatsApp is more reliable when the preview image is served from the same
+ * origin as the shared URL. Keep Cloudinary transformations, then expose them
+ * through a guarded same-domain proxy.
+ */
+export function socialImageUrl(url: string): string {
+  const transformed = ogImage(url);
+
+  if (!transformed) return transformed;
+  if (transformed.startsWith('/')) return absoluteUrl(transformed);
+  if (shouldProxySocialImage(transformed)) {
+    return absoluteUrl(`/api/og-image?src=${encodeURIComponent(transformed)}`);
+  }
+
+  return transformed;
+}
+
 /**
  * Build page metadata with sensible defaults and OG/Twitter tags.
  *
@@ -71,7 +97,7 @@ export function buildMetadata({
 
   const allImages = (images && images.length > 0 ? images : image ? [image] : [])
     .filter(Boolean)
-    .map(ogImage);
+    .map(socialImageUrl);
 
   // For product pages, openGraph is rendered as JSX by the page component
   // because Next.js's openGraph API rejects og:type=product. Setting it to
@@ -139,7 +165,7 @@ export function buildProductOgTags(opts: {
     ogTitle,
     description: opts.description,
     siteName: SITE_NAME,
-    images: opts.images.filter(Boolean).map(ogImage),
+    images: opts.images.filter(Boolean).map(socialImageUrl),
     price: String(opts.price),
     currency: opts.currency,
     availability: opts.availability,
