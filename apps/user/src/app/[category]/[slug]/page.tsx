@@ -14,7 +14,14 @@ import ListingDetailClient from '@/components/listings/ListingDetailClient';
 // particular) can cache the parsed OG metadata. Without this, Next.js 16 marks
 // the route dynamic and sends `Cache-Control: private, no-cache, no-store`,
 // which makes FB's scraper refuse to persist og_object even on a 200 response.
+// `generateStaticParams` returning `[]` is required alongside `revalidate` —
+// without it Next.js classifies the route as `ƒ` (Dynamic SSR) and ignores the
+// revalidate hint entirely.
 export const revalidate = 300;
+export const dynamicParams = true;
+export function generateStaticParams() {
+  return [];
+}
 
 interface PageProps {
   params: Promise<{ category: string; slug: string }>;
