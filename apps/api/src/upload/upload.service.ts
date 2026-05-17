@@ -1,12 +1,13 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { imageSize } from 'image-size';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class UploadService {
   private readonly logger = new Logger(UploadService.name);
 
-  constructor() {
+  constructor(private readonly prisma: PrismaService) {
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
@@ -17,7 +18,7 @@ export class UploadService {
   async uploadImage(
     file: Express.Multer.File,
     folder: string = 'listings',
-  ): Promise<string> {
+  ): Promise<{ url: string; publicId: string }> {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
@@ -91,7 +92,7 @@ export class UploadService {
             this.logger.log(
               `Image uploaded: ${result.public_id} (${result.bytes} bytes)`,
             );
-            resolve(result.secure_url);
+            resolve({ url: result.secure_url, publicId: result.public_id });
           } else {
             reject(new BadRequestException('Upload failed'));
           }
@@ -105,7 +106,7 @@ export class UploadService {
   async uploadMultipleImages(
     files: Express.Multer.File[],
     folder: string = 'listings',
-  ): Promise<string[]> {
+  ): Promise<Array<{ url: string; publicId: string }>> {
     if (!files || files.length === 0) {
       throw new BadRequestException('No files provided');
     }
@@ -119,7 +120,70 @@ export class UploadService {
   }
 
   /**
-   * Delete a single image from Cloudinary by public ID
+   * Delete multiple Cloudinary resources by public_id. Prefer this over
+   * deleteImagesByUrls when the caller stored public_ids — it avoids
+   * brittle URL regex parsing.
+   */
+  async deleteImagesByPublicIds(publicIds: string[]): Promise<{
+    deleted: number;
+    failed: number;
+    errors: string[];
+  }> {
+    const results = { deleted: 0, failed: 0, errors: [] as string[] };
+    if (!publicIds || publicIds.length === 0) return results;
+
+    const deletePromises = publicIds.map(async (publicId) => {
+      if (!publicId) {
+        results.failed++;
+        results.errors.push('Empty public ID skipped');
+        return;
+      }
+      const success = await this.deleteImage(publicId);
+      if (success) {
+        results.deleted++;
+      } else {
+        results.failed++;
+        results.errors.push(`Failed to delete: ${publicId}`);
+      }
+    });
+
+    await Promise.all(deletePromises);
+
+    this.logger.log(
+      `Cloudinary public-id delete: ${results.deleted} deleted, ${results.failed} failed`,
+    );
+    return results;
+  }
+
+  /**
+   * Mark images permanent in Cloudinary by public_id (preferred path when
+   * the caller has public_ids stored).
+   */
+  async markImagesPermanentByPublicIds(publicIds: string[]): Promise<void> {
+    if (!publicIds || publicIds.length === 0) return;
+
+    const promises = publicIds.map(async (publicId) => {
+      if (!publicId) return;
+      try {
+        await cloudinary.uploader.explicit(publicId, {
+          type: 'upload',
+          context: 'status=permanent',
+        });
+      } catch (error) {
+        this.logger.warn(
+          `Failed to mark image permanent ${publicId}: ${error.message}`,
+        );
+      }
+    });
+
+    await Promise.all(promises);
+    this.logger.log(`Marked ${publicIds.length} images as permanent`);
+  }
+
+  /**
+   * Delete a single image from Cloudinary by public ID.
+   * Enqueues a retry row on transient (caught-exception) failures —
+   * "not found" results are NOT enqueued since they're terminal.
    */
   async deleteImage(publicId: string): Promise<boolean> {
     try {
@@ -131,7 +195,50 @@ export class UploadService {
       return success;
     } catch (error) {
       this.logger.error(`Failed to delete image ${publicId}: ${error.message}`);
+      await this.enqueueFailedDeletion(publicId, null, error.message);
       return false;
+    }
+  }
+
+  /**
+   * Raw Cloudinary destroy without retry-queue side effects.
+   * Used by the retry cron so it can update the existing row in place
+   * instead of creating duplicates.
+   */
+  async destroyResourceRaw(
+    publicId: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const result = await cloudinary.uploader.destroy(publicId);
+      return { success: result.result === 'ok' };
+    } catch (error: any) {
+      return { success: false, error: error?.message ?? 'unknown' };
+    }
+  }
+
+  /**
+   * Record a failed Cloudinary delete for later retry. No-op if neither
+   * identifier is provided. Insert failures here must not surface to the
+   * caller — best-effort by design.
+   */
+  private async enqueueFailedDeletion(
+    publicId: string | null,
+    url: string | null,
+    error: string,
+  ): Promise<void> {
+    if (!publicId && !url) return;
+    try {
+      await this.prisma.failedMediaDeletion.create({
+        data: {
+          publicId,
+          url,
+          lastError: error.slice(0, 500),
+        },
+      });
+    } catch (err: any) {
+      this.logger.warn(
+        `Could not enqueue failed deletion (${publicId ?? url}): ${err?.message ?? err}`,
+      );
     }
   }
 

@@ -48,10 +48,21 @@ class AppConfig {
   static const int maxTitleLength = 150;
 
   /// Image settings
-  static const int maxImageWidth = 1200;
-  static const int maxImageHeight = 1200;
+  /// Picker pre-resizes to these bounds; our WebP recompress runs after.
+  static const int maxImageWidth = 1800;
+  static const int maxImageHeight = 1800;
+
+  /// Picker quality hint (0-100). Final encode happens in ImageService.compressImage.
   static const int imageQuality = 85;
+
+  /// Target WebP quality for the post-pick recompress step.
+  static const int compressedImageQuality = 80;
+
+  /// Hard ceiling for source files before compression.
   static const double maxImageSizeMB = 5.0;
+
+  /// Target output size after compression. Spec: ≤500–700KB balanced.
+  static const double targetCompressedSizeMB = 0.7;
 
   /// Cache durations
   static const Duration listingCacheDuration = Duration(minutes: 5);

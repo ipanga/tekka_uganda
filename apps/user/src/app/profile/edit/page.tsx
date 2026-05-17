@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeftIcon, CameraIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
 import { api } from '@/lib/api';
+import { resizeImageFile } from '@/lib/utils';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/Button';
@@ -126,7 +127,8 @@ export default function EditProfilePage() {
     setUploadingPhoto(true);
     setError(null);
     try {
-      const { url } = await api.uploadImage(file);
+      const compressed = await resizeImageFile(file);
+      const { url } = await api.uploadImage(compressed);
       setPhotoUrl(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to upload photo');

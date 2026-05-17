@@ -4,9 +4,10 @@ import { UsersController } from './users.controller';
 import { ScheduledDeletionCronService } from './scheduled-deletion.cron';
 import { AuthModule } from '../auth/auth.module';
 import { EmailModule } from '../email/email.module';
+import { UploadModule } from '../upload/upload.module';
 
 @Module({
-  imports: [AuthModule, EmailModule],
+  imports: [AuthModule, EmailModule, UploadModule],
   controllers: [UsersController],
   providers: [UsersService, ScheduledDeletionCronService],
   exports: [UsersService],

@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
+import { UploadService } from '../upload/upload.service';
 import { User } from '@prisma/client';
 import {
   UpdateUserDto,
@@ -25,6 +26,7 @@ export class UsersService {
     private prisma: PrismaService,
     private emailService: EmailService,
     private configService: ConfigService,
+    private uploadService: UploadService,
   ) {
     this.isDevelopment =
       this.configService.get<string>('NODE_ENV') === 'development';
@@ -391,6 +393,11 @@ export class UsersService {
     const user = await this.findById(userId);
     const userEmail = user.email;
 
+    // Collect all Cloudinary references owned by this user BEFORE deletion.
+    // We tolerate failures here: GDPR delete must succeed even if collection
+    // partially fails. Anything we miss is swept by the reconciliation cron.
+    const mediaToDelete = await this.collectUserCloudinaryMedia(userId, user);
+
     // Delete all user data using transaction
     await this.prisma.$transaction(async (tx) => {
       // Delete user's listings
@@ -432,12 +439,24 @@ export class UsersService {
         where: { OR: [{ reporterId: userId }, { reportedUserId: userId }] },
       });
 
+      // Delete identity verification (cascade FK exists post-migration but the
+      // explicit delete makes this safe on pre-migration DBs too).
+      await tx.identityVerification.deleteMany({ where: { userId } });
+
       // Delete scheduled deletion record
       await tx.scheduledDeletion.deleteMany({ where: { userId } });
 
       // Finally delete the user
       await tx.user.delete({ where: { id: userId } });
     });
+
+    // Fire Cloudinary cleanup after the DB delete commits. Best-effort —
+    // failures are logged but never block the GDPR-deletion response.
+    this.purgeUserCloudinaryMedia(userId, mediaToDelete).catch((err) =>
+      this.logger.error(
+        `Cloudinary cleanup after account deletion failed for ${userId}: ${err?.message ?? err}`,
+      ),
+    );
 
     if (userEmail) {
       await this.emailService
@@ -450,6 +469,107 @@ export class UsersService {
     }
 
     return { deleted: true };
+  }
+
+  /**
+   * Gather every Cloudinary reference owned by a user so they can be
+   * destroyed once the DB delete commits. Tolerates missing tables/columns
+   * — partial collection is better than a failed account delete.
+   */
+  private async collectUserCloudinaryMedia(
+    userId: string,
+    user: User,
+  ): Promise<{ publicIds: string[]; urls: string[] }> {
+    const publicIds = new Set<string>();
+    const urls = new Set<string>();
+
+    const add = (url?: string | null, publicId?: string | null) => {
+      if (publicId) publicIds.add(publicId);
+      else if (url) urls.add(url);
+    };
+
+    add(user.photoUrl, user.photoPublicId);
+
+    try {
+      const [listings, identity, messages] = await Promise.all([
+        this.prisma.listing.findMany({
+          where: { sellerId: userId },
+          select: { imageUrls: true, imagePublicIds: true },
+        }),
+        this.prisma.identityVerification.findUnique({
+          where: { userId },
+          select: {
+            frontImageUrl: true,
+            frontImagePublicId: true,
+            backImageUrl: true,
+            backImagePublicId: true,
+            selfieUrl: true,
+            selfiePublicId: true,
+          },
+        }),
+        this.prisma.message.findMany({
+          where: {
+            imageUrl: { not: null },
+            OR: [
+              { senderId: userId },
+              { chat: { buyerId: userId } },
+              { chat: { sellerId: userId } },
+            ],
+          },
+          select: { imageUrl: true, imagePublicId: true },
+        }),
+      ]);
+
+      for (const listing of listings) {
+        const ids = listing.imagePublicIds || [];
+        const u = listing.imageUrls || [];
+        if (ids.length === u.length && ids.length > 0) {
+          ids.forEach((id) => id && publicIds.add(id));
+        } else {
+          u.forEach((url) => url && urls.add(url));
+        }
+      }
+
+      if (identity) {
+        add(identity.frontImageUrl, identity.frontImagePublicId);
+        add(identity.backImageUrl, identity.backImagePublicId);
+        add(identity.selfieUrl, identity.selfiePublicId);
+      }
+
+      for (const m of messages) add(m.imageUrl, m.imagePublicId);
+    } catch (err: any) {
+      this.logger.warn(
+        `Partial Cloudinary collection for ${userId}: ${err?.message ?? err}`,
+      );
+    }
+
+    return { publicIds: [...publicIds], urls: [...urls] };
+  }
+
+  private async purgeUserCloudinaryMedia(
+    userId: string,
+    media: { publicIds: string[]; urls: string[] },
+  ): Promise<void> {
+    if (media.publicIds.length === 0 && media.urls.length === 0) return;
+
+    this.logger.log(
+      `Purging Cloudinary media for deleted user ${userId}: ` +
+        `${media.publicIds.length} by public_id, ${media.urls.length} by URL`,
+    );
+
+    const [byId, byUrl] = await Promise.all([
+      media.publicIds.length > 0
+        ? this.uploadService.deleteImagesByPublicIds(media.publicIds)
+        : Promise.resolve({ deleted: 0, failed: 0, errors: [] }),
+      media.urls.length > 0
+        ? this.uploadService.deleteImagesByUrls(media.urls)
+        : Promise.resolve({ deleted: 0, failed: 0, errors: [] }),
+    ]);
+
+    this.logger.log(
+      `Cloudinary purge for ${userId}: deleted=${byId.deleted + byUrl.deleted}, ` +
+        `failed=${byId.failed + byUrl.failed}`,
+    );
   }
 
   // Session Management
