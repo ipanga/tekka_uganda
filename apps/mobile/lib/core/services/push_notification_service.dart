@@ -127,6 +127,13 @@ class PushNotificationService {
   /// callback has access to the live `GoRouter` instance.
   void Function(String route, Map<String, dynamic> data)? onNotificationTap;
 
+  /// Fires whenever a notification reaches the device — both foreground
+  /// arrival and tap. Set from the app layer to refresh Riverpod providers
+  /// that back the in-app notifications list, so the user doesn't have to
+  /// pull-to-refresh after a listing-approved / listing-rejected push (and
+  /// the same for any other type).
+  void Function()? onNotificationReceived;
+
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
 
@@ -482,6 +489,11 @@ class PushNotificationService {
       ),
       payload: jsonEncode(message.data),
     );
+
+    // Tell the app a notification just landed so it can refresh the
+    // in-app notifications list / unread count. Fire-and-forget; host
+    // never raises back.
+    onNotificationReceived?.call();
   }
 
   void _handleNotificationTap(RemoteMessage message) {
@@ -490,6 +502,7 @@ class PushNotificationService {
       '[tekka.push] tap received: messageId=${message.messageId} '
       'data=${message.data} notification=${message.notification?.title}',
     );
+    onNotificationReceived?.call();
     _routeFromData(message.data);
   }
 

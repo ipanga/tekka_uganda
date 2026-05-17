@@ -29,6 +29,11 @@ void refreshTabDataAfterResume(WidgetRef ref) {
   // Notifications list + shell badge.
   ref.invalidate(notificationsStreamProvider);
   ref.invalidate(unreadNotificationsStreamProvider);
+  // The paginated list backing the Notifications screen is its own
+  // StateNotifier — invalidating it tears down and rebuilds via the
+  // notifier's _loadInitial. Without this, a notification that arrived
+  // while the app was backgrounded never shows up after resume.
+  ref.invalidate(notificationsListProvider);
 
   // Saved tab.
   ref.invalidate(savedListingsProvider);
@@ -38,4 +43,20 @@ void refreshTabDataAfterResume(WidgetRef ref) {
   ref.invalidate(userListingsProvider);
   ref.invalidate(profileStatsProvider);
   ref.invalidate(myListingsPreviewProvider);
+}
+
+/// Refresh the notification providers after a push notification arrives
+/// (foreground delivery or tap). Called from the host-side
+/// `onNotificationReceived` callback wired in `main.dart`. Keeps the
+/// in-app notifications list and badge consistent with what the user
+/// just saw on the lock screen, without forcing pull-to-refresh.
+///
+/// Uses `.notifier.refresh()` on the paginated list rather than
+/// `invalidate()` so subscribers (the Notifications screen, if open)
+/// don't briefly see a "loading" state — the existing items stay on
+/// screen while page 1 re-fetches, then swap atomically.
+void refreshNotificationsAfterPush(WidgetRef ref) {
+  if (!ref.read(isConnectedProvider)) return;
+  ref.invalidate(unreadNotificationsStreamProvider);
+  ref.read(notificationsListProvider.notifier).refresh();
 }
