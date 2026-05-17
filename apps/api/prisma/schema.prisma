@@ -834,3 +834,25 @@ model ScheduledDeletion {
 
   @@map("scheduled_deletions")
 }
+
+// ============================================
+// MEDIA CLEANUP RETRY QUEUE
+// ============================================
+
+// Records Cloudinary deletes that failed. A cron retries with exponential
+// backoff up to `attemptCount = 5`, then leaves the row for manual review.
+// At least one of `publicId` / `url` must be populated — the retry path
+// prefers `publicId` if present.
+model FailedMediaDeletion {
+  id            String   @id @default(cuid())
+  publicId      String?  @map("public_id")
+  url           String?
+  attemptCount  Int      @default(0) @map("attempt_count")
+  lastError     String?  @map("last_error")
+  createdAt     DateTime @default(now()) @map("created_at")
+  lastAttemptAt DateTime @default(now()) @map("last_attempt_at")
+
+  @@index([attemptCount])
+  @@index([lastAttemptAt])
+  @@map("failed_media_deletions")
+}
