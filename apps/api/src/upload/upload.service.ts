@@ -1,12 +1,13 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { imageSize } from 'image-size';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class UploadService {
   private readonly logger = new Logger(UploadService.name);
 
-  constructor() {
+  constructor(private readonly prisma: PrismaService) {
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
@@ -180,7 +181,9 @@ export class UploadService {
   }
 
   /**
-   * Delete a single image from Cloudinary by public ID
+   * Delete a single image from Cloudinary by public ID.
+   * Enqueues a retry row on transient (caught-exception) failures —
+   * "not found" results are NOT enqueued since they're terminal.
    */
   async deleteImage(publicId: string): Promise<boolean> {
     try {
@@ -192,7 +195,50 @@ export class UploadService {
       return success;
     } catch (error) {
       this.logger.error(`Failed to delete image ${publicId}: ${error.message}`);
+      await this.enqueueFailedDeletion(publicId, null, error.message);
       return false;
+    }
+  }
+
+  /**
+   * Raw Cloudinary destroy without retry-queue side effects.
+   * Used by the retry cron so it can update the existing row in place
+   * instead of creating duplicates.
+   */
+  async destroyResourceRaw(
+    publicId: string,
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const result = await cloudinary.uploader.destroy(publicId);
+      return { success: result.result === 'ok' };
+    } catch (error: any) {
+      return { success: false, error: error?.message ?? 'unknown' };
+    }
+  }
+
+  /**
+   * Record a failed Cloudinary delete for later retry. No-op if neither
+   * identifier is provided. Insert failures here must not surface to the
+   * caller — best-effort by design.
+   */
+  private async enqueueFailedDeletion(
+    publicId: string | null,
+    url: string | null,
+    error: string,
+  ): Promise<void> {
+    if (!publicId && !url) return;
+    try {
+      await this.prisma.failedMediaDeletion.create({
+        data: {
+          publicId,
+          url,
+          lastError: error.slice(0, 500),
+        },
+      });
+    } catch (err: any) {
+      this.logger.warn(
+        `Could not enqueue failed deletion (${publicId ?? url}): ${err?.message ?? err}`,
+      );
     }
   }
 
