@@ -45,18 +45,24 @@ void refreshTabDataAfterResume(WidgetRef ref) {
   ref.invalidate(myListingsPreviewProvider);
 }
 
-/// Refresh the notification providers after a push notification arrives
-/// (foreground delivery or tap). Called from the host-side
-/// `onNotificationReceived` callback wired in `main.dart`. Keeps the
-/// in-app notifications list and badge consistent with what the user
-/// just saw on the lock screen, without forcing pull-to-refresh.
+/// Refresh the notification + chat unread providers after a push arrives
+/// (foreground delivery, tap, or silent `sync_unread_state` from a sibling
+/// device that just marked something read). Called from the host-side
+/// `onNotificationReceived` callback wired in `main.dart`. Keeps every
+/// badge consistent with the freshly-mutated backend state without
+/// forcing pull-to-refresh.
 ///
 /// Uses `.notifier.refresh()` on the paginated list rather than
 /// `invalidate()` so subscribers (the Notifications screen, if open)
 /// don't briefly see a "loading" state — the existing items stay on
 /// screen while page 1 re-fetches, then swap atomically.
+///
+/// Chat unread (`unreadCountProvider`) is invalidated separately — same
+/// provider the resume sweep already touches — so the chat tab badge
+/// also re-polls within seconds of a sibling device reading a chat.
 void refreshNotificationsAfterPush(WidgetRef ref) {
   if (!ref.read(isConnectedProvider)) return;
   ref.invalidate(unreadNotificationsStreamProvider);
   ref.read(notificationsListProvider.notifier).refresh();
+  ref.invalidate(unreadCountProvider);
 }
