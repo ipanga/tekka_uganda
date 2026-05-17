@@ -453,9 +453,22 @@ class PushNotificationService {
     );
     final notification = message.notification;
     if (notification == null) {
-      // Data-only payload — nothing to render. Logged so we can tell the
-      // difference between "no push arrived" and "push arrived but had no
-      // notification block" while debugging iOS delivery.
+      // Silent state-sync push from the backend (fired after a read mutation
+      // on another device) — refresh providers and return without rendering.
+      final type = message.data['type'] as String?;
+      if (type == 'sync_unread_state') {
+        developer.log(
+          'sync_unread_state: refreshing notification + chat unread state',
+          name: 'tekka.push',
+          level: 800,
+        );
+        onNotificationReceived?.call();
+        return;
+      }
+
+      // Other data-only payloads — log for debugging but no-op. Renders
+      // nothing because there's no notification block, and we don't have
+      // a known handler for this type.
       developer.log(
         'data-only message: id=${message.messageId} data=${message.data}',
         name: 'tekka.push',
