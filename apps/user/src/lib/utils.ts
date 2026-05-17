@@ -191,14 +191,17 @@ export function isValidPassword(password: string): boolean {
 // ============================================
 
 /** Maximum image dimension (width or height) in pixels before upload */
-const MAX_IMAGE_DIMENSION = 1920;
-/** JPEG compression quality (0-1) for resized images */
-const IMAGE_COMPRESSION_QUALITY = 0.85;
+const MAX_IMAGE_DIMENSION = 1800;
+/** WebP compression quality (0-1) for resized images */
+const IMAGE_COMPRESSION_QUALITY = 0.80;
+/** Output format — WebP gives ~30% smaller files than JPEG at equivalent quality */
+const IMAGE_OUTPUT_TYPE = 'image/webp';
+const IMAGE_OUTPUT_EXTENSION = '.webp';
 
 /**
  * Resize an image File if either dimension exceeds MAX_IMAGE_DIMENSION.
- * Maintains aspect ratio, outputs JPEG at IMAGE_COMPRESSION_QUALITY.
- * Returns the original file if no resizing is needed and it's already JPEG.
+ * Maintains aspect ratio, outputs WebP at IMAGE_COMPRESSION_QUALITY.
+ * Returns the original file if WebP encoding fails (very rare in modern browsers).
  */
 export async function resizeImageFile(file: File): Promise<File> {
   return new Promise((resolve, reject) => {
@@ -210,28 +213,31 @@ export async function resizeImageFile(file: File): Promise<File> {
 
       const { width, height } = img;
 
-      // If already within limits, still compress to JPEG for consistency
-      // but skip canvas resize if dimensions are fine
+      // If already within limits, still recompress to WebP for size savings.
+      // Skip canvas resize if dimensions are fine but the source is already WebP.
       if (width <= MAX_IMAGE_DIMENSION && height <= MAX_IMAGE_DIMENSION) {
-        // For non-JPEG files, convert to JPEG for size savings
-        if (!file.type.startsWith('image/jpeg')) {
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          if (!ctx) { resolve(file); return; }
-          ctx.drawImage(img, 0, 0);
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) { resolve(file); return; }
-              resolve(new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' }));
-            },
-            'image/jpeg',
-            IMAGE_COMPRESSION_QUALITY,
-          );
+        if (file.type === IMAGE_OUTPUT_TYPE) {
+          resolve(file);
           return;
         }
-        resolve(file);
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) { resolve(file); return; }
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob(
+          (blob) => {
+            if (!blob) { resolve(file); return; }
+            resolve(new File(
+              [blob],
+              file.name.replace(/\.\w+$/, IMAGE_OUTPUT_EXTENSION),
+              { type: IMAGE_OUTPUT_TYPE },
+            ));
+          },
+          IMAGE_OUTPUT_TYPE,
+          IMAGE_COMPRESSION_QUALITY,
+        );
         return;
       }
 
@@ -268,12 +274,12 @@ export async function resizeImageFile(file: File): Promise<File> {
           if (!blob) { resolve(file); return; }
           const resizedFile = new File(
             [blob],
-            file.name.replace(/\.\w+$/, '.jpg'),
-            { type: 'image/jpeg' },
+            file.name.replace(/\.\w+$/, IMAGE_OUTPUT_EXTENSION),
+            { type: IMAGE_OUTPUT_TYPE },
           );
           resolve(resizedFile);
         },
-        'image/jpeg',
+        IMAGE_OUTPUT_TYPE,
         IMAGE_COMPRESSION_QUALITY,
       );
     };
