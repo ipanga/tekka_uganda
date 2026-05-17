@@ -458,6 +458,11 @@ export class ChatsService {
       data: { isRead: true },
     });
 
+    // Fan out a silent FCM push so every other device this user is signed
+    // into invalidates its chat + notification badges within seconds
+    // instead of waiting for the next poll tick.
+    void this.notificationsService.sendUnreadStateSync(userId);
+
     return { success: true };
   }
 

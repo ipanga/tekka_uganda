@@ -173,6 +173,76 @@ export class NotificationsService {
   }
 
   /**
+   * Push a silent FCM "refresh state" signal to all of a user's devices.
+   * Fired after a read-state mutation on any device so siblings invalidate
+   * their cached unread counts within seconds instead of waiting for the
+   * next polling tick (5s chat, 15s notifications).
+   *
+   * iOS: `contentAvailable: true` + `apns-push-type: background` wakes the
+   * app silently and the supplied `badge` value updates the home-screen
+   * badge directly — even if the app is terminated.
+   *
+   * Android: no notification block so nothing is shown. The Flutter
+   * foreground handler invalidates the unread provider when the data-only
+   * message arrives; backgrounded apps catch up via the resume sweep.
+   *
+   * Fire-and-forget — failures are logged, never thrown. A failed sync
+   * push degrades to "device catches up on next poll", not a real outage.
+   */
+  async sendUnreadStateSync(userId: string): Promise<void> {
+    try {
+      const fcmTokens = await this.prisma.fcmToken.findMany({
+        where: { userId },
+        select: { token: true },
+      });
+      if (fcmTokens.length === 0) return;
+
+      const tokens = fcmTokens.map((t) => t.token);
+      const badge = await this.getUnreadCount(userId);
+
+      const messaging = getFirebaseMessaging();
+      if (!messaging) return;
+
+      const response = await messaging.sendEachForMulticast({
+        tokens,
+        data: { type: 'sync_unread_state' },
+        android: {
+          priority: 'high',
+        },
+        apns: {
+          headers: {
+            // Required for background/content-available pushes — `10` is
+            // reserved for alert pushes and Apple silently drops a
+            // background push that uses it.
+            'apns-priority': '5',
+            // iOS 13+ requires explicit push-type for background.
+            'apns-push-type': 'background',
+          },
+          payload: {
+            aps: {
+              contentAvailable: true,
+              badge,
+            },
+          },
+        },
+      });
+
+      this.logger.log(
+        `Unread-state sync userId=${userId} ` +
+          `success=${response.successCount} failure=${response.failureCount} ` +
+          `badge=${badge}`,
+      );
+
+      // Reuse the dead-token prune so this path also keeps the table honest.
+      await this.pruneDeadTokens(response.responses, tokens);
+    } catch (error) {
+      this.logger.warn(
+        `Unread-state sync failed for ${userId}: ${(error as Error).message ?? error}`,
+      );
+    }
+  }
+
+  /**
    * Send bulk notifications
    */
   async sendBulk(dto: SendBulkNotificationDto) {
@@ -239,10 +309,15 @@ export class NotificationsService {
   async markAsRead(notificationId: string, userId: string) {
     await this.findOne(notificationId, userId);
 
-    return this.prisma.notification.update({
+    const updated = await this.prisma.notification.update({
       where: { id: notificationId },
       data: { isRead: true },
     });
+
+    // Fan out to sibling devices so their badges drop in real time.
+    void this.sendUnreadStateSync(userId);
+
+    return updated;
   }
 
   /**
@@ -253,6 +328,8 @@ export class NotificationsService {
       where: { userId, isRead: false },
       data: { isRead: true },
     });
+
+    void this.sendUnreadStateSync(userId);
 
     return { success: true };
   }
@@ -267,6 +344,8 @@ export class NotificationsService {
       where: { id: notificationId },
     });
 
+    void this.sendUnreadStateSync(userId);
+
     return { success: true };
   }
 
@@ -277,6 +356,8 @@ export class NotificationsService {
     await this.prisma.notification.deleteMany({
       where: { userId },
     });
+
+    void this.sendUnreadStateSync(userId);
 
     return { success: true };
   }
