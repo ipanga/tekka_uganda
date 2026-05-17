@@ -73,6 +73,11 @@ class TekkaApp extends ConsumerWidget {
     // to Universal-Link arrivals routed by deep_link_service.
     ref.read(pushNotificationServiceProvider).onNotificationTap = (route, _) =>
         router.push(route);
+    // Refresh the in-app notifications list + unread count whenever a push
+    // notification arrives — so listing-approved / listing-rejected (and
+    // any other type) show up without requiring pull-to-refresh.
+    ref.read(pushNotificationServiceProvider).onNotificationReceived = () =>
+        refreshNotificationsAfterPush(ref);
     ref.read(deepLinkServiceProvider).initialize(router);
 
     // Prime the cache + offline queue and teach the queue how to replay
