@@ -17,7 +17,7 @@ export class UploadService {
   async uploadImage(
     file: Express.Multer.File,
     folder: string = 'listings',
-  ): Promise<string> {
+  ): Promise<{ url: string; publicId: string }> {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
@@ -91,7 +91,7 @@ export class UploadService {
             this.logger.log(
               `Image uploaded: ${result.public_id} (${result.bytes} bytes)`,
             );
-            resolve(result.secure_url);
+            resolve({ url: result.secure_url, publicId: result.public_id });
           } else {
             reject(new BadRequestException('Upload failed'));
           }
@@ -105,7 +105,7 @@ export class UploadService {
   async uploadMultipleImages(
     files: Express.Multer.File[],
     folder: string = 'listings',
-  ): Promise<string[]> {
+  ): Promise<Array<{ url: string; publicId: string }>> {
     if (!files || files.length === 0) {
       throw new BadRequestException('No files provided');
     }
@@ -116,6 +116,67 @@ export class UploadService {
 
     const uploadPromises = files.map((file) => this.uploadImage(file, folder));
     return Promise.all(uploadPromises);
+  }
+
+  /**
+   * Delete multiple Cloudinary resources by public_id. Prefer this over
+   * deleteImagesByUrls when the caller stored public_ids — it avoids
+   * brittle URL regex parsing.
+   */
+  async deleteImagesByPublicIds(publicIds: string[]): Promise<{
+    deleted: number;
+    failed: number;
+    errors: string[];
+  }> {
+    const results = { deleted: 0, failed: 0, errors: [] as string[] };
+    if (!publicIds || publicIds.length === 0) return results;
+
+    const deletePromises = publicIds.map(async (publicId) => {
+      if (!publicId) {
+        results.failed++;
+        results.errors.push('Empty public ID skipped');
+        return;
+      }
+      const success = await this.deleteImage(publicId);
+      if (success) {
+        results.deleted++;
+      } else {
+        results.failed++;
+        results.errors.push(`Failed to delete: ${publicId}`);
+      }
+    });
+
+    await Promise.all(deletePromises);
+
+    this.logger.log(
+      `Cloudinary public-id delete: ${results.deleted} deleted, ${results.failed} failed`,
+    );
+    return results;
+  }
+
+  /**
+   * Mark images permanent in Cloudinary by public_id (preferred path when
+   * the caller has public_ids stored).
+   */
+  async markImagesPermanentByPublicIds(publicIds: string[]): Promise<void> {
+    if (!publicIds || publicIds.length === 0) return;
+
+    const promises = publicIds.map(async (publicId) => {
+      if (!publicId) return;
+      try {
+        await cloudinary.uploader.explicit(publicId, {
+          type: 'upload',
+          context: 'status=permanent',
+        });
+      } catch (error) {
+        this.logger.warn(
+          `Failed to mark image permanent ${publicId}: ${error.message}`,
+        );
+      }
+    });
+
+    await Promise.all(promises);
+    this.logger.log(`Marked ${publicIds.length} images as permanent`);
   }
 
   /**

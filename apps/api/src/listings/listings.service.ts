@@ -111,12 +111,22 @@ export class ListingsService {
         material: dto.material,
         location: dto.location,
         imageUrls: dto.imageUrls,
+        imagePublicIds: dto.imagePublicIds ?? [],
         status,
       },
     });
 
-    // Mark uploaded images as permanent in Cloudinary
-    if (dto.imageUrls?.length > 0) {
+    // Mark uploaded images as permanent in Cloudinary — prefer public_ids when
+    // available; fall back to URL parsing for older clients.
+    if (dto.imagePublicIds?.length) {
+      this.uploadService
+        .markImagesPermanentByPublicIds(dto.imagePublicIds)
+        .catch((error) => {
+          this.logger.warn(
+            `Failed to mark images permanent for listing ${listing.id}: ${error.message}`,
+          );
+        });
+    } else if (dto.imageUrls?.length > 0) {
       this.uploadService.markImagesPermanent(dto.imageUrls).catch((error) => {
         this.logger.warn(
           `Failed to mark images permanent for listing ${listing.id}: ${error.message}`,
@@ -306,17 +316,54 @@ export class ListingsService {
     if (dto.imageUrls) {
       const newUrls = dto.imageUrls;
       const oldUrls = listing.imageUrls || [];
+      const oldPublicIds = listing.imagePublicIds || [];
+      const newPublicIds = dto.imagePublicIds;
+
+      // Build URL → publicId map from the existing record so we can resolve
+      // removed images to public_ids when the positional arrays are aligned.
+      const oldUrlToPublicId = new Map<string, string>();
+      if (oldUrls.length === oldPublicIds.length) {
+        oldUrls.forEach((url, idx) => {
+          if (oldPublicIds[idx]) oldUrlToPublicId.set(url, oldPublicIds[idx]);
+        });
+      }
+
       const removedUrls = oldUrls.filter((url) => !newUrls.includes(url));
       const addedUrls = newUrls.filter((url) => !oldUrls.includes(url));
+      const removedPublicIds = removedUrls
+        .map((url) => oldUrlToPublicId.get(url))
+        .filter((p): p is string => !!p);
 
-      if (removedUrls.length > 0) {
+      if (
+        removedPublicIds.length === removedUrls.length &&
+        removedPublicIds.length > 0
+      ) {
+        this.uploadService
+          .deleteImagesByPublicIds(removedPublicIds)
+          .catch((error) => {
+            this.logger.warn(
+              `Failed to cleanup replaced images for listing ${id}: ${error.message}`,
+            );
+          });
+      } else if (removedUrls.length > 0) {
         this.uploadService.deleteImagesByUrls(removedUrls).catch((error) => {
           this.logger.warn(
             `Failed to cleanup replaced images for listing ${id}: ${error.message}`,
           );
         });
       }
-      if (addedUrls.length > 0) {
+
+      if (newPublicIds?.length) {
+        // Mark the entire new set permanent — Cloudinary explicit() is idempotent
+        // and this avoids needing to align positionally with addedUrls.
+        this.uploadService
+          .markImagesPermanentByPublicIds(newPublicIds)
+          .catch((error) => {
+            this.logger.warn(
+              `Failed to mark new images permanent for listing ${id}: ${error.message}`,
+            );
+          });
+      } else if (addedUrls.length > 0) {
         this.uploadService.markImagesPermanent(addedUrls).catch((error) => {
           this.logger.warn(
             `Failed to mark new images permanent for listing ${id}: ${error.message}`,
@@ -406,6 +453,7 @@ export class ListingsService {
    */
   private async deleteListingWithCleanup(listing: Listing): Promise<void> {
     const imageUrls = listing.imageUrls || [];
+    const imagePublicIds = listing.imagePublicIds || [];
     const listingId = listing.id;
 
     this.logger.log(
@@ -417,19 +465,35 @@ export class ListingsService {
 
     this.logger.log(`Database records deleted for listing ${listingId}`);
 
-    // Delete images from Cloudinary (don't block on failures)
-    if (imageUrls.length > 0) {
+    // Delete images from Cloudinary (don't block on failures). Prefer
+    // public_ids when stored — falls back to URL parsing for old rows.
+    if (imagePublicIds.length > 0) {
       try {
-        const result = await this.uploadService.deleteImagesByUrls(imageUrls);
+        const result =
+          await this.uploadService.deleteImagesByPublicIds(imagePublicIds);
         this.logger.log(
-          `Cloudinary cleanup for listing ${listingId}: ` +
+          `Cloudinary cleanup (by public_id) for listing ${listingId}: ` +
             `${result.deleted} deleted, ${result.failed} failed`,
         );
         if (result.errors.length > 0) {
           this.logger.warn(`Cloudinary errors: ${result.errors.join(', ')}`);
         }
       } catch (error) {
-        // Log but don't fail the deletion - images can be cleaned up later
+        this.logger.error(
+          `Cloudinary cleanup failed for listing ${listingId}: ${error.message}`,
+        );
+      }
+    } else if (imageUrls.length > 0) {
+      try {
+        const result = await this.uploadService.deleteImagesByUrls(imageUrls);
+        this.logger.log(
+          `Cloudinary cleanup (by URL) for listing ${listingId}: ` +
+            `${result.deleted} deleted, ${result.failed} failed`,
+        );
+        if (result.errors.length > 0) {
+          this.logger.warn(`Cloudinary errors: ${result.errors.join(', ')}`);
+        }
+      } catch (error) {
         this.logger.error(
           `Cloudinary cleanup failed for listing ${listingId}: ${error.message}`,
         );

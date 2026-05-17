@@ -150,6 +150,16 @@ export class CreateListingDto {
   @IsString({ each: true })
   imageUrls: string[];
 
+  @ApiPropertyOptional({
+    description:
+      'Cloudinary public_ids matching imageUrls (positional). Optional but recommended — enables reliable deletion without URL parsing.',
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  imagePublicIds?: string[];
+
   @ApiPropertyOptional({ description: 'Save as draft' })
   @IsOptional()
   @IsBoolean()
@@ -270,6 +280,16 @@ export class UpdateListingDto {
   @IsArray()
   @IsString({ each: true })
   imageUrls?: string[];
+
+  @ApiPropertyOptional({
+    description:
+      'Cloudinary public_ids matching imageUrls (positional). Optional but recommended for reliable deletion.',
+    type: [String],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  imagePublicIds?: string[];
 }
 
 export class ListingQueryDto {
