@@ -10,11 +10,24 @@ class ApiClient {
   late final Dio _dio;
   final FlutterSecureStorage _storage;
 
+  /// Expose the underlying Dio so tests can swap its [HttpClientAdapter].
+  /// Production callers must go through the typed wrappers below.
+  @visibleForTesting
+  Dio get dio => _dio;
+
+  /// Factory used to construct the dedicated Dio that performs the
+  /// `/auth/refresh` call. In production we mint a fresh Dio so it doesn't
+  /// inherit the auth interceptor (which would recurse on its own 401).
+  /// Tests can substitute a Dio whose [HttpClientAdapter] is stubbed.
+  @visibleForTesting
+  Dio Function()? refreshDioFactory;
+
   /// Called when token refresh fails — signals that the session is expired
   VoidCallback? onSessionExpired;
 
   static const String _tokenKey = 'access_token';
   static const String _refreshTokenKey = 'refresh_token';
+  static const String _cachedUserKey = 'cached_user';
 
   /// Auth paths that should NOT trigger 401 auto-retry
   static const _authPaths = [
@@ -86,26 +99,31 @@ class ApiClient {
     DioException error,
     ErrorInterceptorHandler handler,
   ) async {
+    final refreshToken = await _storage.read(key: _refreshTokenKey);
+    if (refreshToken == null) {
+      // No refresh token in storage — the original 401 is a real logout
+      // (e.g. user signed out elsewhere, or storage was wiped).
+      _handleSessionExpired();
+      return false;
+    }
+
+    // Use a separate Dio instance to avoid interceptor recursion. Tests can
+    // override the factory to drive controlled responses.
+    final refreshDio =
+        refreshDioFactory?.call() ??
+        Dio(
+          BaseOptions(
+            baseUrl: AppConfig.apiBaseUrl,
+            connectTimeout: AppConfig.apiTimeout,
+            receiveTimeout: AppConfig.apiTimeout,
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+          ),
+        );
+
     try {
-      final refreshToken = await _storage.read(key: _refreshTokenKey);
-      if (refreshToken == null) {
-        _handleSessionExpired();
-        return false;
-      }
-
-      // Use a separate Dio instance to avoid interceptor recursion
-      final refreshDio = Dio(
-        BaseOptions(
-          baseUrl: AppConfig.apiBaseUrl,
-          connectTimeout: AppConfig.apiTimeout,
-          receiveTimeout: AppConfig.apiTimeout,
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        ),
-      );
-
       final response = await refreshDio.post<Map<String, dynamic>>(
         '/auth/refresh',
         data: {'refreshToken': refreshToken},
@@ -125,9 +143,29 @@ class ApiClient {
       final retryResponse = await _dio.fetch(opts);
       handler.resolve(retryResponse);
       return true;
+    } on DioException catch (e) {
+      // Only treat a real 401 from /auth/refresh as session-expired. Anything
+      // else (timeout, connection error, 5xx, badCertificate, cancel) means
+      // we couldn't *verify* the refresh token, not that it's invalid — wiping
+      // the user out here is the wrong call. Propagate the original error so
+      // the caller surfaces a normal API error and the cached session stays
+      // intact until either the request succeeds on retry or the server
+      // genuinely rejects the refresh.
+      if (e.response?.statusCode == 401) {
+        debugPrint('Token refresh rejected (401): real logout');
+        _handleSessionExpired();
+      } else {
+        debugPrint(
+          'Token refresh transient failure (${e.type} / '
+          '${e.response?.statusCode}); keeping session',
+        );
+      }
+      return false;
     } catch (e) {
-      debugPrint('Token refresh failed: $e');
-      _handleSessionExpired();
+      // Non-Dio failures (e.g. malformed response, storage write failure):
+      // also treat as transient — better to leave the user signed in and let
+      // them retry than to log them out on an unexpected client-side error.
+      debugPrint('Token refresh unexpected error: $e; keeping session');
       return false;
     }
   }
@@ -247,6 +285,27 @@ class ApiClient {
   /// Get the refresh token
   Future<String?> getRefreshToken() async {
     return await _storage.read(key: _refreshTokenKey);
+  }
+
+  /// Persist the last-known authenticated user as a JSON blob so we can
+  /// re-hydrate the session on cold start when `/users/me` is temporarily
+  /// unreachable (deploy window, dead socket, DNS glitch). Without this,
+  /// a transient `getMe()` failure would otherwise force a logout.
+  Future<void> setCachedUser(String userJson) async {
+    await _storage.write(key: _cachedUserKey, value: userJson);
+  }
+
+  Future<String?> getCachedUser() async {
+    try {
+      return await _storage.read(key: _cachedUserKey);
+    } catch (e) {
+      debugPrint('ApiClient: Failed to read cached user: $e');
+      return null;
+    }
+  }
+
+  Future<void> clearCachedUser() async {
+    await _storage.delete(key: _cachedUserKey);
   }
 
   /// POST request without authentication (for auth endpoints)
