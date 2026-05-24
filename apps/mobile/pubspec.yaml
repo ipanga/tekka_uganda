@@ -1,7 +1,7 @@
 name: tekka
 description: "C2C Fashion Marketplace for Uganda"
 publish_to: 'none'
-version: 1.2.0+32
+version: 1.2.1+33
 
 environment:
   sdk: ^3.10.4
