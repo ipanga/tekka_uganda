@@ -27,17 +27,6 @@ final notificationsStreamProvider = StreamProvider<List<AppNotification>>((
   return repository.watchNotifications(user.uid);
 });
 
-/// Notifications list provider (one-time fetch)
-final notificationsProvider = FutureProvider<List<AppNotification>>((
-  ref,
-) async {
-  final user = ref.watch(currentUserProvider);
-  if (user == null) return [];
-
-  final repository = ref.watch(notificationRepositoryProvider);
-  return repository.getNotifications(user.uid);
-});
-
 /// Stream of unread notifications count
 final unreadNotificationsStreamProvider = StreamProvider<int>((ref) {
   final user = ref.watch(currentUserProvider);
