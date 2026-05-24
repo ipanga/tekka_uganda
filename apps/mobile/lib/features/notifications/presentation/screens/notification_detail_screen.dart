@@ -10,16 +10,18 @@ import '../../domain/entities/app_notification.dart';
 
 /// Single notification provider.
 ///
-/// First scan the cached notifications list (avoids a second round-trip when
-/// the user tapped a row they're already looking at). Fall back to a direct
-/// `GET /notifications/:id` when the id isn't in the cached page — covers:
-///   * cold-start from a push tap (provider hasn't run yet)
-///   * the notification falls outside the first 50 cached on the list page
-///   * the notification arrived after the last list refresh
+/// First do a *synchronous* scan of the already-loaded paginated list — a
+/// free hit when the user tapped a row they were already viewing. We
+/// deliberately do NOT await any list fetch here: the previous version
+/// awaited the full list FutureProvider, which on a cold-tap from a push
+/// made the detail screen sit on a spinner while `GET /notifications?limit=50`
+/// raced its own cheap `GET /notifications/:id`. The list and detail no
+/// longer share a critical path — the detail screen always opens in one
+/// round-trip (or zero, on cache hit).
 final singleNotificationProvider =
     FutureProvider.family<AppNotification?, String>((ref, id) async {
-      final cached = await ref.watch(notificationsProvider.future);
-      for (final n in cached) {
+      final listState = ref.read(notificationsListProvider);
+      for (final n in listState.items) {
         if (n.id == id) return n;
       }
       final repository = ref.read(notificationRepositoryProvider);
