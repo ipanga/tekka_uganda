@@ -515,7 +515,14 @@ class PushNotificationService {
       '[tekka.push] tap received: messageId=${message.messageId} '
       'data=${message.data} notification=${message.notification?.title}',
     );
-    onNotificationReceived?.call();
+    // We deliberately do NOT call `onNotificationReceived()` on tap — that
+    // hook refreshes the in-app notifications list, but the tap is about to
+    // navigate to a detail screen that owns its own fetch. Firing both at
+    // once causes two concurrent requests against the same provider, and on
+    // a cold-tap-after-suspend the racing list fetch can starve the detail
+    // screen on a spinner. The foreground delivery path
+    // (`_handleForegroundMessage`) still calls the hook — that's the path
+    // that actually needs to keep the visible list fresh.
     _routeFromData(message.data);
   }
 

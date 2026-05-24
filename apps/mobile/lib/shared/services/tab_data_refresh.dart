@@ -29,11 +29,15 @@ void refreshTabDataAfterResume(WidgetRef ref) {
   // Notifications list + shell badge.
   ref.invalidate(notificationsStreamProvider);
   ref.invalidate(unreadNotificationsStreamProvider);
-  // The paginated list backing the Notifications screen is its own
-  // StateNotifier — invalidating it tears down and rebuilds via the
-  // notifier's _loadInitial. Without this, a notification that arrived
-  // while the app was backgrounded never shows up after resume.
-  ref.invalidate(notificationsListProvider);
+  // The paginated list backing the Notifications screen is a StateNotifier.
+  // Calling `.notifier.refresh()` re-fetches page 1 in-place: existing items
+  // stay on screen while the request is in flight, then swap atomically.
+  // We deliberately do NOT `invalidate()` here — that tears the notifier
+  // down and rebuilds it with `isInitialLoading: true`, which replaces the
+  // user's list with a spinner on every resume even when the cache was
+  // perfectly serviceable. `refreshNotificationsAfterPush` already uses
+  // this approach for the same reason.
+  ref.read(notificationsListProvider.notifier).refresh();
 
   // Saved tab.
   ref.invalidate(savedListingsProvider);
