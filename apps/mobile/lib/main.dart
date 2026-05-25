@@ -62,6 +62,7 @@ class TekkaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final container = ProviderScope.containerOf(context);
 
     // Wire notification taps + incoming universal/app links to the router.
     // Safe to re-wire on rebuild — both are idempotent.
@@ -81,13 +82,7 @@ class TekkaApp extends ConsumerWidget {
     // Buffer it instead; the auth-state listener below drains the buffer once
     // the user is fully authenticated + onboarded.
     ref.read(pushNotificationServiceProvider).onNotificationTap = (route, _) {
-      final auth = ref.read(authStateProvider);
-      final user = auth.valueOrNull;
-      if (!auth.isLoading && user != null && user.isOnboardingComplete) {
-        router.push(route);
-      } else {
-        ref.read(pendingDeepLinkProvider.notifier).state = route;
-      }
+      captureOrPushDeepLink(container, route, push: router.push);
     };
     // Refresh the in-app notifications list + unread count whenever a push
     // notification arrives — so listing-approved / listing-rejected (and
@@ -100,7 +95,6 @@ class TekkaApp extends ConsumerWidget {
     // actions. Runs once at boot; Riverpod providers are idempotent.
     ref.read(cacheServiceProvider).init();
     final queue = ref.read(offlineQueueProvider);
-    final container = ProviderScope.containerOf(context);
     queue.registerExecutor(buildQueueExecutor(container));
     queue.init().then((_) {
       // Boot-time flush: anything queued in a previous session ships now
@@ -153,19 +147,17 @@ class TekkaApp extends ConsumerWidget {
     }
 
     // Drain a deep-link route buffered from a push tap that arrived before
-    // the app was ready to navigate. Fires whenever auth state resolves to a
-    // fully-onboarded user. Clears the buffer BEFORE pushing so subsequent
-    // auth-state re-emissions (e.g. from _maybeRevalidateSession on long
-    // resume) can't re-fire the same deep link. Uses `push` to preserve the
-    // /home back-stack — matching the warm-path semantics above.
+    // the app was ready to navigate. Fires on every authStateProvider
+    // emission:
+    //  - onboarded user with a buffered route → clear slot, then push
+    //    (cleared BEFORE pushing so re-emissions from _maybeRevalidateSession
+    //    can't re-fire a consumed link)
+    //  - signed-out (user == null) → clear any buffered route so a stale
+    //    link can't re-fire after the next sign-in (potentially as a
+    //    different account on the same device)
+    //  - loading or pre-onboarding → no-op, keep the buffer
     ref.listen<AsyncValue<AppUser?>>(authStateProvider, (_, next) {
-      if (next.isLoading) return;
-      final user = next.valueOrNull;
-      if (user == null || !user.isOnboardingComplete) return;
-      final pending = ref.read(pendingDeepLinkProvider);
-      if (pending == null) return;
-      ref.read(pendingDeepLinkProvider.notifier).state = null;
-      router.push(pending);
+      onAuthStateForDeepLinkBuffer(container, next, push: router.push);
     });
 
     return AppLockWrapper(
