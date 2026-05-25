@@ -8,12 +8,14 @@ import 'core/config/environment.dart';
 import 'core/providers/cache_providers.dart';
 import 'core/providers/connectivity_provider.dart';
 import 'core/providers/deep_link_provider.dart';
+import 'core/providers/pending_deep_link_provider.dart';
 import 'core/providers/push_notification_provider.dart';
 import 'core/services/ios_badge_service.dart';
 import 'core/services/offline_queue/queue_executor.dart';
 import 'core/services/push_notification_service.dart' show primeInitialMessage;
 import 'core/theme/theme.dart';
 import 'features/auth/application/auth_provider.dart';
+import 'features/auth/domain/entities/app_user.dart';
 import 'features/notifications/application/notification_provider.dart';
 import 'router/app_router.dart';
 import 'shared/services/tab_data_refresh.dart';
@@ -71,8 +73,22 @@ class TekkaApp extends ConsumerWidget {
     // detail on top of whatever was there (typically /home), so the AppBar
     // back arrow returns the user where they were before the tap. Same applies
     // to Universal-Link arrivals routed by deep_link_service.
-    ref.read(pushNotificationServiceProvider).onNotificationTap = (route, _) =>
+    //
+    // Cold-tap path: if auth is still restoring (or onboarding incomplete) at
+    // the moment the tap fires, pushing now would race the GoRouter redirect —
+    // `appRouterProvider` rebuilds on auth resolve, collapsing the matched
+    // location back to `initialLocation` (/home) and losing the deep link.
+    // Buffer it instead; the auth-state listener below drains the buffer once
+    // the user is fully authenticated + onboarded.
+    ref.read(pushNotificationServiceProvider).onNotificationTap = (route, _) {
+      final auth = ref.read(authStateProvider);
+      final user = auth.valueOrNull;
+      if (!auth.isLoading && user != null && user.isOnboardingComplete) {
         router.push(route);
+      } else {
+        ref.read(pendingDeepLinkProvider.notifier).state = route;
+      }
+    };
     // Refresh the in-app notifications list + unread count whenever a push
     // notification arrives — so listing-approved / listing-rejected (and
     // any other type) show up without requiring pull-to-refresh.
@@ -135,6 +151,22 @@ class TekkaApp extends ConsumerWidget {
     if (ref.read(authStateProvider).valueOrNull != null) {
       ref.read(pushNotificationServiceProvider).initialize();
     }
+
+    // Drain a deep-link route buffered from a push tap that arrived before
+    // the app was ready to navigate. Fires whenever auth state resolves to a
+    // fully-onboarded user. Clears the buffer BEFORE pushing so subsequent
+    // auth-state re-emissions (e.g. from _maybeRevalidateSession on long
+    // resume) can't re-fire the same deep link. Uses `push` to preserve the
+    // /home back-stack — matching the warm-path semantics above.
+    ref.listen<AsyncValue<AppUser?>>(authStateProvider, (_, next) {
+      if (next.isLoading) return;
+      final user = next.valueOrNull;
+      if (user == null || !user.isOnboardingComplete) return;
+      final pending = ref.read(pendingDeepLinkProvider);
+      if (pending == null) return;
+      ref.read(pendingDeepLinkProvider.notifier).state = null;
+      router.push(pending);
+    });
 
     return AppLockWrapper(
       child: MaterialApp.router(
