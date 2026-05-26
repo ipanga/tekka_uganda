@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { APP_FILTER } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { SentryGlobalFilter, SentryModule } from '@sentry/nestjs/setup';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
@@ -24,8 +26,18 @@ import { EmailModule } from './email/email.module';
 
 @Module({
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    // SentryGlobalFilter forwards unhandled exceptions to Sentry before
+    // re-throwing to NestJS's built-in handler. Must be the FIRST APP_FILTER
+    // so it sees errors before any business-logic filter swallows them.
+    { provide: APP_FILTER, useClass: SentryGlobalFilter },
+  ],
   imports: [
+    // SentryModule wires Sentry's request handler, tracing, and span helpers
+    // into Nest's lifecycle. `Sentry.init()` itself runs from src/instrument.ts
+    // (imported before this module loads). Safe no-op if no DSN is configured.
+    SentryModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',

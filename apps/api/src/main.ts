@@ -1,3 +1,7 @@
+// MUST be the first import. `Sentry.init` patches `require()` to instrument
+// modules as they load, so anything above this line is invisible to Sentry.
+import './instrument';
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
