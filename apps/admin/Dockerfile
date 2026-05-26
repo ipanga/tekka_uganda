@@ -21,6 +21,22 @@ ARG NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
 ARG NEXT_PUBLIC_FIREBASE_APP_ID
 ARG NEXT_PUBLIC_API_URL
 
+# Sentry build-args. The DSN (NEXT_PUBLIC_*) is baked into the client
+# bundle — that's intentional, DSNs aren't secrets. SENTRY_AUTH_TOKEN is
+# only needed at build time so withSentryConfig can upload source maps;
+# it's never written to the final image layer. SENTRY_RELEASE tags this
+# build's events to a specific deploy so issues group per release.
+ARG NEXT_PUBLIC_SENTRY_DSN_ADMIN
+ARG SENTRY_AUTH_TOKEN
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT_ADMIN
+ARG SENTRY_RELEASE
+ENV SENTRY_AUTH_TOKEN=${SENTRY_AUTH_TOKEN}
+ENV SENTRY_ORG=${SENTRY_ORG}
+ENV SENTRY_PROJECT_ADMIN=${SENTRY_PROJECT_ADMIN}
+ENV SENTRY_RELEASE=${SENTRY_RELEASE}
+ENV NEXT_PUBLIC_SENTRY_RELEASE=${SENTRY_RELEASE}
+
 # Build the application
 RUN npm run build
 

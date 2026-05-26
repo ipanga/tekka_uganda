@@ -31,6 +31,13 @@ services:
       ALLOW_REVIEW_STATIC_OTP: ${ALLOW_REVIEW_STATIC_OTP:-false}
       REVIEW_STATIC_PHONE: ${REVIEW_STATIC_PHONE:-}
       REVIEW_STATIC_OTP: ${REVIEW_STATIC_OTP:-}
+      # Sentry. SENTRY_RELEASE is exported by the deploy workflow as the
+      # git short SHA so events group per deploy. Optional — when unset
+      # Sentry groups under "unknown release". DSN + environment come
+      # from .env.production.
+      SENTRY_DSN_API: ${SENTRY_DSN_API}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-}
     networks:
       - tekka-network
     restart: unless-stopped
@@ -56,6 +63,13 @@ services:
       NODE_ENV: production
       PORT: ${ADMIN_PORT:-3001}
       API_URL_INTERNAL: http://tekka-api:${API_PORT:-4000}/api/v1
+      # Sentry. NEXT_PUBLIC_SENTRY_DSN_ADMIN is also baked into the
+      # client bundle at build time (Dockerfile); we set it here too so
+      # the server runtime can initialise its own SDK.
+      NEXT_PUBLIC_SENTRY_DSN_ADMIN: ${NEXT_PUBLIC_SENTRY_DSN_ADMIN}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-}
+      NEXT_PUBLIC_SENTRY_RELEASE: ${SENTRY_RELEASE:-}
     depends_on:
       api:
         condition: service_healthy
@@ -84,6 +98,13 @@ services:
       NODE_ENV: production
       PORT: ${USER_PORT:-3000}
       API_URL_INTERNAL: http://tekka-api:${API_PORT:-4000}/api/v1
+      # Sentry. NEXT_PUBLIC_SENTRY_DSN_USER is also baked into the
+      # client bundle at build time (Dockerfile); we set it here too so
+      # the server runtime can initialise its own SDK.
+      NEXT_PUBLIC_SENTRY_DSN_USER: ${NEXT_PUBLIC_SENTRY_DSN_USER}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      SENTRY_RELEASE: ${SENTRY_RELEASE:-}
+      NEXT_PUBLIC_SENTRY_RELEASE: ${SENTRY_RELEASE:-}
     depends_on:
       api:
         condition: service_healthy
