@@ -89,8 +89,8 @@ jobs:
               git reset --hard origin/main
 
               echo "Deploying $SERVICE @ $IMAGE_TAG (previous: ${PREVIOUS_TAG:-none})"
-              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env pull $SERVICE
-              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --force-recreate --remove-orphans $SERVICE
+              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env.production pull $SERVICE
+              docker compose -f infra/docker/docker-compose.prod.yml --env-file .env.production up -d --force-recreate --remove-orphans $SERVICE
 
               STATUS=unknown
               for i in {1..30}; do
@@ -111,7 +111,7 @@ jobs:
                 if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$IMAGE_TAG" ]; then
                   echo "Rolling back to $PREVIOUS_TAG"
                   export NGINX_IMAGE_TAG="$PREVIOUS_TAG"
-                  docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d --force-recreate $SERVICE
+                  docker compose -f infra/docker/docker-compose.prod.yml --env-file .env.production up -d --force-recreate $SERVICE
                 else
                   echo "No previous tag recorded; manual intervention required."
                 fi
