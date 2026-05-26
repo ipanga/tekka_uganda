@@ -93,7 +93,7 @@ jobs:
               SMOKE_URL="https://admin.tekka.ug/"
               EXPECTED_IMAGE="ghcr.io/${GHCR_USERNAME}/tekka-${SERVICE}:${IMAGE_TAG}"
               export ADMIN_IMAGE_TAG="$IMAGE_TAG"
-              COMPOSE="docker compose -f infra/docker/docker-compose.prod.yml --env-file .env"
+              COMPOSE="docker compose -f infra/docker/docker-compose.prod.yml --env-file .env.production"
 
               echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
 
