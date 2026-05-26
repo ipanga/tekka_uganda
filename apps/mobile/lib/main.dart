@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/config/app_config.dart';
 import 'core/config/environment.dart';
+import 'core/observability/sentry.dart';
 import 'core/providers/cache_providers.dart';
 import 'core/providers/connectivity_provider.dart';
 import 'core/providers/deep_link_provider.dart';
@@ -22,37 +23,46 @@ import 'shared/services/tab_data_refresh.dart';
 import 'shared/widgets/app_lock_wrapper.dart';
 import 'shared/widgets/offline_banner.dart';
 
-void main() async {
+Future<void> main() async {
   EnvironmentConfig.init(Environment.prod);
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Firebase for prod only. Non-prod iOS builds strip the plist
-  // at build time (see Runner.xcodeproj :: "Strip Firebase plist" phase) and
-  // non-prod Android skips the google-services plugin, so neither ships with
-  // a Firebase config. Dev/staging don't use any Firebase features.
-  if (EnvironmentConfig.isProd) {
-    try {
-      await Firebase.initializeApp();
-      // Kick off cold-start tap capture in the background. NEVER await this
-      // here — `getInitialMessage()` can block on iOS while APNs sets up,
-      // and stalling main() before runApp() shows the user a blank screen.
-      // The prime caches into a top-level static which the auth-gated
-      // `PushNotificationService.initialize()` reads later (or falls back
-      // to a fresh call). See primeInitialMessage's docstring.
-      // ignore: discarded_futures
-      primeInitialMessage();
-    } catch (e) {
-      debugPrint('Firebase init failed: $e');
+  // `initSentry` wraps the rest of boot inside Sentry's error-capturing
+  // zone so anything thrown during Firebase init, orientation setup, or
+  // widget mount is reported. Becomes a thin pass-through when no DSN is
+  // configured (e.g. local debug builds without
+  // `--dart-define=SENTRY_DSN=...`), preserving the previous launch path.
+  await initSentry(() async {
+    // Initialize Firebase for prod only. Non-prod iOS builds strip the
+    // plist at build time (see Runner.xcodeproj :: "Strip Firebase plist"
+    // phase) and non-prod Android skips the google-services plugin, so
+    // neither ships with a Firebase config. Dev/staging don't use any
+    // Firebase features.
+    if (EnvironmentConfig.isProd) {
+      try {
+        await Firebase.initializeApp();
+        // Kick off cold-start tap capture in the background. NEVER await
+        // this here — `getInitialMessage()` can block on iOS while APNs
+        // sets up, and stalling main() before runApp() shows the user a
+        // blank screen. The prime caches into a top-level static which
+        // the auth-gated `PushNotificationService.initialize()` reads
+        // later (or falls back to a fresh call). See primeInitialMessage's
+        // docstring.
+        // ignore: discarded_futures
+        primeInitialMessage();
+      } catch (e) {
+        debugPrint('Firebase init failed: $e');
+      }
     }
-  }
 
-  // Set preferred orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
+    // Set preferred orientations
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
 
-  runApp(const ProviderScope(child: TekkaApp()));
+    runApp(const ProviderScope(child: TekkaApp()));
+  });
 }
 
 /// Tekka App - Biggest C2C Fashion Marketplace for Uganda

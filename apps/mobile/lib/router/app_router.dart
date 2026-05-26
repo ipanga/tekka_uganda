@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 import '../core/config/environment.dart';
 import '../features/auth/application/auth_provider.dart';
@@ -168,6 +169,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.home,
     debugLogDiagnostics: !EnvironmentConfig.isProd,
     refreshListenable: refresh,
+    // Sentry observer tags every navigation as a breadcrumb and starts a
+    // transaction per route. No-op when Sentry isn't initialised
+    // (handled internally by the SDK).
+    observers: [SentryNavigatorObserver()],
     redirect: (context, state) {
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isSplash = state.matchedLocation == AppRoutes.splash;
