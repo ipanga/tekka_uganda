@@ -17,7 +17,7 @@ set -e
 
 # Configuration
 COMPOSE_FILE="/opt/tekka/infra/docker/docker-compose.prod.yml"
-ENV_FILE="/opt/tekka/.env"
+ENV_FILE="/opt/tekka/.env.production"
 
 # Docker Compose command with env file
 DC="docker compose -f $COMPOSE_FILE --env-file $ENV_FILE"

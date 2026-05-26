@@ -21,7 +21,7 @@ set -e
 DOMAINS="tekka.ug www.tekka.ug api.tekka.ug admin.tekka.ug"
 EMAIL="ipanga@outlook.fr"
 COMPOSE_FILE="infra/docker/docker-compose.prod.yml"
-ENV_FILE=".env"
+ENV_FILE=".env.production"
 
 # Docker Compose command with env file
 DC="docker compose -f $COMPOSE_FILE --env-file $ENV_FILE"

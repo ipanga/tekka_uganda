@@ -114,7 +114,7 @@ docker-compose build
 ### Deploy
 ```bash
 cd /opt/tekka
-docker compose -f infra/docker/docker-compose.prod.yml --env-file .env up -d
+docker compose -f infra/docker/docker-compose.prod.yml --env-file .env.production up -d
 ```
 
 ### SSL/HTTPS Setup (First-time)
@@ -135,8 +135,8 @@ The production stack uses Let's Encrypt certificates via Certbot (Docker-based).
 2. **Manual renewal (if needed):**
    ```bash
    cd /opt/tekka
-   docker compose -f infra/docker/docker-compose.prod.yml --env-file .env run --rm certbot renew
-   docker compose -f infra/docker/docker-compose.prod.yml --env-file .env exec nginx nginx -s reload
+   docker compose -f infra/docker/docker-compose.prod.yml --env-file .env.production run --rm certbot renew
+   docker compose -f infra/docker/docker-compose.prod.yml --env-file .env.production exec nginx nginx -s reload
    ```
 
 3. **Automatic renewal (recommended):**

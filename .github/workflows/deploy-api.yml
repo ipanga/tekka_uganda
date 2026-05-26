@@ -85,7 +85,7 @@ jobs:
               SMOKE_URL="https://api.tekka.ug/api/v1/"
               EXPECTED_IMAGE="ghcr.io/${GHCR_USERNAME}/tekka-${SERVICE}:${IMAGE_TAG}"
               export API_IMAGE_TAG="$IMAGE_TAG"
-              COMPOSE="docker compose -f infra/docker/docker-compose.prod.yml --env-file .env"
+              COMPOSE="docker compose -f infra/docker/docker-compose.prod.yml --env-file .env.production"
 
               # 1. Refresh GHCR credentials
               echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USERNAME" --password-stdin
