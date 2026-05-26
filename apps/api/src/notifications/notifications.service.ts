@@ -639,13 +639,19 @@ export class NotificationsService {
       },
     });
 
-    // For product-linked broadcasts include `type: 'listing'` so the Flutter
+    // Always set `type` on broadcast pushes for cross-platform parity with
+    // every other notification type (message / listing_* / review). Modern
+    // clients route taps via `deep_link`, but older installs and the
+    // foreground channel-routing helper (_channelIdForType in
+    // push_notification_service.dart) fall back to `type` — without it,
+    // generic broadcasts land on the default Android channel instead of
+    // the 'system' one.
+    //
+    // Product-linked broadcasts override to `type: 'listing'` so the Flutter
     // notification-detail screen renders a "View Listing" action button
-    // (notification_detail_screen.dart:328 switches on data.type, treating it
-    // as the targetType). data.listingId alone is enough for the FCM
-    // tap-routing path (deep_link), but the in-app detail screen needs the
-    // type hint to know what kind of target this is.
-    const data: Record<string, unknown> = {};
+    // (notification_detail_screen.dart:328 switches on data.type, treating
+    // it as the targetType).
+    const data: Record<string, unknown> = { type: 'system' };
     if (dto.listingId) {
       data.listingId = dto.listingId;
       data.type = 'listing';

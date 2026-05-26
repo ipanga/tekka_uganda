@@ -227,11 +227,32 @@ Implemented as Next.js route handlers in `apps/user/src/app/.well-known/*/route.
 ### FCM payload contract
 
 Every push sent by `apps/api/src/notifications/notifications.service.ts` includes a `data` map with at least:
-- `type` — legacy string (`message`, `listing_approved`, etc.)
+- `type` — legacy string (`message`, `listing_approved`, `listing_rejected`, `review`, `system` for broadcasts, `listing` for product-linked broadcasts)
 - `deep_link` — canonical URL (e.g. `https://tekka.ug/chat/abc123`)
 - Type-specific ID field (`chatId`, `listingId`, `reviewId`, `meetupId`)
 
-The Flutter `PushNotificationService` prefers `deep_link` and falls back to type-based routing for backwards compatibility with older installs.
+The Flutter `PushNotificationService` prefers `deep_link` and falls back to type-based routing for backwards compatibility with older installs. Silent state-sync payloads (`type: 'sync_unread_state'`) omit `deep_link` and never navigate.
+
+### Tap-routing pipeline (Flutter)
+
+All four tap entry points funnel through a single `onNotificationTap` callback in `apps/mobile/lib/main.dart`, set on `PushNotificationService`:
+
+1. **Cold start** — `primeInitialMessage()` caches `getInitialMessage()` before `runApp()`; `_doInitialize()` dispatches it via `_handleNotificationTap`.
+2. **Android background** — `FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap)`.
+3. **iOS background** — native `UNUserNotificationCenter` delegate in `Runner/AppDelegate.swift` forwards `userInfo` over a MethodChannel; the Dart side calls `_routeFromData`.
+4. **Foreground** — `flutter_local_notifications` `onDidReceiveNotificationResponse` decodes the payload and calls `_routeFromData`.
+
+Each entry point routes via `_routeFromData`: prefer `deep_link` (mapped through `mapDeepLinkUri`), fall back to `_fallbackRouteForType`.
+
+### Cold-tap buffer
+
+`appRouterProvider` watches `authStateProvider`. A push tap that fires while auth is still restoring would race the GoRouter redirect: the provider rebuilds when auth resolves, GoRouter re-evaluates redirect, and `state.matchedLocation` has already collapsed back to `initialLocation` (`/home`). The deep link is lost.
+
+The fix is a single-slot `StateProvider<String?>` at `apps/mobile/lib/core/providers/pending_deep_link_provider.dart`, plus a drain listener in `main.dart`:
+
+- **Warm path** (auth ready + onboarding complete) — `captureOrPushDeepLink` pushes immediately via `router.push` (preserves the `/home` back-stack so the AppBar back arrow keeps working).
+- **Cold path** — same helper writes the route into `pendingDeepLinkProvider`. Last-write-wins on rapid double-tap.
+- **Drain** — `onAuthStateForDeepLinkBuffer` listens on `authStateProvider`. When the user resolves to an onboarded user, it clears the slot **before** pushing so re-emissions (e.g. from `_maybeRevalidateSession` on long resume) cannot re-fire a consumed link. On sign-out (`user == null`), it clears any buffered route so a stale link cannot re-fire as a different account after the next login.
 
 ### Mobile platform config
 

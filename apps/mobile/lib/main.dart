@@ -8,12 +8,14 @@ import 'core/config/environment.dart';
 import 'core/providers/cache_providers.dart';
 import 'core/providers/connectivity_provider.dart';
 import 'core/providers/deep_link_provider.dart';
+import 'core/providers/pending_deep_link_provider.dart';
 import 'core/providers/push_notification_provider.dart';
 import 'core/services/ios_badge_service.dart';
 import 'core/services/offline_queue/queue_executor.dart';
 import 'core/services/push_notification_service.dart' show primeInitialMessage;
 import 'core/theme/theme.dart';
 import 'features/auth/application/auth_provider.dart';
+import 'features/auth/domain/entities/app_user.dart';
 import 'features/notifications/application/notification_provider.dart';
 import 'router/app_router.dart';
 import 'shared/services/tab_data_refresh.dart';
@@ -60,6 +62,7 @@ class TekkaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(appRouterProvider);
+    final container = ProviderScope.containerOf(context);
 
     // Wire notification taps + incoming universal/app links to the router.
     // Safe to re-wire on rebuild — both are idempotent.
@@ -71,8 +74,16 @@ class TekkaApp extends ConsumerWidget {
     // detail on top of whatever was there (typically /home), so the AppBar
     // back arrow returns the user where they were before the tap. Same applies
     // to Universal-Link arrivals routed by deep_link_service.
-    ref.read(pushNotificationServiceProvider).onNotificationTap = (route, _) =>
-        router.push(route);
+    //
+    // Cold-tap path: if auth is still restoring (or onboarding incomplete) at
+    // the moment the tap fires, pushing now would race the GoRouter redirect —
+    // `appRouterProvider` rebuilds on auth resolve, collapsing the matched
+    // location back to `initialLocation` (/home) and losing the deep link.
+    // Buffer it instead; the auth-state listener below drains the buffer once
+    // the user is fully authenticated + onboarded.
+    ref.read(pushNotificationServiceProvider).onNotificationTap = (route, _) {
+      captureOrPushDeepLink(container, route, push: router.push);
+    };
     // Refresh the in-app notifications list + unread count whenever a push
     // notification arrives — so listing-approved / listing-rejected (and
     // any other type) show up without requiring pull-to-refresh.
@@ -84,7 +95,6 @@ class TekkaApp extends ConsumerWidget {
     // actions. Runs once at boot; Riverpod providers are idempotent.
     ref.read(cacheServiceProvider).init();
     final queue = ref.read(offlineQueueProvider);
-    final container = ProviderScope.containerOf(context);
     queue.registerExecutor(buildQueueExecutor(container));
     queue.init().then((_) {
       // Boot-time flush: anything queued in a previous session ships now
@@ -135,6 +145,20 @@ class TekkaApp extends ConsumerWidget {
     if (ref.read(authStateProvider).valueOrNull != null) {
       ref.read(pushNotificationServiceProvider).initialize();
     }
+
+    // Drain a deep-link route buffered from a push tap that arrived before
+    // the app was ready to navigate. Fires on every authStateProvider
+    // emission:
+    //  - onboarded user with a buffered route → clear slot, then push
+    //    (cleared BEFORE pushing so re-emissions from _maybeRevalidateSession
+    //    can't re-fire a consumed link)
+    //  - signed-out (user == null) → clear any buffered route so a stale
+    //    link can't re-fire after the next sign-in (potentially as a
+    //    different account on the same device)
+    //  - loading or pre-onboarding → no-op, keep the buffer
+    ref.listen<AsyncValue<AppUser?>>(authStateProvider, (_, next) {
+      onAuthStateForDeepLinkBuffer(container, next, push: router.push);
+    });
 
     return AppLockWrapper(
       child: MaterialApp.router(
