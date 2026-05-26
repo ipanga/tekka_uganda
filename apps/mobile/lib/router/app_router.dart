@@ -116,20 +116,66 @@ abstract class AppRoutes {
   static const String notificationDetail = '/notifications/:id';
 }
 
-/// App router configuration
-/// Using keepAlive to prevent router recreation on auth state changes
+/// Bridges Riverpod's `authStateProvider` to GoRouter's `refreshListenable`.
+///
+/// Why: previously `appRouterProvider` did `ref.watch(authStateProvider)`,
+/// which made the provider — and therefore the entire `GoRouter` instance —
+/// rebuild on every auth-state emission. That cleared GoRouter's navigation
+/// stack back to `initialLocation` and was the actual reason cold-tap deep
+/// links landed on `/home`: the `_tryRefreshToken()` call following the
+/// initial `/me/fcm-token` POST emits a *second* auth state ~1s after the
+/// push tap is dispatched, recreating the router and wiping the pushed
+/// route. The buffer mechanism in `pending_deep_link_provider.dart` only
+/// catches the truly-loading case, not this warm-then-revalidate race.
+///
+/// With this notifier hooked up to GoRouter's `refreshListenable`, the
+/// router instance stays stable across auth emissions; only the `redirect`
+/// callback re-evaluates, preserving any pushed location.
+class _AuthRefreshNotifier extends ChangeNotifier {
+  _AuthRefreshNotifier(this._ref) {
+    _sub = _ref.listen<AsyncValue<dynamic>>(
+      authStateProvider,
+      (_, _) => notifyListeners(),
+    );
+  }
+
+  final Ref _ref;
+  late final ProviderSubscription<AsyncValue<dynamic>> _sub;
+
+  @override
+  void dispose() {
+    _sub.close();
+    super.dispose();
+  }
+}
+
+/// App router configuration.
+///
+/// The router instance is intentionally stable across auth-state emissions —
+/// auth changes drive a `refreshListenable` instead of `ref.watch`, so
+/// GoRouter only re-runs its `redirect` callback rather than getting
+/// recreated. Recreating the router resets the navigation stack to
+/// `initialLocation`, which previously clobbered deep links pushed via a
+/// push-notification tap (see [_AuthRefreshNotifier] for the full
+/// regression trace).
 final appRouterProvider = Provider<GoRouter>((ref) {
-  // Keep reference to previous router to preserve navigation state
   ref.keepAlive();
 
-  final authState = ref.watch(authStateProvider);
+  final refresh = _AuthRefreshNotifier(ref);
+  ref.onDispose(refresh.dispose);
 
   return GoRouter(
     initialLocation: AppRoutes.home,
     debugLogDiagnostics: !EnvironmentConfig.isProd,
+    refreshListenable: refresh,
     redirect: (context, state) {
       final isAuthRoute = state.matchedLocation.startsWith('/auth');
       final isSplash = state.matchedLocation == AppRoutes.splash;
+
+      // Read (not watch) the current auth snapshot. The refreshListenable
+      // above causes this redirect to re-run on every auth-state emission,
+      // but the surrounding GoRouter instance does NOT get rebuilt.
+      final authState = ref.read(authStateProvider);
 
       // Wait for auth state to load
       if (authState.isLoading) {
