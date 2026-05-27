@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:sentry_dio/sentry_dio.dart';
 import '../config/app_config.dart';
 import '../errors/app_exception.dart';
 import 'retry_interceptor.dart';
@@ -60,6 +61,15 @@ class ApiClient {
     // Retries run AFTER auth (so 401 refresh still happens first) and only
     // on idempotent requests. See RetryInterceptor for details.
     _dio.interceptors.add(RetryInterceptor(dio: _dio));
+    // Sentry's Dio interceptor creates an HTTP span per request and tags
+    // failed responses on the active transaction. Added LAST so the auth
+    // + retry behavior is already settled by the time we observe it.
+    // Request/response body capture is OFF by default in sentry v9
+    // (`MaxRequestBodySize.never` / `MaxResponseBodySize.never`) — that's
+    // what prevents OTP/phone/password request bodies from being attached
+    // to Sentry events. Leave the addSentry call argument-less to inherit
+    // those defaults.
+    _dio.addSentry();
   }
 
   Future<void> _onRequest(
