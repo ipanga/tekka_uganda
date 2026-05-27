@@ -98,11 +98,14 @@ jobs:
               SMOKE_URL="https://admin.tekka.ug/"
               EXPECTED_IMAGE="ghcr.io/${GHCR_USERNAME}/tekka-${SERVICE}:${IMAGE_TAG}"
               export ADMIN_IMAGE_TAG="$IMAGE_TAG"
-              # Tag Sentry events with this deploy's commit SHA so issues
+              # Tag Sentry events with the deploy commit SHA so issues
               # group per release. Server-side Sentry SDK in
               # instrumentation.ts reads SENTRY_RELEASE; Next.js client
               # reads NEXT_PUBLIC_SENTRY_RELEASE (also baked into the
-              # image at build time via Dockerfile ENV).
+              # image at build time via Dockerfile ENV). NOTE: do NOT
+              # add apostrophes here — the script body is wrapped in
+              # bash -c "..." single quotes and any apostrophe closes
+              # the string and scrambles the script.
               export SENTRY_RELEASE="$IMAGE_TAG"
               COMPOSE="docker compose -f infra/docker/docker-compose.prod.yml --env-file .env.production"
 
