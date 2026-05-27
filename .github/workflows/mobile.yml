@@ -196,7 +196,52 @@ jobs:
 
       - name: Build App Bundle (prod release)
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: flutter build appbundle --release --flavor prod -t lib/main.dart --obfuscate --split-debug-info=build/app/outputs/symbols --no-tree-shake-icons || flutter build apk --release --flavor prod -t lib/main.dart --obfuscate --split-debug-info=build/app/outputs/symbols
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_MOBILE }}
+          SENTRY_ENVIRONMENT: production
+          SENTRY_RELEASE: tekka-mobile@1.2.2+34-${{ github.sha }}
+        run: |
+          # --dart-define wires SENTRY_DSN / _ENVIRONMENT / _RELEASE into
+          # the compiled Dart code (see apps/mobile/lib/core/observability/
+          # sentry.dart). --obfuscate + --split-debug-info produces
+          # symbol files in build/app/outputs/symbols/ that we upload
+          # to Sentry in the next step so crash stack traces in prod
+          # builds are symbolicated.
+          flutter build appbundle --release --flavor prod -t lib/main.dart \
+            --obfuscate \
+            --split-debug-info=build/app/outputs/symbols \
+            --no-tree-shake-icons \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+            --dart-define=SENTRY_ENVIRONMENT="$SENTRY_ENVIRONMENT" \
+            --dart-define=SENTRY_RELEASE="$SENTRY_RELEASE" \
+            || flutter build apk --release --flavor prod -t lib/main.dart \
+                 --obfuscate \
+                 --split-debug-info=build/app/outputs/symbols \
+                 --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+                 --dart-define=SENTRY_ENVIRONMENT="$SENTRY_ENVIRONMENT" \
+                 --dart-define=SENTRY_RELEASE="$SENTRY_RELEASE"
+
+      - name: Upload Android debug symbols to Sentry
+        # `sentry-cli debug-files upload` finds the .symbols files
+        # produced by `--split-debug-info` and uploads them so Sentry can
+        # symbolicate obfuscated stack traces. Idempotent — re-runs over
+        # the same release just no-op on already-uploaded files.
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: tekka-uganda
+          SENTRY_PROJECT: tekka-mobile
+          SENTRY_RELEASE: tekka-mobile@1.2.2+34-${{ github.sha }}
+        run: |
+          curl -sL https://sentry.io/get-cli/ | bash
+          sentry-cli releases new "$SENTRY_RELEASE"
+          sentry-cli debug-files upload --include-sources build/app/outputs/symbols/
+          # Also upload the AAB's mapping.txt if it exists (Proguard/R8).
+          if [ -f build/app/outputs/mapping/prodRelease/mapping.txt ]; then
+            sentry-cli debug-files upload build/app/outputs/mapping/prodRelease/mapping.txt
+          fi
+          sentry-cli releases set-commits "$SENTRY_RELEASE" --auto || true
+          sentry-cli releases finalize "$SENTRY_RELEASE"
 
       - name: Upload release artifacts
         uses: actions/upload-artifact@v4
@@ -287,7 +332,43 @@ jobs:
 
       - name: Build iOS Release (prod, no codesign)
         working-directory: ${{ env.WORKING_DIRECTORY }}
-        run: flutter build ios --no-codesign --release --flavor prod -t lib/main.dart --obfuscate --split-debug-info=build/ios/symbols
+        env:
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN_MOBILE }}
+          SENTRY_ENVIRONMENT: production
+          SENTRY_RELEASE: tekka-mobile@1.2.2+34-${{ github.sha }}
+        run: |
+          flutter build ios --no-codesign --release --flavor prod -t lib/main.dart \
+            --obfuscate \
+            --split-debug-info=build/ios/symbols \
+            --dart-define=SENTRY_DSN="$SENTRY_DSN" \
+            --dart-define=SENTRY_ENVIRONMENT="$SENTRY_ENVIRONMENT" \
+            --dart-define=SENTRY_RELEASE="$SENTRY_RELEASE"
+
+      - name: Upload iOS debug symbols + dSYM to Sentry
+        # Three artifacts go up:
+        #   1. Dart split-debug-info (build/ios/symbols/) — symbolicates
+        #      the Dart stack frames of any obfuscated release crash.
+        #   2. Flutter framework dSYMs (Runner.app.dSYM/) — symbolicates
+        #      native iOS frames that bubble into Dart from the engine.
+        #   3. Sentry Cocoa SDK dSYMs (under Pods build dir) — same for
+        #      Sentry's own native bridge.
+        # `sentry-cli debug-files upload --include-sources` recursively
+        # finds and uploads everything it can identify.
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: tekka-uganda
+          SENTRY_PROJECT: tekka-mobile
+          SENTRY_RELEASE: tekka-mobile@1.2.2+34-${{ github.sha }}
+        run: |
+          curl -sL https://sentry.io/get-cli/ | bash
+          sentry-cli releases new "$SENTRY_RELEASE" || true
+          sentry-cli debug-files upload --include-sources build/ios/symbols/
+          # Walk the iOS build output for dSYM bundles too.
+          find build/ios/iphoneos -name '*.dSYM' -type d \
+            -exec sentry-cli debug-files upload {} \; || true
+          sentry-cli releases set-commits "$SENTRY_RELEASE" --auto || true
+          sentry-cli releases finalize "$SENTRY_RELEASE"
 
       - name: Upload iOS release build
         uses: actions/upload-artifact@v4
