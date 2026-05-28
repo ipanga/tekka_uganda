@@ -24,6 +24,26 @@ export class UploadCleanupService {
   ) {}
 
   /**
+   * Returns true (= caller should bail) when the process is not running in
+   * production. Crons in this module touch the same Postgres + Cloudinary
+   * objects as production, so running them on a developer workstation is
+   * pure noise — at best a duplicated delete attempt, at worst a Prisma
+   * timeout against the prod DB that ships to Sentry as a real-looking
+   * "unhandled error" (TEKKA-API-2 + TEKKA-API-3 were both this).
+   *
+   * Production deploys set NODE_ENV=production via the api Dockerfile's
+   * `ENV NODE_ENV=production`; everything else (`npm run start:dev`,
+   * tests, ad-hoc REPL) takes the early return.
+   */
+  private skipInNonProd(taskName: string): boolean {
+    if (process.env.NODE_ENV === 'production') return false;
+    this.logger.debug(
+      `${taskName}: skipped (NODE_ENV=${process.env.NODE_ENV ?? 'unset'})`,
+    );
+    return true;
+  }
+
+  /**
    * Clean up temporary images older than 24 hours.
    * Runs daily at 2 AM.
    *
@@ -32,6 +52,7 @@ export class UploadCleanupService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_2AM)
   async cleanupTemporaryImages(): Promise<void> {
+    if (this.skipInNonProd('cleanupTemporaryImages')) return;
     this.logger.log('Starting cleanup of temporary Cloudinary images...');
 
     try {
@@ -53,6 +74,7 @@ export class UploadCleanupService {
    */
   @Cron(CronExpression.EVERY_DAY_AT_4AM)
   async cleanupArchivedListingImages(): Promise<void> {
+    if (this.skipInNonProd('cleanupArchivedListingImages')) return;
     const retentionDays = Number(
       process.env.ARCHIVED_LISTING_RETENTION_DAYS ?? 30,
     );
@@ -132,6 +154,7 @@ export class UploadCleanupService {
    */
   @Cron(CronExpression.EVERY_HOUR)
   async retryFailedDeletions(): Promise<void> {
+    if (this.skipInNonProd('retryFailedDeletions')) return;
     const candidates = await this.prisma.failedMediaDeletion.findMany({
       where: { attemptCount: { lt: MAX_RETRY_ATTEMPTS } },
       orderBy: { lastAttemptAt: 'asc' },
