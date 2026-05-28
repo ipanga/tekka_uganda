@@ -22,37 +22,42 @@ export class AdminService {
 
   // ===== DASHBOARD STATS =====
   async getDashboardStats() {
-    const [
-      totalUsers,
-      activeUsers,
-      totalListings,
-      activeListings,
-      pendingListings,
-      soldListings,
-      pendingReports,
-    ] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.user.count({
-        where: {
-          updatedAt: {
-            gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+    const [totalUsers, activeUsers, listingsByStatus, pendingReports] =
+      await Promise.all([
+        this.prisma.user.count(),
+        this.prisma.user.count({
+          where: {
+            updatedAt: {
+              gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // Last 30 days
+            },
           },
-        },
-      }),
-      this.prisma.listing.count(),
-      this.prisma.listing.count({ where: { status: ListingStatus.ACTIVE } }),
-      this.prisma.listing.count({ where: { status: ListingStatus.PENDING } }),
-      this.prisma.listing.count({ where: { status: ListingStatus.SOLD } }),
-      this.prisma.report.count({ where: { status: ReportStatus.PENDING } }),
-    ]);
+        }),
+        // Single grouped count covers total + every per-status total in one
+        // round trip. Previously this endpoint ran four separate
+        // `SELECT COUNT(*) FROM listings WHERE status = ?` queries that
+        // Sentry flagged as an N+1 (TEKKA-API-4). Same response shape,
+        // half the DB round trips on a hot admin endpoint.
+        this.prisma.listing.groupBy({
+          by: ['status'],
+          _count: { _all: true },
+        }),
+        this.prisma.report.count({ where: { status: ReportStatus.PENDING } }),
+      ]);
+
+    const byStatus = (s: ListingStatus): number =>
+      listingsByStatus.find((r) => r.status === s)?._count._all ?? 0;
+    const totalListings = listingsByStatus.reduce(
+      (sum, r) => sum + r._count._all,
+      0,
+    );
 
     return {
       totalUsers,
       activeUsers,
       totalListings,
-      activeListings,
-      pendingListings,
-      totalTransactions: soldListings,
+      activeListings: byStatus(ListingStatus.ACTIVE),
+      pendingListings: byStatus(ListingStatus.PENDING),
+      totalTransactions: byStatus(ListingStatus.SOLD),
       pendingReports,
     };
   }
