@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { getListingBySlug } from '@/lib/api-server';
+import { getListingBySlug, getRelatedListings } from '@/lib/api-server';
 import {
   getListingUrl,
   buildMetadata,
@@ -83,6 +83,12 @@ export default async function ListingPage({ params }: PageProps) {
     notFound();
   }
 
+  // Fetch related products server-side so they ship in the initial HTML —
+  // crawlable + zero client roundtrip. Errors fall back to an empty array
+  // (api-server.ts swallows non-2xx), so the carousel just renders nothing
+  // on backend failure instead of bouncing the whole page.
+  const relatedListings = await getRelatedListings(listing.id, 12);
+
   const productJsonLd = buildProductJsonLd(listing as any);
 
   const cat = listing.categoryData as any;
@@ -160,7 +166,10 @@ export default async function ListingPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
-      <ListingDetailClient listingId={listing.id} />
+      <ListingDetailClient
+        listingId={listing.id}
+        relatedListings={relatedListings}
+      />
     </>
   );
 }
