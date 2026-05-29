@@ -10,6 +10,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../core/providers/repository_providers.dart';
 import '../../../../core/theme/theme.dart';
 import '../../../../router/app_router.dart';
+import '../../../../shared/widgets/listing_card.dart';
 import '../../../auth/application/auth_provider.dart';
 import '../../../chat/application/chat_provider.dart';
 import '../../../chat/domain/entities/chat.dart';
@@ -486,6 +487,14 @@ class _ListingDetailScreenState extends ConsumerState<ListingDetailScreen> {
                     ),
                   ),
                 ),
+              ),
+
+              // "You might also like" carousel. Renders nothing when there
+              // are no related results (sparse category/price match) — the
+              // provider catches errors and returns an empty list so the
+              // section just collapses instead of showing an error state.
+              SliverToBoxAdapter(
+                child: _RelatedListingsSection(sourceListingId: listing.id),
               ),
             ],
           ),
@@ -1393,6 +1402,65 @@ class _DiscountBadge extends StatelessWidget {
           fontWeight: FontWeight.w600,
         ),
       ),
+    );
+  }
+}
+
+/// Horizontal "You might also like" carousel below the listing body.
+///
+/// Watches `relatedListingsProvider(sourceListingId)` — the underlying call
+/// hits `GET /api/v1/listings/:id/related?limit=12` which orders by the
+/// shared relevance score with a same-condition tie-break and a ±30% price
+/// band. The provider already swallows errors into an empty list, so the
+/// only states this widget needs to handle are loading, empty, and data.
+class _RelatedListingsSection extends ConsumerWidget {
+  const _RelatedListingsSection({required this.sourceListingId});
+
+  final String sourceListingId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncRelated = ref.watch(relatedListingsProvider(sourceListingId));
+    return asyncRelated.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.space4,
+            AppSpacing.space2,
+            0,
+            AppSpacing.space6,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.space4),
+                child: Text(
+                  'You might also like',
+                  style: AppTypography.titleMedium,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.space3),
+              SizedBox(
+                height: 260,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: AppSpacing.space3),
+                  itemBuilder: (context, i) => SizedBox(
+                    width: 160,
+                    child: ListingCard(listing: items[i]),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

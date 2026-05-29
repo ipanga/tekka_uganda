@@ -98,6 +98,26 @@ export class ListingsController {
     return { isSaved };
   }
 
+  // Related products — "You might also like" carousel on the detail page.
+  // Public (no auth required). Limit defaults to 12, capped at 24 server-side.
+  // Declared before the `:idOrSlug` catch-all so `/:id/related` resolves first.
+  @Get(':id/related')
+  async getRelated(
+    @Param('id') id: string,
+    @Query('limit') limit?: string,
+    @CurrentUser() user?: Prisma.User | null,
+  ) {
+    const parsedLimit = limit ? parseInt(limit, 10) : 12;
+    const safeLimit =
+      Number.isFinite(parsedLimit) && parsedLimit > 0 ? parsedLimit : 12;
+    const items = await this.listingsService.findRelated(
+      id,
+      safeLimit,
+      user?.id,
+    );
+    return { listings: items };
+  }
+
   // Get a specific listing (supports both ID and slug lookup)
   @Get(':idOrSlug')
   async findOne(

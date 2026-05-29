@@ -402,6 +402,23 @@ class ListingApiRepository {
         .toList();
   }
 
+  /// "You might also like" — related products for the detail screen.
+  /// Single GET; backend caps `limit` at 24. Empty list on backend failure
+  /// or no matches (caller renders nothing rather than an error state).
+  Future<List<Listing>> getRelatedListings(
+    String listingId, {
+    int limit = 12,
+  }) async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/listings/$listingId/related',
+      queryParameters: {'limit': limit},
+    );
+    final items = response['listings'] as List<dynamic>? ?? const [];
+    return items
+        .map((e) => Listing.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   /// Get purchase history (items bought by current user)
   Future<List<Listing>> getPurchaseHistory() async {
     final response = await _apiClient.get<List<dynamic>>('/listings/purchases');

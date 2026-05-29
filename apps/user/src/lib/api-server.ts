@@ -52,3 +52,13 @@ export async function getActiveListings(
 export async function getCategories(): Promise<Category[] | null> {
   return serverFetch<Category[]>('/categories');
 }
+
+export async function getRelatedListings(
+  listingId: string,
+  limit = 12,
+): Promise<Listing[]> {
+  const raw = await serverFetch<{ listings: Listing[] }>(
+    `/listings/${listingId}/related?limit=${limit}`,
+  );
+  return raw?.listings ?? [];
+}

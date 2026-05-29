@@ -1335,6 +1335,162 @@ export class ListingsService {
     return !!saved;
   }
 
+  /**
+   * "You might also like" — products related to a source listing.
+   *
+   * Strategy is intentionally simple and SQL-only (no ML):
+   *   - same exact categoryId (skipped if the source has no category — covers
+   *     legacy enum-only listings),
+   *   - price within ±30% of the source price,
+   *   - status = ACTIVE,
+   *   - exclude the source listing itself,
+   *   - same condition (NEW/USED) preferred via a CASE tie-breaker,
+   *   - finally ranked by the shared LISTING_RANK_SCORE_SQL so high-quality,
+   *     high-engagement candidates float to the top.
+   *
+   * Returns the same wire shape as `search()` for client reuse.
+   */
+  async findRelated(sourceId: string, limit: number, viewerId?: string) {
+    const source = await this.prisma.listing.findUnique({
+      where: { id: sourceId },
+      select: { id: true, categoryId: true, price: true, condition: true },
+    });
+    if (!source) {
+      throw new NotFoundException('Listing not found');
+    }
+
+    const cappedLimit = Math.min(Math.max(limit || 12, 1), 24);
+    const minPrice = Math.floor(source.price * 0.7);
+    const maxPrice = Math.ceil(source.price * 1.3);
+
+    const params: any[] = [
+      sourceId, // $1
+      minPrice, // $2
+      maxPrice, // $3
+      source.condition, // $4
+    ];
+    let categoryFilter = '';
+    if (source.categoryId) {
+      params.push(source.categoryId);
+      categoryFilter = `AND l.category_id = $${params.length}`;
+    }
+
+    const sql = `
+      SELECT l.*,
+        json_build_object(
+          'id', u.id,
+          'displayName', u.display_name,
+          'photoUrl', u.photo_url,
+          'location', u.location
+        ) AS seller,
+        CASE WHEN c.id IS NOT NULL THEN
+          json_build_object(
+            'id', c.id,
+            'name', c.name,
+            'slug', c.slug,
+            'level', c.level,
+            'parentId', c.parent_id,
+            'parent', CASE WHEN cp.id IS NOT NULL THEN
+              json_build_object(
+                'id', cp.id,
+                'name', cp.name,
+                'slug', cp.slug,
+                'level', cp.level,
+                'parentId', cp.parent_id,
+                'parent', CASE WHEN cpp.id IS NOT NULL THEN
+                  json_build_object(
+                    'id', cpp.id,
+                    'name', cpp.name,
+                    'slug', cpp.slug,
+                    'level', cpp.level
+                  )
+                ELSE NULL END
+              )
+            ELSE NULL END
+          )
+        ELSE NULL END AS category_data,
+        CASE WHEN city.id IS NOT NULL THEN
+          json_build_object(
+            'id', city.id,
+            'name', city.name,
+            'isActive', city.is_active,
+            'sortOrder', city.sort_order
+          )
+        ELSE NULL END AS city_data,
+        CASE WHEN div.id IS NOT NULL THEN
+          json_build_object(
+            'id', div.id,
+            'cityId', div.city_id,
+            'name', div.name,
+            'isActive', div.is_active,
+            'sortOrder', div.sort_order
+          )
+        ELSE NULL END AS division_data
+      FROM listings l
+      LEFT JOIN users u ON l.seller_id = u.id
+      LEFT JOIN categories c ON l.category_id = c.id
+      LEFT JOIN categories cp ON c.parent_id = cp.id
+      LEFT JOIN categories cpp ON cp.parent_id = cpp.id
+      LEFT JOIN cities city ON l.city_id = city.id
+      LEFT JOIN divisions div ON l.division_id = div.id
+      WHERE l.status = 'ACTIVE'
+        AND l.id <> $1
+        AND l.price BETWEEN $2 AND $3
+        ${categoryFilter}
+      ORDER BY
+        CASE WHEN l.condition = $4::"ItemCondition" THEN 0 ELSE 1 END,
+        ${LISTING_RANK_SCORE_SQL} DESC,
+        l.created_at DESC
+      LIMIT ${cappedLimit}
+    `;
+
+    const queryStart = Date.now();
+    const rows = await this.prisma.$queryRawUnsafe<any[]>(sql, ...params);
+    const queryMs = Date.now() - queryStart;
+    if (queryMs > SLOW_RANKED_QUERY_MS) {
+      Sentry.addBreadcrumb({
+        category: 'listings.related',
+        level: 'warning',
+        message: `slow related listings query: ${queryMs}ms`,
+        data: { ms: queryMs, sourceId, limit: cappedLimit },
+      });
+    }
+
+    const normalized = rows.map((row) => ({
+      id: row.id,
+      sellerId: row.seller_id,
+      title: row.title,
+      slug: row.slug,
+      description: row.description,
+      price: row.price,
+      originalPrice: row.original_price,
+      categoryId: row.category_id,
+      attributes: row.attributes,
+      cityId: row.city_id,
+      divisionId: row.division_id,
+      category: row.category,
+      size: row.size,
+      brand: row.brand,
+      color: row.color,
+      material: row.material,
+      location: row.location,
+      condition: row.condition,
+      imageUrls: row.image_urls,
+      status: row.status,
+      viewCount: row.view_count,
+      saveCount: row.save_count,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      seller: row.seller,
+      categoryData: row.category_data,
+      city: row.city_data,
+      division: row.division_data,
+    }));
+
+    const withSaved = await this.addSavedStatus(normalized, viewerId);
+    return this.maskViewCounts(withSaved, viewerId);
+  }
+
   async getListingsBySeller(sellerId: string, viewerId?: string) {
     const [listings, total] = await Promise.all([
       this.prisma.listing.findMany({
