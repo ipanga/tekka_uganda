@@ -36,6 +36,7 @@ const conditions = [
 ];
 
 const sortOptions = [
+  { label: 'Relevance', value: 'relevance:desc' },
   { label: 'Newest', value: 'createdAt:desc' },
   { label: 'Price: Low to High', value: 'price:asc' },
   { label: 'Price: High to Low', value: 'price:desc' },
@@ -66,7 +67,7 @@ function ExploreContent() {
   const [sort, setSort] = useState(
     searchParams.get('sortBy') && searchParams.get('sortOrder')
       ? `${searchParams.get('sortBy')}:${searchParams.get('sortOrder')}`
-      : 'createdAt:desc'
+      : 'relevance:desc'
   );
   const [showFilters, setShowFilters] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');

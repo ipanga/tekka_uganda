@@ -69,6 +69,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final filter = ListingsFilter(
         categoryId: _selectedCategoryId,
         searchQuery: _searchQuery,
+        sortBy: 'relevance',
+        sortOrder: 'desc',
         limit: 24,
       );
       ref.read(paginatedListingsProvider(filter).notifier).loadMore();
@@ -90,6 +92,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final filter = ListingsFilter(
       categoryId: _selectedCategoryId,
       searchQuery: _searchQuery,
+      sortBy: 'relevance',
+      sortOrder: 'desc',
       limit: 24,
     );
     final paginatedState = ref.watch(paginatedListingsProvider(filter));

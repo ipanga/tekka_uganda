@@ -25,7 +25,7 @@ function HomeContent() {
     params.append('status', 'ACTIVE');
     params.append('limit', String(PAGE_SIZE));
     params.append('page', String(pageNum));
-    params.append('sortBy', 'createdAt');
+    params.append('sortBy', 'relevance');
     params.append('sortOrder', 'desc');
 
     const response = await api.get<{ listings?: Listing[]; data?: Listing[]; pagination?: { page: number; totalPages: number } }>(`/listings?${params}`);
