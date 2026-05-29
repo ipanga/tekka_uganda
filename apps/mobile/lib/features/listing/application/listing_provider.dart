@@ -83,6 +83,26 @@ final listingsFeedProvider =
     });
 
 // ============================================
+// RELATED PRODUCTS (listing detail "You might also like")
+// ============================================
+
+/// "You might also like" carousel on the detail screen. One GET per listing,
+/// keyed by listing id. The backend caps `limit` at 24 and orders by the
+/// shared relevance score with a same-condition tie-break. Errors collapse
+/// to an empty list — the UI just hides the section.
+final relatedListingsProvider = FutureProvider.family<List<Listing>, String>((
+  ref,
+  listingId,
+) async {
+  final repository = ref.watch(listingApiRepositoryProvider);
+  try {
+    return await repository.getRelatedListings(listingId);
+  } catch (_) {
+    return const [];
+  }
+});
+
+// ============================================
 // PAGINATED LISTINGS FEED (for infinite scroll)
 // ============================================
 

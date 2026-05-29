@@ -20,6 +20,7 @@ import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { api } from '@/lib/api';
 import { authManager } from '@/lib/auth';
+import { ListingCard } from '@/components/listings/ListingCard';
 import { Listing, User, UserStats, CATEGORY_LABELS, CONDITION_LABELS, OCCASION_LABELS } from '@/types';
 import { formatPrice, formatRelativeTime, cn } from '@/lib/utils';
 import Header from '@/components/layout/Header';
@@ -35,9 +36,18 @@ import { useAuthStore } from '@/stores/authStore';
 
 interface ListingDetailClientProps {
   listingId: string;
+  // Server-rendered "You might also like" feed. Comes from the page server
+  // component so it ships in the initial HTML — crawlable and one less
+  // client roundtrip on first paint. Empty array means no related items
+  // (sparse data) or that the related fetch failed — either way the section
+  // collapses cleanly.
+  relatedListings?: Listing[];
 }
 
-export default function ListingDetailClient({ listingId }: ListingDetailClientProps) {
+export default function ListingDetailClient({
+  listingId,
+  relatedListings = [],
+}: ListingDetailClientProps) {
   const router = useRouter();
 
   const { user, isAuthenticated } = useAuthStore();
@@ -609,6 +619,25 @@ export default function ListingDetailClient({ listingId }: ListingDetailClientPr
             </div>
           </div>
         </div>
+
+        {relatedListings.length > 0 && (
+          <section
+            aria-labelledby="related-heading"
+            className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 mb-16"
+          >
+            <h2
+              id="related-heading"
+              className="text-xl font-semibold text-gray-900 mb-4"
+            >
+              You might also like
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {relatedListings.map((rel) => (
+                <ListingCard key={rel.id} listing={rel} />
+              ))}
+            </div>
+          </section>
+        )}
       </main>
 
       <Footer />
