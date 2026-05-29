@@ -70,7 +70,8 @@ API dev scripts pass `-e ../../.env.development` explicitly; Next.js apps read w
 - Swagger UI at `/api/docs` — only registered when `NODE_ENV !== 'production'`.
 - Global `ValidationPipe` with `whitelist` + `forbidNonWhitelisted` + `transform`. DTOs need `class-validator` decorators or fields are stripped.
 - CORS origins from `CORS_ORIGINS` (comma-separated). Defaults to localhost ports for dev.
-- Modules in `app.module.ts`: `Auth, Users, Listings, Chats, Reviews, Notifications, Reports, Meetups, PriceAlerts, SavedSearches, QuickReplies, Upload, Admin, Categories, Attributes, Locations, Email`. Cron-style work uses `@nestjs/schedule` (`ScheduleModule.forRoot()`).
+- Modules in `app.module.ts`: `Auth, Users, Listings, Chats, Reviews, Notifications, Reports, Meetups, PriceAlerts, SavedSearches, QuickReplies, Upload, Admin, Categories, Attributes, Locations, Email`. Cron-style work uses `@nestjs/schedule` (`ScheduleModule.forRoot()`); cleanup crons are guarded to no-op outside production to keep dev logs quiet.
+- Observability: `@sentry/nestjs` + `@sentry/profiling-node` ship errors and profiles to Sentry; CI uploads source maps on deploy (`feat/sentry-ci-uploads`). DSN comes from env — unset in dev means Sentry silently no-ops.
 
 ### Auth
 - Two parallel auth systems sharing the User table:
@@ -111,6 +112,7 @@ GitHub Actions in `.github/workflows/`:
 - `mobile.yml` — Flutter analyze/test (and release build on main).
 - Each workflow filters by `paths:` so only relevant apps rebuild.
 - Prod deployment runs `prisma migrate deploy` against the cloud Postgres (Alwaysdata).
+- **No apostrophes in deploy SSH scripts.** The deploy workflows use `appleboy/ssh-action`, which wraps the `script:` block in single quotes — any apostrophe (possessives, contractions, comments) terminates the string and silently scrambles the remote command. Use plain ASCII or rephrase. Cost a production outage in PR #131 → #132 → #133.
 
 ## Conventions worth knowing
 
