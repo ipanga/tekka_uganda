@@ -5,6 +5,7 @@ import {
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import * as Sentry from '@sentry/nestjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UploadService } from '../upload/upload.service';
@@ -14,6 +15,39 @@ import {
   UpdateListingDto,
   ListingQueryDto,
 } from './dto/listing.dto';
+
+/**
+ * SQL fragment that computes a listing relevance score in [~0, ~5+].
+ *
+ * Composition:
+ *   - freshness:    exp(-age_seconds / 604800) — 1.0 at 0s, ~0.37 at 7d, ~0.13 at 14d
+ *   - engagement:   0.4 * ln(views+1) + 1.2 * ln(saves+1) — saves weighted ~3x views
+ *   - quality:      photo coverage (cap 5) + description length (cap 200ch)
+ *                   + attribute-filled bonus (binary)
+ *
+ * Pure arithmetic over already-projected columns; no joins, no subqueries.
+ * Postgres evaluates once per returned row, not the full table.
+ *
+ * Kept as a constant so the SAME expression is used in both the
+ * no-search ORDER BY and the multiplicative blend with ts_rank() during
+ * keyword search. Single source of truth.
+ */
+export const LISTING_RANK_SCORE_SQL = `(
+    EXP(-GREATEST(EXTRACT(EPOCH FROM (NOW() - l.created_at)), 0) / 604800.0)
+  + 0.4 * LN(GREATEST(l.view_count, 0) + 1)
+  + 1.2 * LN(GREATEST(l.save_count, 0) + 1)
+  + LEAST(COALESCE(array_length(l.image_urls, 1), 0), 5)::float / 5.0
+  + LEAST(LENGTH(COALESCE(l.description, '')), 200)::float / 200.0
+  + CASE
+      WHEN l.attributes IS NOT NULL
+       AND jsonb_typeof(l.attributes) = 'object'
+       AND l.attributes <> '{}'::jsonb
+      THEN 1.0
+      ELSE 0
+    END
+)`;
+
+const SLOW_RANKED_QUERY_MS = 500;
 
 @Injectable()
 export class ListingsService {
@@ -595,7 +629,7 @@ export class ListingsService {
       status,
       page = 1,
       limit = 20,
-      sortBy = 'createdAt',
+      sortBy = 'relevance',
       sortOrder = 'desc',
     } = query;
 
@@ -607,10 +641,16 @@ export class ListingsService {
         ? ListingStatus.ACTIVE
         : status || ListingStatus.ACTIVE;
 
-    // If search term provided, use PostgreSQL full-text search for relevance ranking
-    if (search && search.trim()) {
+    // Raw-SQL ranking path runs when either:
+    //   - a keyword search is present (needs Postgres full-text search), or
+    //   - sortBy='relevance' (new default; needs the computed score in ORDER BY
+    //     which Prisma can't express).
+    // Explicit non-relevance sorts (createdAt/price/viewCount) without a search
+    // term still take the lightweight Prisma path below — backward compatible.
+    const hasSearch = !!(search && search.trim());
+    if (hasSearch || sortBy === 'relevance') {
       return this.fullTextSearch(
-        { ...query, status: effectiveStatus },
+        { ...query, status: effectiveStatus, sortBy },
         viewerId,
       );
     }
@@ -712,9 +752,23 @@ export class ListingsService {
   }
 
   /**
-   * PostgreSQL full-text search with relevance ranking.
-   * Uses to_tsvector/to_tsquery for proper tokenization and ranking.
-   * Falls back to ILIKE for short or special-character queries.
+   * Raw-SQL listings query with composable ranking. Handles two modes:
+   *
+   *   1. Keyword search (search term present): Postgres full-text search via
+   *      to_tsvector/to_tsquery with weighted fields (title A, description B,
+   *      brand C) and ILIKE fallback for short/special-character terms.
+   *
+   *   2. No-search relevance browse (sortBy='relevance', no search term):
+   *      same query shape, just without the ts_query WHERE/ORDER fragments.
+   *
+   * In both modes, when sortBy='relevance' the ORDER BY uses the shared
+   * LISTING_RANK_SCORE_SQL fragment (freshness + engagement + quality). In
+   * keyword-search mode the score is *multiplied* into ts_rank so text
+   * matches stay dominant but high-quality matches outrank low-quality ones
+   * with the same text rank.
+   *
+   * Explicit sortBy=createdAt/price/viewCount paths are preserved for
+   * backward compatibility with older clients.
    */
   private async fullTextSearch(query: ListingQueryDto, viewerId?: string) {
     const {
@@ -731,11 +785,12 @@ export class ListingsService {
       status,
       page = 1,
       limit = 20,
-      sortBy = 'createdAt',
+      sortBy = 'relevance',
       sortOrder = 'desc',
     } = query;
 
     const searchTerm = search?.trim() || '';
+    const hasSearch = searchTerm.length > 0;
     const filterStatus = status || 'ACTIVE';
 
     // Build WHERE conditions for filters
@@ -809,48 +864,60 @@ export class ListingsService {
       paramIndex++;
     }
 
-    // Convert search term to tsquery format: split words and join with &
-    const tsQueryWords = searchTerm
-      .split(/\s+/)
-      .filter((w) => w.length > 0)
-      .map((w) => w.replace(/[^a-zA-Z0-9]/g, ''))
-      .filter((w) => w.length > 0);
+    // Search-only: build ts_query fragment and ILIKE fallback. When there's
+    // no search term we skip these entirely — no extra WHERE clause, no
+    // extra params, just the relevance score in the ORDER BY.
+    let searchParamIdx = 0;
+    if (hasSearch) {
+      const tsQueryWords = searchTerm
+        .split(/\s+/)
+        .filter((w) => w.length > 0)
+        .map((w) => w.replace(/[^a-zA-Z0-9]/g, ''))
+        .filter((w) => w.length > 0);
 
-    // Use prefix matching (:*) for the last word to support partial typing
-    const tsQueryTerms = tsQueryWords.map((w, i) =>
-      i === tsQueryWords.length - 1 ? `${w}:*` : w,
-    );
-    const tsQueryStr = tsQueryTerms.join(' & ');
+      // Prefix-match the last word so partial typing still matches.
+      const tsQueryTerms = tsQueryWords.map((w, i) =>
+        i === tsQueryWords.length - 1 ? `${w}:*` : w,
+      );
+      const tsQueryStr = tsQueryTerms.join(' & ');
 
-    // Add full-text search condition with fallback to ILIKE
-    const searchParamIdx = paramIndex;
-    const ilikeParamIdx = paramIndex + 1;
-    params.push(tsQueryStr);
-    params.push(`%${searchTerm}%`);
+      searchParamIdx = paramIndex;
+      const ilikeParamIdx = paramIndex + 1;
+      params.push(tsQueryStr);
+      params.push(`%${searchTerm}%`);
+      paramIndex += 2;
 
-    // Full-text search on title (weighted A) + description (weighted B) + brand (weighted C)
-    // Falls back to ILIKE if tsquery doesn't match (handles special characters, very short terms)
-    conditions.push(`(
-      to_tsvector('english', COALESCE(l.title, '') || ' ' || COALESCE(l.description, '') || ' ' || COALESCE(l.brand, ''))
-      @@ to_tsquery('english', $${searchParamIdx})
-      OR l.title ILIKE $${ilikeParamIdx}
-      OR l.description ILIKE $${ilikeParamIdx}
-      OR l.brand ILIKE $${ilikeParamIdx}
-    )`);
+      // Full-text search on title (weighted A) + description (B) + brand (C).
+      // ILIKE fallback handles special chars / short terms that tsquery rejects.
+      conditions.push(`(
+        to_tsvector('english', COALESCE(l.title, '') || ' ' || COALESCE(l.description, '') || ' ' || COALESCE(l.brand, ''))
+        @@ to_tsquery('english', $${searchParamIdx})
+        OR l.title ILIKE $${ilikeParamIdx}
+        OR l.description ILIKE $${ilikeParamIdx}
+        OR l.brand ILIKE $${ilikeParamIdx}
+      )`);
+    }
 
     const whereClause = conditions.join(' AND ');
     const offset = (page - 1) * limit;
 
-    // Determine sort: use relevance ranking when searching, otherwise use specified sort
+    // ORDER BY:
+    //   - sortBy='relevance' + hasSearch  → ts_rank * (1 + score) (text dominant,
+    //     quality breaks ties)
+    //   - sortBy='relevance' + no search  → score alone (browse ranking)
+    //   - sortBy='createdAt'/'price'/'viewCount' → legacy explicit-sort behavior
     let orderClause: string;
-    if (sortBy === 'createdAt' || !sortBy) {
-      // Default: sort by relevance rank when searching
-      orderClause = `ts_rank(
-        setweight(to_tsvector('english', COALESCE(l.title, '')), 'A') ||
-        setweight(to_tsvector('english', COALESCE(l.description, '')), 'B') ||
-        setweight(to_tsvector('english', COALESCE(l.brand, '')), 'C'),
-        to_tsquery('english', $${searchParamIdx})
-      ) DESC, l.created_at DESC`;
+    if (sortBy === 'relevance') {
+      if (hasSearch) {
+        orderClause = `ts_rank(
+          setweight(to_tsvector('english', COALESCE(l.title, '')), 'A') ||
+          setweight(to_tsvector('english', COALESCE(l.description, '')), 'B') ||
+          setweight(to_tsvector('english', COALESCE(l.brand, '')), 'C'),
+          to_tsquery('english', $${searchParamIdx})
+        ) * (1 + ${LISTING_RANK_SCORE_SQL}) DESC, l.created_at DESC`;
+      } else {
+        orderClause = `${LISTING_RANK_SCORE_SQL} DESC, l.created_at DESC`;
+      }
     } else {
       const sortColumn =
         sortBy === 'price'
@@ -929,10 +996,31 @@ export class ListingsService {
       WHERE ${whereClause}
     `;
 
+    const queryStart = Date.now();
     const [listings, countResult] = await Promise.all([
       this.prisma.$queryRawUnsafe<any[]>(searchQuery, ...params),
       this.prisma.$queryRawUnsafe<[{ total: number }]>(countQuery, ...params),
     ]);
+    const queryMs = Date.now() - queryStart;
+
+    // Surface slow ranked queries to Sentry as a breadcrumb so the next event
+    // (error or transaction) carries the context. No PII — just the shape.
+    if (queryMs > SLOW_RANKED_QUERY_MS) {
+      Sentry.addBreadcrumb({
+        category: 'listings.rankedSearch',
+        level: 'warning',
+        message: `slow ranked listings query: ${queryMs}ms`,
+        data: {
+          ms: queryMs,
+          hasSearch,
+          sortBy,
+          page,
+          limit,
+          hasCategoryFilter: !!categoryId,
+          hasPriceFilter: minPrice !== undefined || maxPrice !== undefined,
+        },
+      });
+    }
 
     const total = countResult[0]?.total || 0;
 

@@ -389,12 +389,13 @@ export class ListingQueryDto {
   limit?: number = 20;
 
   @ApiPropertyOptional({
-    description: 'Sort field',
-    enum: ['createdAt', 'price', 'viewCount'],
+    description:
+      'Sort field. `relevance` (default for non-keyword browsing) ranks by a freshness + engagement + listing-quality score.',
+    enum: ['relevance', 'createdAt', 'price', 'viewCount'],
   })
   @IsOptional()
   @IsString()
-  sortBy?: 'createdAt' | 'price' | 'viewCount';
+  sortBy?: 'relevance' | 'createdAt' | 'price' | 'viewCount';
 
   @ApiPropertyOptional({ description: 'Sort order', enum: ['asc', 'desc'] })
   @IsOptional()

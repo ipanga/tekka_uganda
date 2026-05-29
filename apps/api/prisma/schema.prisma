@@ -330,6 +330,14 @@ model Listing {
   @@index([divisionId])
   @@index([status])
   @@index([createdAt])
+  // Composite index supporting the dominant filtered+sorted access pattern
+  // (status='ACTIVE' ORDER BY created_at DESC) used by the relevance and
+  // newest-first feeds. Declarative twin of the migration in
+  // 20260529185858_add_listing_ranking_indexes/migration.sql. A second
+  // partial index for view_count/save_count lives only in that migration —
+  // partial indexes aren't expressible in Prisma schema (same pattern as the
+  // GIN fulltext index in 20260123100000_add_fulltext_search_index).
+  @@index([status, createdAt(sort: Desc)])
   @@index([slug])
   @@map("listings")
 }

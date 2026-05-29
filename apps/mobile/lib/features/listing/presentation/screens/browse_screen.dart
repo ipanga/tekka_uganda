@@ -31,7 +31,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
   ItemCondition? _selectedCondition;
   int? _minPrice;
   int? _maxPrice;
-  String _sortBy = 'createdAt';
+  String _sortBy = 'relevance';
   String _sortOrder = 'desc';
 
   @override
@@ -76,7 +76,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
       _selectedCondition = null;
       _minPrice = null;
       _maxPrice = null;
-      _sortBy = 'createdAt';
+      _sortBy = 'relevance';
       _sortOrder = 'desc';
     });
   }
@@ -232,7 +232,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                 const SizedBox(width: 8),
                 _FilterChip(
                   label: _getSortLabel(),
-                  isActive: _sortBy != 'createdAt' || _sortOrder != 'desc',
+                  isActive: _sortBy != 'relevance' || _sortOrder != 'desc',
                   onTap: _showSortPicker,
                 ),
               ],
@@ -293,7 +293,8 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
     if (_sortBy == 'price' && _sortOrder == 'asc') return 'Price: Low-High';
     if (_sortBy == 'price' && _sortOrder == 'desc') return 'Price: High-Low';
     if (_sortBy == 'viewCount' && _sortOrder == 'desc') return 'Most Viewed';
-    return 'Newest';
+    if (_sortBy == 'createdAt' && _sortOrder == 'desc') return 'Newest';
+    return 'Relevance';
   }
 
   String _getPriceLabel() {
@@ -926,6 +927,17 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             _SortOption(
+              title: 'Relevance',
+              isSelected: _sortBy == 'relevance' && _sortOrder == 'desc',
+              onTap: () {
+                setState(() {
+                  _sortBy = 'relevance';
+                  _sortOrder = 'desc';
+                });
+                Navigator.pop(context);
+              },
+            ),
+            _SortOption(
               title: 'Newest',
               isSelected: _sortBy == 'createdAt' && _sortOrder == 'desc',
               onTap: () {
@@ -1385,6 +1397,15 @@ class _FilterSheetState extends State<_FilterSheet> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
+                        ChoiceChip(
+                          label: const Text('Relevance'),
+                          selected:
+                              _sortBy == 'relevance' && _sortOrder == 'desc',
+                          onSelected: (_) => setState(() {
+                            _sortBy = 'relevance';
+                            _sortOrder = 'desc';
+                          }),
+                        ),
                         ChoiceChip(
                           label: const Text('Newest'),
                           selected:
