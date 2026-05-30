@@ -12,7 +12,11 @@ import type { Listing } from '@/types';
 
 const PAGE_SIZE = 24;
 
-function HomeContent() {
+interface HomeContentProps {
+  trendingListings: Listing[];
+}
+
+function HomeContent({ trendingListings }: HomeContentProps) {
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -137,11 +141,53 @@ function HomeContent() {
           </div>
         </section>
 
+        {trendingListings.length > 0 && (
+          <section
+            id="trending"
+            aria-labelledby="trending-heading"
+            className="py-10 bg-[var(--background)]"
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between mb-5">
+                <h2
+                  id="trending-heading"
+                  className="text-xl font-bold text-gray-900"
+                >
+                  Trending This Week
+                </h2>
+                <Link
+                  href="/explore"
+                  className="text-sm font-medium text-primary-500 hover:text-primary-600"
+                >
+                  View all
+                </Link>
+              </div>
+              {/*
+                Horizontal scroll on small screens, capped grid on larger ones.
+                snap-x makes the touch carousel feel native; the cards are
+                fixed-width on mobile and fluid on desktop.
+              */}
+              <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:grid sm:grid-cols-3 lg:grid-cols-6 sm:overflow-visible">
+                {trendingListings.map((rel) => (
+                  <div
+                    key={rel.id}
+                    className="snap-start shrink-0 w-40 sm:w-auto"
+                  >
+                    <ListingCard listing={rel} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Listings Section */}
         <section id="listings" className="py-12 bg-[var(--background)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-900">Just Dropped</h2>
+              <h2 className="text-xl font-bold text-gray-900">
+                {trendingListings.length > 0 ? 'Recently Added' : 'Just Dropped'}
+              </h2>
               <Link
                 href="/explore"
                 className="text-sm font-medium text-primary-500 hover:text-primary-600"
@@ -187,7 +233,13 @@ function HomeContent() {
   );
 }
 
-export default function HomeClient() {
+interface HomeClientProps {
+  trendingListings?: Listing[];
+}
+
+export default function HomeClient({
+  trendingListings = [],
+}: HomeClientProps) {
   return (
     <Suspense
       fallback={
@@ -196,7 +248,7 @@ export default function HomeClient() {
         </div>
       }
     >
-      <HomeContent />
+      <HomeContent trendingListings={trendingListings} />
     </Suspense>
   );
 }

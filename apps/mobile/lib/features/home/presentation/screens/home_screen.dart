@@ -236,6 +236,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                       const SizedBox(height: AppSpacing.space5),
 
+                      // "Trending This Week" carousel — shown only when no
+                      // filter is active so it doesn't conflict with category /
+                      // search semantics. The widget collapses to nothing when
+                      // the backend returns an empty list (sparse week / error).
+                      if (!hasFilters) const _TrendingSection(),
+
                       // Listings header
                       Padding(
                         padding: AppSpacing.screenHorizontal,
@@ -776,6 +782,59 @@ class _SubcategoryChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Horizontal "Trending This Week" carousel on the home screen.
+///
+/// Watches `trendingListingsProvider` — the underlying call hits
+/// `GET /api/v1/listings?trending=true` which applies a hard 7-day window
+/// and the engagement-boosted score. The provider catches errors into an
+/// empty list, so the only states this widget needs to handle are loading,
+/// empty, and data.
+class _TrendingSection extends ConsumerWidget {
+  const _TrendingSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncTrending = ref.watch(trendingListingsProvider);
+    return asyncTrending.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.space5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: AppSpacing.screenHorizontal,
+                child: Text(
+                  'Trending This Week',
+                  style: AppTypography.titleSmall,
+                ),
+              ),
+              const SizedBox(height: AppSpacing.space3),
+              SizedBox(
+                height: 260,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: AppSpacing.screenHorizontal,
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: AppSpacing.space3),
+                  itemBuilder: (context, i) => SizedBox(
+                    width: 160,
+                    child: ListingCard(listing: items[i]),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
