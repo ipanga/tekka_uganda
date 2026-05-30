@@ -419,6 +419,21 @@ class ListingApiRepository {
         .toList();
   }
 
+  /// "Trending this week" — engagement-boosted, 7-day-windowed listings feed
+  /// for the home screen. Same wire shape as `search()`; backend applies the
+  /// trending=true flag's hard date cutoff and switches to the higher-
+  /// engagement-weighted score.
+  Future<List<Listing>> getTrendingListings({int limit = 12}) async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/listings',
+      queryParameters: {'status': 'ACTIVE', 'trending': 'true', 'limit': limit},
+    );
+    final items = response['listings'] as List<dynamic>? ?? const [];
+    return items
+        .map((e) => Listing.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   /// Get purchase history (items bought by current user)
   Future<List<Listing>> getPurchaseHistory() async {
     final response = await _apiClient.get<List<dynamic>>('/listings/purchases');

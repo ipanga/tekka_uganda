@@ -215,6 +215,47 @@ class _ListingCardState extends ConsumerState<ListingCard> {
                         ),
                       ),
                     ),
+
+                  // Social-proof badge: ♥ N saves, only shown once a listing
+                  // has crossed the threshold, so low-engagement cards stay
+                  // clean. viewCount is intentionally NOT surfaced — the API
+                  // masks it for non-owners (seller-private analytics), so a
+                  // viewer-facing view badge would never render in practice.
+                  if (listing.saveCount >= 3)
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.white.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusXs,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.favorite,
+                              size: 12,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${listing.saveCount}',
+                              style: AppTypography.labelSmall.copyWith(
+                                color: AppColors.gray900,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),

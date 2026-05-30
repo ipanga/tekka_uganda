@@ -64,6 +64,15 @@ export function ListingCard({ listing, onSaveChange, showStatus }: ListingCardPr
     USED: 'Used',
   };
 
+  // Threshold for the social-proof badge. Below 3 saves we hide the badge to
+  // keep low-engagement cards uncluttered; once a listing crosses the bar it
+  // gets a small "♥ N" overlay. viewCount is intentionally NOT used here —
+  // the API masks viewCount for non-owners (seller-private analytics), so a
+  // viewer-facing badge would never render for the typical browser.
+  const SAVE_BADGE_THRESHOLD = 3;
+  const saveCount = listing.saveCount ?? 0;
+  const showSaveBadge = saveCount >= SAVE_BADGE_THRESHOLD;
+
   const statusLabels: Record<string, { label: string; className: string }> = {
     PENDING: { label: 'Pending Review', className: 'bg-yellow-100 text-yellow-800' },
     REJECTED: { label: 'Rejected', className: 'bg-red-100 text-red-800' },
@@ -98,6 +107,18 @@ export function ListingCard({ listing, onSaveChange, showStatus }: ListingCardPr
         {showStatus && listing.status && statusLabels[listing.status] && (
           <span className={`absolute bottom-2 left-2 text-xs font-medium px-2 py-1 rounded-full ${statusLabels[listing.status].className}`}>
             {statusLabels[listing.status].label}
+          </span>
+        )}
+
+        {/* Social-proof badge: visible only when a listing has crossed the
+            save threshold, so most cards stay clean. */}
+        {showSaveBadge && (
+          <span
+            className="absolute bottom-2 right-2 inline-flex items-center gap-1 bg-white/90 backdrop-blur-sm text-xs font-medium px-2 py-1 rounded-full text-gray-700"
+            aria-label={`${saveCount} ${saveCount === 1 ? 'save' : 'saves'}`}
+          >
+            <HeartSolidIcon className="h-3 w-3 text-primary-500" />
+            {saveCount}
           </span>
         )}
       </Link>

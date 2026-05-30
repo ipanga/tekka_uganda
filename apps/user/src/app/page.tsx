@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import HomeClient from '@/components/home/HomeClient';
+import { getTrendingListings } from '@/lib/api-server';
 
 export const metadata: Metadata = {
   title: 'Tekka Uganda - Buy & Sell Second-Hand Clothes Online',
@@ -11,10 +12,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Server-fetch the "Trending this week" feed so it ships in the initial
+  // HTML — crawlable + zero client roundtrip on first paint. Errors fall
+  // back to an empty list (api-server.ts swallows non-2xx) which collapses
+  // the section cleanly.
+  const trendingListings = await getTrendingListings(12);
+
   return (
     <>
-      <HomeClient />
+      <HomeClient trendingListings={trendingListings} />
       {/*
         Server-rendered SEO section — always in the DOM for crawlers.
         Visually appears below the fold but provides crawlable text
