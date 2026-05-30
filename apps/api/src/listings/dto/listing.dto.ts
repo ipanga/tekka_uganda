@@ -410,6 +410,15 @@ export class ListingQueryDto {
   @IsOptional()
   @Transform(({ value }) => value === true || value === 'true' || value === '1')
   trending?: boolean;
+
+  @ApiPropertyOptional({
+    description:
+      'When true, only return listings flagged by an admin as Featured, ordered by featured_at DESC. Used by the "Featured" surface on the home page.',
+    type: Boolean,
+  })
+  @IsOptional()
+  @Transform(({ value }) => value === true || value === 'true' || value === '1')
+  featured?: boolean;
 }
 
 export class AdminListingActionDto {

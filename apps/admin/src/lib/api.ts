@@ -260,6 +260,21 @@ class ApiClient {
     });
   }
 
+  // Toggle a listing's Featured status. POST promotes it (sets isFeatured +
+  // featuredAt=now), DELETE unfeatures it. Listing must be ACTIVE to be
+  // promoted — the API rejects featuring on PENDING/SOLD/etc.
+  async featureListing(id: string) {
+    return this.request(`/listings/admin/${id}/feature`, {
+      method: 'POST',
+    });
+  }
+
+  async unfeatureListing(id: string) {
+    return this.request(`/listings/admin/${id}/feature`, {
+      method: 'DELETE',
+    });
+  }
+
   async getListing(id: string) {
     return this.request<any>(`/listings/${id}`);
   }

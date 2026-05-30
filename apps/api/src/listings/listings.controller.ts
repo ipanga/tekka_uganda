@@ -231,6 +231,26 @@ export class ListingsController {
     return this.listingsService.rejectListing(id, admin.id, dto.reason);
   }
 
+  // Promote a listing to the home "Featured" surface (admin curation).
+  @Post('admin/:id/feature')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async featureListing(
+    @Param('id') id: string,
+    @CurrentUser() admin: Prisma.User,
+  ) {
+    return this.listingsService.setListingFeatured(id, admin.id, true);
+  }
+
+  // Remove a listing from the home "Featured" surface.
+  @Delete('admin/:id/feature')
+  @UseGuards(JwtAuthGuard, AdminGuard)
+  async unfeatureListing(
+    @Param('id') id: string,
+    @CurrentUser() admin: Prisma.User,
+  ) {
+    return this.listingsService.setListingFeatured(id, admin.id, false);
+  }
+
   // Suspend a listing (puts it back to pending for review)
   @Post('admin/:id/suspend')
   @UseGuards(JwtAuthGuard, AdminGuard)

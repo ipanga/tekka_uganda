@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import HomeClient from '@/components/home/HomeClient';
-import { getTrendingListings } from '@/lib/api-server';
+import { getFeaturedListings, getTrendingListings } from '@/lib/api-server';
 
 export const metadata: Metadata = {
   title: 'Tekka Uganda - Buy & Sell Second-Hand Clothes Online',
@@ -13,15 +13,21 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  // Server-fetch the "Trending this week" feed so it ships in the initial
+  // Server-fetch the home sections in parallel so they ship in the initial
   // HTML — crawlable + zero client roundtrip on first paint. Errors fall
-  // back to an empty list (api-server.ts swallows non-2xx) which collapses
-  // the section cleanly.
-  const trendingListings = await getTrendingListings(12);
+  // back to empty lists (api-server.ts swallows non-2xx) which collapses
+  // the section cleanly without breaking the page.
+  const [featuredListings, trendingListings] = await Promise.all([
+    getFeaturedListings(12),
+    getTrendingListings(12),
+  ]);
 
   return (
     <>
-      <HomeClient trendingListings={trendingListings} />
+      <HomeClient
+        featuredListings={featuredListings}
+        trendingListings={trendingListings}
+      />
       {/*
         Server-rendered SEO section — always in the DOM for crawlers.
         Visually appears below the fold but provides crawlable text

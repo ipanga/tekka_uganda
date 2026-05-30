@@ -41,6 +41,8 @@ export interface Listing {
   viewCount: number;
   saveCount: number;
   rejectionReason?: string;
+  isFeatured?: boolean;
+  featuredAt?: string | null;
   createdAt: string;
   updatedAt: string;
   soldAt?: string;
