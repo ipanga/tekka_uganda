@@ -1024,11 +1024,14 @@ export class ListingsService {
 
     const total = countResult[0]?.total || 0;
 
-    // Normalize raw results to match Prisma's format
+    // Normalize raw results to match Prisma's format. Field list must stay
+    // in lock-step with the Prisma path of `search()` (and with findRelated's
+    // own normalization below) — see listings.shape.spec.ts.
     const normalizedListings = listings.map((row) => ({
       id: row.id,
       sellerId: row.seller_id,
       title: row.title,
+      slug: row.slug,
       description: row.description,
       price: row.price,
       originalPrice: row.original_price,
@@ -1044,6 +1047,7 @@ export class ListingsService {
       location: row.location,
       condition: row.condition,
       imageUrls: row.image_urls,
+      imagePublicIds: row.image_public_ids,
       status: row.status,
       viewCount: row.view_count,
       saveCount: row.save_count,
@@ -1476,11 +1480,15 @@ export class ListingsService {
       location: row.location,
       condition: row.condition,
       imageUrls: row.image_urls,
+      imagePublicIds: row.image_public_ids,
       status: row.status,
       viewCount: row.view_count,
       saveCount: row.save_count,
+      rejectionReason: row.rejection_reason,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
+      soldAt: row.sold_at,
+      archivedAt: row.archived_at,
       seller: row.seller,
       categoryData: row.category_data,
       city: row.city_data,
