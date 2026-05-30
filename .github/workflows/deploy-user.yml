@@ -157,11 +157,17 @@ jobs:
               #
               # We bypass the public URL (tekka.ug) deliberately: from the
               # VPS the public DNS resolves through Cloudflare IPv6 / the
-              # VPS's own IPv4 in a split-horizon, which intermittently
+              # VPS own IPv4 in a split-horizon, which intermittently
               # returns 403 to VPS-originated probes even though the same
               # URL responds 200 to external clients. That bit the PR4
               # deploys repeatedly. External public-URL smoke is handled by
               # cron monitoring + the manual deploy review, not here.
+              #
+              # NOTE: do NOT add apostrophes anywhere in this script (this
+              # comment included). The whole block is wrapped in single
+              # quotes by bash -c, and any apostrophe closes the string
+              # and silently scrambles every variable after it. Past
+              # incident: PR4 deploys on 2026-05-30.
               SMOKE_OK=0
               for attempt in 1 2 3; do
                 if $COMPOSE exec -T $SERVICE wget --tries=1 --timeout=10 -q -O /dev/null "http://localhost:${USER_PORT:-3000}/"; then
