@@ -150,15 +150,21 @@ jobs:
                 fi
               fi
 
-              # Smoke test with retry. The container health check passes as
-              # soon as the app binds its port, but nginx may still be holding
-              # a connection to the old upstream IP for a brief window after
-              # recreate. Retrying a handful of times with backoff lets the
-              # upstream re-resolve cleanly. PR4 deploys consistently failed
-              # without this; PR1-3 just got lucky on timing.
+              # Smoke test from inside the docker network. The container
+              # healthcheck above verifies the port is open and responds to
+              # HEAD; this additionally exercises a real GET on `/` so a
+              # broken render path still trips the rollback.
+              #
+              # We bypass the public URL (tekka.ug) deliberately: from the
+              # VPS the public DNS resolves through Cloudflare IPv6 / the
+              # VPS's own IPv4 in a split-horizon, which intermittently
+              # returns 403 to VPS-originated probes even though the same
+              # URL responds 200 to external clients. That bit the PR4
+              # deploys repeatedly. External public-URL smoke is handled by
+              # cron monitoring + the manual deploy review, not here.
               SMOKE_OK=0
-              for attempt in 1 2 3 4 5; do
-                if curl -fsS --max-time 10 "$SMOKE_URL" > /dev/null; then
+              for attempt in 1 2 3; do
+                if $COMPOSE exec -T $SERVICE wget --tries=1 --timeout=10 -q -O /dev/null "http://localhost:${USER_PORT:-3000}/"; then
                   SMOKE_OK=1
                   break
                 fi
@@ -166,10 +172,10 @@ jobs:
                 sleep 3
               done
               if [ "$SMOKE_OK" = "1" ]; then
-                echo "Smoke test passed."
+                echo "Smoke test passed (docker-internal GET /)."
                 echo "$IMAGE_TAG" > "$LAST_GOOD_FILE"
               else
-                echo "Smoke test FAILED for $SMOKE_URL after 5 attempts"
+                echo "Smoke test FAILED after 3 attempts"
                 if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$IMAGE_TAG" ]; then
                   echo "Rolling back to $PREVIOUS_TAG"
                   export USER_IMAGE_TAG="$PREVIOUS_TAG"

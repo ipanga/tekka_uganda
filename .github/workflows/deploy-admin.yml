@@ -150,13 +150,13 @@ jobs:
                 fi
               fi
 
-              # Smoke test with retry. See deploy-api.yml / deploy-user.yml
-              # for the full rationale: nginx upstream caching can return 403
-              # for a brief window after recreate even though the container
-              # is healthy.
+              # Smoke test from inside the docker network. See
+              # deploy-user.yml / deploy-api.yml for the rationale on why
+              # we bypass the public URL (VPS split-horizon DNS +
+              # Cloudflare returns 403 to VPS-originated probes).
               SMOKE_OK=0
-              for attempt in 1 2 3 4 5; do
-                if curl -fsS --max-time 10 "$SMOKE_URL" > /dev/null; then
+              for attempt in 1 2 3; do
+                if $COMPOSE exec -T $SERVICE wget --tries=1 --timeout=10 -q -O /dev/null "http://localhost:${ADMIN_PORT:-3001}/"; then
                   SMOKE_OK=1
                   break
                 fi
@@ -164,10 +164,10 @@ jobs:
                 sleep 3
               done
               if [ "$SMOKE_OK" = "1" ]; then
-                echo "Smoke test passed."
+                echo "Smoke test passed (docker-internal GET /)."
                 echo "$IMAGE_TAG" > "$LAST_GOOD_FILE"
               else
-                echo "Smoke test FAILED for $SMOKE_URL after 5 attempts"
+                echo "Smoke test FAILED after 3 attempts"
                 if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$IMAGE_TAG" ]; then
                   echo "Rolling back to $PREVIOUS_TAG"
                   export ADMIN_IMAGE_TAG="$PREVIOUS_TAG"
