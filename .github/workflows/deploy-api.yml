@@ -143,12 +143,27 @@ jobs:
                 fi
               fi
 
-              # 6. Smoke test through public URL
-              if curl -fsS --max-time 10 "$SMOKE_URL" > /dev/null; then
+              # 6. Smoke test through public URL, with retry. The container
+              # health check passes as soon as the app binds its port, but
+              # nginx may still hold a connection to the old upstream IP
+              # for a brief window after recreate (it serves 403 in that
+              # window). Five attempts with 3s backoff let the upstream
+              # re-resolve cleanly. PR4 deploys consistently failed without
+              # this; PR1-3 just got lucky on timing.
+              SMOKE_OK=0
+              for attempt in 1 2 3 4 5; do
+                if curl -fsS --max-time 10 "$SMOKE_URL" > /dev/null; then
+                  SMOKE_OK=1
+                  break
+                fi
+                echo "Smoke attempt $attempt failed; retrying in 3s..."
+                sleep 3
+              done
+              if [ "$SMOKE_OK" = "1" ]; then
                 echo "Smoke test passed."
                 echo "$IMAGE_TAG" > "$LAST_GOOD_FILE"
               else
-                echo "Smoke test FAILED for $SMOKE_URL"
+                echo "Smoke test FAILED for $SMOKE_URL after 5 attempts"
                 if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$IMAGE_TAG" ]; then
                   echo "Rolling back to $PREVIOUS_TAG"
                   export API_IMAGE_TAG="$PREVIOUS_TAG"
