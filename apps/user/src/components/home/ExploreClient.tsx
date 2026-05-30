@@ -184,6 +184,16 @@ function ExploreContent() {
     return () => clearTimeout(debounce);
   }, [searchQuery, categoryId, condition, minPrice, maxPrice, cityId, divisionId, sort]);
 
+  // PR5a category-affinity beacon. Fires once per category-id change so
+  // the server can accumulate per-user "this viewer likes this category"
+  // signal that PR5b reads back when ranking the "For You" surface.
+  // Guests are no-op'd server-side; errors are swallowed because tracking
+  // must never break navigation.
+  useEffect(() => {
+    if (!categoryId) return;
+    api.recordCategoryView(categoryId).catch(() => {});
+  }, [categoryId]);
+
   // IntersectionObserver for infinite scroll
   useEffect(() => {
     if (!hasMore || loadingMore || loading) return;

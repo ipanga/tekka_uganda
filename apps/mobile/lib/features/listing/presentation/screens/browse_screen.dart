@@ -9,6 +9,7 @@ import '../../../search/application/saved_search_provider.dart';
 import '../../application/listing_provider.dart';
 import '../../application/category_provider.dart';
 import '../../domain/entities/listing.dart';
+import '../../../home/data/repositories/tracking_api_repository.dart';
 
 /// Browse/Search screen with filters
 class BrowseScreen extends ConsumerStatefulWidget {
@@ -33,6 +34,10 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
   int? _maxPrice;
   String _sortBy = 'relevance';
   String _sortOrder = 'desc';
+  // Last category-id sent to the affinity tracking endpoint, so the
+  // post-frame beacon fires once per actual change. Mirrors the same
+  // pattern in home_screen.dart.
+  String? _lastTrackedCategoryId;
 
   @override
   void initState() {
@@ -89,8 +94,20 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
       _maxPrice != null ||
       _searchController.text.isNotEmpty;
 
+  // PR5a category-affinity beacon — see home_screen._maybeTrackCategoryChange.
+  void _maybeTrackCategoryChange() {
+    if (_selectedCategoryId == _lastTrackedCategoryId) return;
+    _lastTrackedCategoryId = _selectedCategoryId;
+    final id = _selectedCategoryId;
+    if (id == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(trackingApiRepositoryProvider).recordCategoryView(id);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    _maybeTrackCategoryChange();
     final categoryState = ref.watch(categoryProvider);
     final listingsAsync = ref.watch(listingsFeedProvider(_currentFilter));
 

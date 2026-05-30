@@ -113,6 +113,7 @@ model User {
   purchases            Purchase[]
   broadcastsCreated    Broadcast[]           @relation("BroadcastsCreated")
   identityVerification IdentityVerification?
+  categoryAffinities   UserCategoryAffinity[]
 
   @@map("users")
 }
@@ -167,10 +168,11 @@ model Category {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  parent     Category?           @relation("CategoryHierarchy", fields: [parentId], references: [id])
-  children   Category[]          @relation("CategoryHierarchy")
+  parent     Category?              @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children   Category[]             @relation("CategoryHierarchy")
   attributes CategoryAttribute[]
   listings   Listing[]
+  affinities UserCategoryAffinity[]
 
   @@index([parentId])
   @@index([level])
@@ -381,6 +383,32 @@ model SavedItem {
 
   @@unique([userId, listingId])
   @@map("saved_items")
+}
+
+/// Per-(user, category) affinity counter that PR5b's "For You" ranking
+/// reads from to boost a viewer's preferred categories. PR5a only writes
+/// to this table — there is no client-visible read path yet.
+///
+/// Updates are upserts:
+///   - category-view event: weight += 1.0, eventCount += 1, lastSeenAt = NOW()
+///   - save event:         weight += 2.0, same counter/timestamp bumps
+/// Decay is applied at read time in PR5b's ranking SQL (no cron).
+model UserCategoryAffinity {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  categoryId String   @map("category_id")
+  weight     Float    @default(0)
+  eventCount Int      @default(0) @map("event_count")
+  lastSeenAt DateTime @default(now()) @map("last_seen_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, categoryId])
+  @@index([userId, weight(sort: Desc)])
+  @@map("user_category_affinities")
 }
 
 // ============================================

@@ -10,6 +10,7 @@ import '../../../listing/application/listing_provider.dart';
 import '../../../listing/application/category_provider.dart';
 import '../../../listing/domain/entities/category.dart' as cat;
 import '../../../notifications/application/notification_provider.dart';
+import '../../data/repositories/tracking_api_repository.dart';
 
 /// Home screen with featured and recent listings
 class HomeScreen extends ConsumerStatefulWidget {
@@ -29,6 +30,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final _scrollController = ScrollController();
   bool _hasSearchText = false;
   bool _showScrollToTop = false;
+  // Last category-id we sent to the affinity tracking endpoint, so the
+  // post-frame beacon fires exactly once per actual change (not on every
+  // rebuild). See trackingApiRepositoryProvider for the contract.
+  String? _lastTrackedCategoryId;
 
   @override
   void initState() {
@@ -86,8 +91,23 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     super.dispose();
   }
 
+  // PR5a category-affinity beacon. Schedules a post-frame send if
+  // _selectedCategoryId changed since the last build, so any setState path
+  // that updates the category (subcategory chip, clear-filters, deep-link)
+  // funnels through one call site without touching every setState body.
+  void _maybeTrackCategoryChange() {
+    if (_selectedCategoryId == _lastTrackedCategoryId) return;
+    _lastTrackedCategoryId = _selectedCategoryId;
+    final id = _selectedCategoryId;
+    if (id == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(trackingApiRepositoryProvider).recordCategoryView(id);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    _maybeTrackCategoryChange();
     final categoryState = ref.watch(categoryProvider);
     final filter = ListingsFilter(
       categoryId: _selectedCategoryId,
