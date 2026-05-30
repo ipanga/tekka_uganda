@@ -317,6 +317,16 @@ class ApiClient {
     return this.get<{ saved: boolean }>(`/listings/${id}/saved`);
   }
 
+  /**
+   * Best-effort beacon for the PR5a affinity-tracking surface. Fires once
+   * per category-page entry. Returns 204 for both authed and guest sessions;
+   * guests are no-op'd server-side. Callers should swallow errors — tracking
+   * never breaks navigation.
+   */
+  recordCategoryView(categoryId: string): Promise<void> {
+    return this.post<void>('/tracking/category-view', { categoryId });
+  }
+
   // ============================================
   // CHAT ENDPOINTS
   // ============================================
