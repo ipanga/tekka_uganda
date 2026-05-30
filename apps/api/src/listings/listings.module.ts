@@ -4,9 +4,10 @@ import { ListingsController } from './listings.controller';
 import { AuthModule } from '../auth/auth.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UploadModule } from '../upload/upload.module';
+import { TrackingModule } from '../tracking/tracking.module';
 
 @Module({
-  imports: [AuthModule, NotificationsModule, UploadModule],
+  imports: [AuthModule, NotificationsModule, UploadModule, TrackingModule],
   controllers: [ListingsController],
   providers: [ListingsService],
   exports: [ListingsService],

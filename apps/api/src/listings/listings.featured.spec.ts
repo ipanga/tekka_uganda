@@ -6,10 +6,7 @@ import { join } from 'node:path';
 // listings.trending.spec.ts: we can't hit Postgres in unit tests, so we
 // scan the service source for the invariants we care about.
 
-const SOURCE = readFileSync(
-  join(__dirname, 'listings.service.ts'),
-  'utf8',
-);
+const SOURCE = readFileSync(join(__dirname, 'listings.service.ts'), 'utf8');
 
 describe('Featured surface', () => {
   it('filters by is_featured = true when featured=true', () => {
@@ -17,9 +14,7 @@ describe('Featured surface', () => {
   });
 
   it('orders featured listings by featured_at DESC NULLS LAST', () => {
-    expect(SOURCE).toMatch(
-      /l\.featured_at\s+DESC\s+NULLS\s+LAST/i,
-    );
+    expect(SOURCE).toMatch(/l\.featured_at\s+DESC\s+NULLS\s+LAST/i);
   });
 
   it('routes featured=true through the raw-SQL ranking path', () => {
@@ -35,7 +30,7 @@ describe('Featured surface', () => {
 describe('setListingFeatured', () => {
   const fn =
     SOURCE.match(
-      /async setListingFeatured\([^)]*\)\s*:\s*Promise<Listing>\s*\{([\s\S]*?)\n  \}/,
+      /async setListingFeatured\([^)]*\)\s*:\s*Promise<Listing>\s*\{([\s\S]*?)\n {2}\}/,
     )?.[1] ?? '';
 
   it('requires the listing to be ACTIVE when promoting', () => {

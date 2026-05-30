@@ -9,6 +9,7 @@ import * as Sentry from '@sentry/nestjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { UploadService } from '../upload/upload.service';
+import { TrackingService } from '../tracking/tracking.service';
 import { Listing, ListingStatus, Prisma } from '@prisma/client';
 import {
   CreateListingDto,
@@ -95,6 +96,7 @@ export class ListingsService {
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
     private uploadService: UploadService,
+    private tracking: TrackingService,
   ) {}
 
   /**
@@ -688,7 +690,12 @@ export class ListingsService {
     // Explicit non-relevance sorts (createdAt/price/viewCount) without a search
     // term still take the lightweight Prisma path below — backward compatible.
     const hasSearch = !!(search && search.trim());
-    if (hasSearch || sortBy === 'relevance' || query.trending || query.featured) {
+    if (
+      hasSearch ||
+      sortBy === 'relevance' ||
+      query.trending ||
+      query.featured
+    ) {
       return this.fullTextSearch(
         { ...query, status: effectiveStatus, sortBy },
         viewerId,
@@ -1332,7 +1339,7 @@ export class ListingsService {
 
   // Saved items
   async saveListing(userId: string, listingId: string) {
-    await this.findById(listingId); // Verify listing exists
+    const listing = await this.findById(listingId); // Verify listing exists
 
     await this.prisma.savedItem.upsert({
       where: {
@@ -1346,6 +1353,15 @@ export class ListingsService {
       where: { id: listingId },
       data: { saveCount: { increment: 1 } },
     });
+
+    // Fire-and-forget affinity touch (PR5a). Tracking is best-effort and
+    // already swallows its own errors internally; we still .catch() here
+    // belt-and-suspenders so a future throw can't break the save flow.
+    if (listing.categoryId) {
+      void this.tracking
+        .recordSaveSignal(userId, listing.categoryId)
+        .catch(() => {});
+    }
   }
 
   async unsaveListing(userId: string, listingId: string) {
@@ -1723,9 +1739,7 @@ export class ListingsService {
     const listing = await this.findById(id);
 
     if (featured && listing.status !== ListingStatus.ACTIVE) {
-      throw new BadRequestException(
-        'Only active listings can be featured',
-      );
+      throw new BadRequestException('Only active listings can be featured');
     }
 
     const updated = await this.prisma.listing.update({

@@ -16,6 +16,7 @@ import { ReportsModule } from './reports/reports.module';
 import { MeetupsModule } from './meetups/meetups.module';
 import { PriceAlertsModule } from './price-alerts/price-alerts.module';
 import { SavedSearchesModule } from './saved-searches/saved-searches.module';
+import { TrackingModule } from './tracking/tracking.module';
 import { QuickRepliesModule } from './quick-replies/quick-replies.module';
 import { UploadModule } from './upload/upload.module';
 import { AdminModule } from './admin/admin.module';
@@ -55,6 +56,7 @@ import { EmailModule } from './email/email.module';
     MeetupsModule,
     PriceAlertsModule,
     SavedSearchesModule,
+    TrackingModule,
     QuickRepliesModule,
     UploadModule,
     AdminModule,
