@@ -150,11 +150,24 @@ jobs:
                 fi
               fi
 
-              if curl -fsS --max-time 10 "$SMOKE_URL" > /dev/null; then
+              # Smoke test with retry. See deploy-api.yml / deploy-user.yml
+              # for the full rationale: nginx upstream caching can return 403
+              # for a brief window after recreate even though the container
+              # is healthy.
+              SMOKE_OK=0
+              for attempt in 1 2 3 4 5; do
+                if curl -fsS --max-time 10 "$SMOKE_URL" > /dev/null; then
+                  SMOKE_OK=1
+                  break
+                fi
+                echo "Smoke attempt $attempt failed; retrying in 3s..."
+                sleep 3
+              done
+              if [ "$SMOKE_OK" = "1" ]; then
                 echo "Smoke test passed."
                 echo "$IMAGE_TAG" > "$LAST_GOOD_FILE"
               else
-                echo "Smoke test FAILED for $SMOKE_URL"
+                echo "Smoke test FAILED for $SMOKE_URL after 5 attempts"
                 if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$IMAGE_TAG" ]; then
                   echo "Rolling back to $PREVIOUS_TAG"
                   export ADMIN_IMAGE_TAG="$PREVIOUS_TAG"
