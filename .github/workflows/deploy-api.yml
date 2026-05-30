@@ -144,16 +144,23 @@ jobs:
               fi
 
               # 6. Smoke test from inside the docker network. The API
-              # container's healthcheck only TCP-connects to the port;
+              # container healthcheck only TCP-connects to the port;
               # this additionally hits a real listings endpoint so a
               # broken request path still trips the rollback.
               #
               # We bypass the public URL (api.tekka.ug) deliberately: see
               # deploy-user.yml for the full rationale (VPS split-horizon
               # DNS + Cloudflare returns 403 to VPS-originated probes).
+              # NOTE: the node -e arg uses double-quotes only (escaped as
+              # backslash-quote) because the surrounding SSH script is
+              # wrapped in single quotes by appleboy/ssh-action — any
+              # apostrophe inside this block terminates that string and
+              # silently scrambles the rest of the script (see CLAUDE.md
+              # deploy-SSH-apostrophe rule). Past incident: PR4 deploys
+              # on 2026-05-30.
               SMOKE_OK=0
               for attempt in 1 2 3; do
-                if $COMPOSE exec -T $SERVICE node -e "require('http').get('http://localhost:${API_PORT:-4000}/api/v1/listings?limit=1', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"; then
+                if $COMPOSE exec -T $SERVICE node -e "var h=require(\"http\");h.get(\"http://localhost:${API_PORT:-4000}/api/v1/listings?limit=1\",function(r){process.exit(r.statusCode===200?0:1)}).on(\"error\",function(){process.exit(1)})"; then
                   SMOKE_OK=1
                   break
                 fi
