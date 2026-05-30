@@ -143,16 +143,17 @@ jobs:
                 fi
               fi
 
-              # 6. Smoke test through public URL, with retry. The container
-              # health check passes as soon as the app binds its port, but
-              # nginx may still hold a connection to the old upstream IP
-              # for a brief window after recreate (it serves 403 in that
-              # window). Five attempts with 3s backoff let the upstream
-              # re-resolve cleanly. PR4 deploys consistently failed without
-              # this; PR1-3 just got lucky on timing.
+              # 6. Smoke test from inside the docker network. The API
+              # container's healthcheck only TCP-connects to the port;
+              # this additionally hits a real listings endpoint so a
+              # broken request path still trips the rollback.
+              #
+              # We bypass the public URL (api.tekka.ug) deliberately: see
+              # deploy-user.yml for the full rationale (VPS split-horizon
+              # DNS + Cloudflare returns 403 to VPS-originated probes).
               SMOKE_OK=0
-              for attempt in 1 2 3 4 5; do
-                if curl -fsS --max-time 10 "$SMOKE_URL" > /dev/null; then
+              for attempt in 1 2 3; do
+                if $COMPOSE exec -T $SERVICE node -e "require('http').get('http://localhost:${API_PORT:-4000}/api/v1/listings?limit=1', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"; then
                   SMOKE_OK=1
                   break
                 fi
@@ -160,10 +161,10 @@ jobs:
                 sleep 3
               done
               if [ "$SMOKE_OK" = "1" ]; then
-                echo "Smoke test passed."
+                echo "Smoke test passed (docker-internal GET /listings)."
                 echo "$IMAGE_TAG" > "$LAST_GOOD_FILE"
               else
-                echo "Smoke test FAILED for $SMOKE_URL after 5 attempts"
+                echo "Smoke test FAILED after 3 attempts"
                 if [ -n "$PREVIOUS_TAG" ] && [ "$PREVIOUS_TAG" != "$IMAGE_TAG" ]; then
                   echo "Rolling back to $PREVIOUS_TAG"
                   export API_IMAGE_TAG="$PREVIOUS_TAG"
