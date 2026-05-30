@@ -236,6 +236,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
                       const SizedBox(height: AppSpacing.space5),
 
+                      // Admin-curated "Featured" carousel — shown only when no
+                      // filter is active. Sits ABOVE Trending because it's
+                      // the most prominent surface (manual editorial pick).
+                      // Collapses to nothing when no listing is currently
+                      // featured (admin hasn't promoted anything, or fetch
+                      // failed). [trendingListingsProvider] is unaffected.
+                      if (!hasFilters) const _FeaturedSection(),
+
                       // "Trending This Week" carousel — shown only when no
                       // filter is active so it doesn't conflict with category /
                       // search semantics. The widget collapses to nothing when
@@ -782,6 +790,62 @@ class _SubcategoryChip extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Horizontal admin-curated "Featured" carousel on the home screen.
+///
+/// Watches `featuredListingsProvider` — the underlying call hits
+/// `GET /api/v1/listings?featured=true` which filters by the admin-set
+/// is_featured flag and orders by featured_at DESC. The provider catches
+/// errors into an empty list so this widget only needs to handle data /
+/// empty / loading.
+class _FeaturedSection extends ConsumerWidget {
+  const _FeaturedSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncFeatured = ref.watch(featuredListingsProvider);
+    return asyncFeatured.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
+      data: (items) {
+        if (items.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.space5),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: AppSpacing.screenHorizontal,
+                child: Row(
+                  children: [
+                    Icon(Icons.star, size: 18, color: AppColors.gold),
+                    const SizedBox(width: AppSpacing.space2),
+                    Text('Featured', style: AppTypography.titleSmall),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.space3),
+              SizedBox(
+                height: 260,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  padding: AppSpacing.screenHorizontal,
+                  itemCount: items.length,
+                  separatorBuilder: (_, _) =>
+                      const SizedBox(width: AppSpacing.space3),
+                  itemBuilder: (context, i) => SizedBox(
+                    width: 160,
+                    child: ListingCard(listing: items[i]),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

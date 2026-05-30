@@ -39,6 +39,8 @@ const REQUIRED_FIELD_MAPPINGS: ReadonlyArray<readonly [string, string]> = [
   ['updatedAt', 'row.updated_at'],
   ['seller', 'row.seller'],
   ['categoryData', 'row.category_data'],
+  ['isFeatured', 'row.is_featured'],
+  ['featuredAt', 'row.featured_at'],
 ];
 
 function extractBlock(after: string, until: string): string {

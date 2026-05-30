@@ -74,3 +74,15 @@ export async function getTrendingListings(
   );
   return raw?.listings ?? [];
 }
+
+export async function getFeaturedListings(
+  limit = 12,
+): Promise<Listing[]> {
+  const raw = await serverFetch<{
+    listings: Listing[];
+    pagination?: { total: number };
+  }>(
+    `/listings?status=ACTIVE&featured=true&limit=${limit}`,
+  );
+  return raw?.listings ?? [];
+}

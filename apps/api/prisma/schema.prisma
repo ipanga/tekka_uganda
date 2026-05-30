@@ -307,6 +307,8 @@ model Listing {
   viewCount       Int           @default(0) @map("view_count")
   saveCount       Int           @default(0) @map("save_count")
   rejectionReason String?       @map("rejection_reason")
+  isFeatured      Boolean       @default(false) @map("is_featured")
+  featuredAt      DateTime?     @map("featured_at")
   createdAt       DateTime      @default(now()) @map("created_at")
   updatedAt       DateTime      @updatedAt @map("updated_at")
   soldAt          DateTime?     @map("sold_at")
