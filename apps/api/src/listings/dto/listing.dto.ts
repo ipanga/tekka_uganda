@@ -401,6 +401,15 @@ export class ListingQueryDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'asc' | 'desc';
+
+  @ApiPropertyOptional({
+    description:
+      'When true, only return listings created in the last 7 days, ranked by an engagement-boosted score (saves weighted heavily). Used by the "Trending this week" surface on the home page.',
+    type: Boolean,
+  })
+  @IsOptional()
+  @Transform(({ value }) => value === true || value === 'true' || value === '1')
+  trending?: boolean;
 }
 
 export class AdminListingActionDto {

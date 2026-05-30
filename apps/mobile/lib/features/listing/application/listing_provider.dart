@@ -103,6 +103,22 @@ final relatedListingsProvider = FutureProvider.family<List<Listing>, String>((
 });
 
 // ============================================
+// TRENDING PRODUCTS (home "Trending This Week")
+// ============================================
+
+/// "Trending this week" carousel on the home screen. Engagement-boosted
+/// 7-day-windowed feed. Errors collapse to an empty list so the section
+/// just hides on backend failure.
+final trendingListingsProvider = FutureProvider<List<Listing>>((ref) async {
+  final repository = ref.watch(listingApiRepositoryProvider);
+  try {
+    return await repository.getTrendingListings();
+  } catch (_) {
+    return const [];
+  }
+});
+
+// ============================================
 // PAGINATED LISTINGS FEED (for infinite scroll)
 // ============================================
 

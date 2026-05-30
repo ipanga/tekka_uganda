@@ -49,6 +49,44 @@ export const LISTING_RANK_SCORE_SQL = `(
 
 const SLOW_RANKED_QUERY_MS = 500;
 
+/**
+ * "Trending this week" variant of the relevance score.
+ *
+ *   - freshness:    exp(-age_seconds / 172800) — 2-day half-life. Combined
+ *                   with the hard 7-day cutoff in the WHERE clause, this
+ *                   makes very-recent listings start ahead but lets older-
+ *                   in-window items win on engagement.
+ *   - engagement:   1.2 * ln(views+1) + 3.6 * ln(saves+1) — roughly 3x the
+ *                   relevance weights so "trending" means engagement-driven,
+ *                   not just "recent and decent".
+ *   - quality:      identical to LISTING_RANK_SCORE_SQL — photo coverage,
+ *                   description length, attributes-filled bonus. Same
+ *                   weights so a well-presented listing isn't penalized for
+ *                   being on the trending surface.
+ *
+ * Used by GET /api/v1/listings?trending=true alongside a hard 7-day
+ * created_at filter. Same shape as LISTING_RANK_SCORE_SQL so the regression
+ * spec catches drift if someone forgets to thread a new field through both.
+ */
+const LISTING_TRENDING_SCORE_SQL = `(
+    EXP(-GREATEST(EXTRACT(EPOCH FROM (NOW() - l.created_at)), 0) / 172800.0)
+  + 1.2 * LN(GREATEST(l.view_count, 0) + 1)
+  + 3.6 * LN(GREATEST(l.save_count, 0) + 1)
+  + LEAST(COALESCE(array_length(l.image_urls, 1), 0), 5)::float / 5.0
+  + LEAST(LENGTH(COALESCE(l.description, '')), 200)::float / 200.0
+  + CASE
+      WHEN l.attributes IS NOT NULL
+       AND jsonb_typeof(l.attributes) = 'object'
+       AND l.attributes <> '{}'::jsonb
+      THEN 1.0
+      ELSE 0
+    END
+)`;
+
+const TRENDING_WINDOW_DAYS = 7;
+
+export { LISTING_TRENDING_SCORE_SQL };
+
 @Injectable()
 export class ListingsService {
   private readonly logger = new Logger(ListingsService.name);
@@ -644,11 +682,12 @@ export class ListingsService {
     // Raw-SQL ranking path runs when either:
     //   - a keyword search is present (needs Postgres full-text search), or
     //   - sortBy='relevance' (new default; needs the computed score in ORDER BY
-    //     which Prisma can't express).
+    //     which Prisma can't express), or
+    //   - trending=true (engagement-boosted score + hard 7-day window).
     // Explicit non-relevance sorts (createdAt/price/viewCount) without a search
     // term still take the lightweight Prisma path below — backward compatible.
     const hasSearch = !!(search && search.trim());
-    if (hasSearch || sortBy === 'relevance') {
+    if (hasSearch || sortBy === 'relevance' || query.trending) {
       return this.fullTextSearch(
         { ...query, status: effectiveStatus, sortBy },
         viewerId,
@@ -864,6 +903,17 @@ export class ListingsService {
       paramIndex++;
     }
 
+    // Trending: hard-cap to the last N days so the "this week" semantic is
+    // honest even when older items have huge save counts. The score's time
+    // decay would shrink them anyway, but a hard cutoff also keeps the
+    // result set small and the query fast.
+    const trendingMode = !!query.trending;
+    if (trendingMode) {
+      conditions.push(
+        `l.created_at > NOW() - INTERVAL '${TRENDING_WINDOW_DAYS} days'`,
+      );
+    }
+
     // Search-only: build ts_query fragment and ILIKE fallback. When there's
     // no search term we skip these entirely — no extra WHERE clause, no
     // extra params, just the relevance score in the ORDER BY.
@@ -902,12 +952,25 @@ export class ListingsService {
     const offset = (page - 1) * limit;
 
     // ORDER BY:
+    //   - trending=true              → engagement-boosted score over 7-day window
+    //     (multiplied by ts_rank when a search term is also present)
     //   - sortBy='relevance' + hasSearch  → ts_rank * (1 + score) (text dominant,
     //     quality breaks ties)
     //   - sortBy='relevance' + no search  → score alone (browse ranking)
     //   - sortBy='createdAt'/'price'/'viewCount' → legacy explicit-sort behavior
     let orderClause: string;
-    if (sortBy === 'relevance') {
+    if (trendingMode) {
+      if (hasSearch) {
+        orderClause = `ts_rank(
+          setweight(to_tsvector('english', COALESCE(l.title, '')), 'A') ||
+          setweight(to_tsvector('english', COALESCE(l.description, '')), 'B') ||
+          setweight(to_tsvector('english', COALESCE(l.brand, '')), 'C'),
+          to_tsquery('english', $${searchParamIdx})
+        ) * (1 + ${LISTING_TRENDING_SCORE_SQL}) DESC, l.created_at DESC`;
+      } else {
+        orderClause = `${LISTING_TRENDING_SCORE_SQL} DESC, l.created_at DESC`;
+      }
+    } else if (sortBy === 'relevance') {
       if (hasSearch) {
         orderClause = `ts_rank(
           setweight(to_tsvector('english', COALESCE(l.title, '')), 'A') ||
@@ -1014,6 +1077,7 @@ export class ListingsService {
           ms: queryMs,
           hasSearch,
           sortBy,
+          trending: trendingMode,
           page,
           limit,
           hasCategoryFilter: !!categoryId,
