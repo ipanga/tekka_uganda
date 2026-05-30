@@ -683,11 +683,12 @@ export class ListingsService {
     //   - a keyword search is present (needs Postgres full-text search), or
     //   - sortBy='relevance' (new default; needs the computed score in ORDER BY
     //     which Prisma can't express), or
-    //   - trending=true (engagement-boosted score + hard 7-day window).
+    //   - trending=true (engagement-boosted score + hard 7-day window), or
+    //   - featured=true (filtered + ordered by featured_at).
     // Explicit non-relevance sorts (createdAt/price/viewCount) without a search
     // term still take the lightweight Prisma path below — backward compatible.
     const hasSearch = !!(search && search.trim());
-    if (hasSearch || sortBy === 'relevance' || query.trending) {
+    if (hasSearch || sortBy === 'relevance' || query.trending || query.featured) {
       return this.fullTextSearch(
         { ...query, status: effectiveStatus, sortBy },
         viewerId,
@@ -914,6 +915,14 @@ export class ListingsService {
       );
     }
 
+    // Featured: admin-curated promotion. We filter to is_featured = true so
+    // only currently-promoted listings appear, and order by featured_at so
+    // the most recently promoted lands at the top of the home carousel.
+    const featuredMode = !!query.featured;
+    if (featuredMode) {
+      conditions.push(`l.is_featured = true`);
+    }
+
     // Search-only: build ts_query fragment and ILIKE fallback. When there's
     // no search term we skip these entirely — no extra WHERE clause, no
     // extra params, just the relevance score in the ORDER BY.
@@ -952,6 +961,8 @@ export class ListingsService {
     const offset = (page - 1) * limit;
 
     // ORDER BY:
+    //   - featured=true              → most-recently-featured first
+    //     (curated surface; admin's choice of order)
     //   - trending=true              → engagement-boosted score over 7-day window
     //     (multiplied by ts_rank when a search term is also present)
     //   - sortBy='relevance' + hasSearch  → ts_rank * (1 + score) (text dominant,
@@ -959,7 +970,13 @@ export class ListingsService {
     //   - sortBy='relevance' + no search  → score alone (browse ranking)
     //   - sortBy='createdAt'/'price'/'viewCount' → legacy explicit-sort behavior
     let orderClause: string;
-    if (trendingMode) {
+    if (featuredMode) {
+      // featured_at NULLS LAST is a safety net — every is_featured=true row
+      // should have featured_at set (the service writes it on promotion), but
+      // a manual DB tweak could leave it null and we'd rather not crash the
+      // sort.
+      orderClause = `l.featured_at DESC NULLS LAST, l.created_at DESC`;
+    } else if (trendingMode) {
       if (hasSearch) {
         orderClause = `ts_rank(
           setweight(to_tsvector('english', COALESCE(l.title, '')), 'A') ||
@@ -1116,6 +1133,8 @@ export class ListingsService {
       viewCount: row.view_count,
       saveCount: row.save_count,
       rejectionReason: row.rejection_reason,
+      isFeatured: row.is_featured,
+      featuredAt: row.featured_at,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       soldAt: row.sold_at,
@@ -1549,6 +1568,8 @@ export class ListingsService {
       viewCount: row.view_count,
       saveCount: row.save_count,
       rejectionReason: row.rejection_reason,
+      isFeatured: row.is_featured,
+      featuredAt: row.featured_at,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       soldAt: row.sold_at,
@@ -1681,6 +1702,50 @@ export class ListingsService {
         buyerId,
       ),
     );
+  }
+
+  /**
+   * Toggle a listing's Featured status (admin curation). Setting featured=true
+   * also stamps featured_at = NOW() so the home "Featured" surface can sort
+   * by promotion recency. Clearing it nulls featured_at — the partial index
+   * (which only contains is_featured=true rows) handles either transition
+   * cleanly.
+   *
+   * No-op when the requested state already matches; we still write
+   * featured_at to refresh the position in the carousel so admins have a
+   * way to "bump" a featured listing without unfeaturing first.
+   */
+  async setListingFeatured(
+    id: string,
+    adminId: string,
+    featured: boolean,
+  ): Promise<Listing> {
+    const listing = await this.findById(id);
+
+    if (featured && listing.status !== ListingStatus.ACTIVE) {
+      throw new BadRequestException(
+        'Only active listings can be featured',
+      );
+    }
+
+    const updated = await this.prisma.listing.update({
+      where: { id },
+      data: {
+        isFeatured: featured,
+        featuredAt: featured ? new Date() : null,
+      },
+    });
+
+    await this.prisma.adminAction.create({
+      data: {
+        adminId,
+        action: featured ? 'FEATURE_LISTING' : 'UNFEATURE_LISTING',
+        targetType: 'listing',
+        targetId: id,
+      },
+    });
+
+    return updated;
   }
 
   // Admin actions

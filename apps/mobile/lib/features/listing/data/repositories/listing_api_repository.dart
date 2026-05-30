@@ -434,6 +434,19 @@ class ListingApiRepository {
         .toList();
   }
 
+  /// Admin-curated "Featured" feed for the home screen. Returns only listings
+  /// an admin has promoted via the admin app, ordered by promotion time.
+  Future<List<Listing>> getFeaturedListings({int limit = 12}) async {
+    final response = await _apiClient.get<Map<String, dynamic>>(
+      '/listings',
+      queryParameters: {'status': 'ACTIVE', 'featured': 'true', 'limit': limit},
+    );
+    final items = response['listings'] as List<dynamic>? ?? const [];
+    return items
+        .map((e) => Listing.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   /// Get purchase history (items bought by current user)
   Future<List<Listing>> getPurchaseHistory() async {
     final response = await _apiClient.get<List<dynamic>>('/listings/purchases');

@@ -118,6 +118,18 @@ final trendingListingsProvider = FutureProvider<List<Listing>>((ref) async {
   }
 });
 
+/// Admin-curated "Featured" carousel on the home screen. Backed by listings
+/// an admin has flagged via the admin app. Empty list on error or when no
+/// listing is currently featured — the UI hides the section.
+final featuredListingsProvider = FutureProvider<List<Listing>>((ref) async {
+  final repository = ref.watch(listingApiRepositoryProvider);
+  try {
+    return await repository.getFeaturedListings();
+  } catch (_) {
+    return const [];
+  }
+});
+
 // ============================================
 // PAGINATED LISTINGS FEED (for infinite scroll)
 // ============================================

@@ -24,7 +24,9 @@ import {
   TrashIcon,
   PauseCircleIcon,
   XMarkIcon,
+  StarIcon,
 } from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { api } from '@/lib/api';
 import type { Listing, ListingStatus, ListingCategory } from '@/types';
 
@@ -159,6 +161,24 @@ export default function ListingsPage() {
     } catch (error) {
       console.error('Failed to suspend listing:', error);
       alert('Failed to suspend listing');
+    }
+  };
+
+  const handleToggleFeatured = async (listing: Listing) => {
+    try {
+      if (listing.isFeatured) {
+        await api.unfeatureListing(listing.id);
+      } else {
+        await api.featureListing(listing.id);
+      }
+      loadListings();
+    } catch (error) {
+      console.error('Failed to toggle Featured status:', error);
+      alert(
+        listing.isFeatured
+          ? 'Failed to unfeature listing'
+          : 'Failed to feature listing — only active listings can be featured',
+      );
     }
   };
 
@@ -323,14 +343,28 @@ export default function ListingsPage() {
                                 </>
                               )}
                               {listing.status === 'ACTIVE' && (
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  title="Suspend"
-                                  onClick={() => handleSuspend(listing.id)}
-                                >
-                                  <PauseCircleIcon className="h-4 w-4 text-orange-500" />
-                                </Button>
+                                <>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    title={listing.isFeatured ? 'Unfeature' : 'Feature'}
+                                    onClick={() => handleToggleFeatured(listing)}
+                                  >
+                                    {listing.isFeatured ? (
+                                      <StarIconSolid className="h-4 w-4 text-amber-500" />
+                                    ) : (
+                                      <StarIcon className="h-4 w-4 text-gray-500" />
+                                    )}
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    title="Suspend"
+                                    onClick={() => handleSuspend(listing.id)}
+                                  >
+                                    <PauseCircleIcon className="h-4 w-4 text-orange-500" />
+                                  </Button>
+                                </>
                               )}
                               <Button
                                 size="sm"
