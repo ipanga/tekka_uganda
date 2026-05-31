@@ -138,9 +138,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         children: [
           RefreshIndicator(
             onRefresh: () async {
-              await ref
-                  .read(paginatedListingsProvider(filter).notifier)
-                  .refresh();
+              // Carousel providers (Featured, Trending) are top-level
+              // FutureProviders, not autoDispose — once resolved they stay
+              // cached until invalidated. Pull-to-refresh must drop them
+              // explicitly or admin edits stay stale until app restart.
+              ref.invalidate(featuredListingsProvider);
+              ref.invalidate(trendingListingsProvider);
+              await Future.wait([
+                ref.read(paginatedListingsProvider(filter).notifier).refresh(),
+                ref.read(featuredListingsProvider.future),
+                ref.read(trendingListingsProvider.future),
+              ]);
             },
             child: CustomScrollView(
               controller: _scrollController,
@@ -858,7 +866,15 @@ class _FeaturedSection extends ConsumerWidget {
                       const SizedBox(width: AppSpacing.space3),
                   itemBuilder: (context, i) => SizedBox(
                     width: 160,
-                    child: ListingCard(listing: items[i]),
+                    child: ListingCard(
+                      listing: items[i],
+                      onTap: () => context.push(
+                        AppRoutes.listingDetail.replaceFirst(
+                          ':id',
+                          items[i].id,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -911,7 +927,15 @@ class _TrendingSection extends ConsumerWidget {
                       const SizedBox(width: AppSpacing.space3),
                   itemBuilder: (context, i) => SizedBox(
                     width: 160,
-                    child: ListingCard(listing: items[i]),
+                    child: ListingCard(
+                      listing: items[i],
+                      onTap: () => context.push(
+                        AppRoutes.listingDetail.replaceFirst(
+                          ':id',
+                          items[i].id,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),

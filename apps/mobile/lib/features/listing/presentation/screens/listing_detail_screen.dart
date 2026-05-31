@@ -1453,7 +1453,15 @@ class _RelatedListingsSection extends ConsumerWidget {
                       const SizedBox(width: AppSpacing.space3),
                   itemBuilder: (context, i) => SizedBox(
                     width: 160,
-                    child: ListingCard(listing: items[i]),
+                    child: ListingCard(
+                      listing: items[i],
+                      onTap: () => context.push(
+                        AppRoutes.listingDetail.replaceFirst(
+                          ':id',
+                          items[i].id,
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ),
