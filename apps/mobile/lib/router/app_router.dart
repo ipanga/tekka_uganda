@@ -482,9 +482,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
     ],
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(child: Text('Page not found: ${state.matchedLocation}')),
-    ),
+    errorBuilder: (context, state) {
+      // A https://tekka.ug URL the app has no route for (e.g. the /app
+      // marketing page) can still be delivered to the app — most importantly on
+      // existing installs whose verified App Links were registered before the
+      // intent-filter was path-scoped (see AndroidManifest.xml). Rather than
+      // stranding the user on a raw "Page not found", degrade gracefully to
+      // home on the next frame.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) context.go(AppRoutes.home);
+      });
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    },
   );
 });
 
