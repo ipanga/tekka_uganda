@@ -28,15 +28,25 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Android App Links: https://tekka.ug/* opens this activity when
-                 the signature matches the Digital Asset Links file served at
-                 https://tekka.ug/.well-known/assetlinks.json -->
+            <!-- Android App Links: opens this activity for the deep-linkable
+                 https://tekka.ug paths when the signature matches the Digital
+                 Asset Links file at https://tekka.ug/.well-known/assetlinks.json.
+                 Scoped by pathPrefix to mirror the iOS apple-app-site-association
+                 (apps/user/src/app/.well-known/apple-app-site-association/route.ts)
+                 so web-only pages (e.g. /app, /about, /help) stay in the browser
+                 instead of being captured by the app and dead-ending on a route
+                 the app does not have. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="https"/>
-                <data android:host="tekka.ug"/>
+                <data android:scheme="https" android:host="tekka.ug" android:pathPrefix="/listing"/>
+                <data android:scheme="https" android:host="tekka.ug" android:pathPrefix="/chat"/>
+                <data android:scheme="https" android:host="tekka.ug" android:pathPrefix="/user"/>
+                <data android:scheme="https" android:host="tekka.ug" android:pathPrefix="/reviews"/>
+                <data android:scheme="https" android:host="tekka.ug" android:pathPrefix="/notifications"/>
+                <data android:scheme="https" android:host="tekka.ug" android:pathPrefix="/profile"/>
+                <data android:scheme="https" android:host="tekka.ug" android:pathPrefix="/meetups"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
