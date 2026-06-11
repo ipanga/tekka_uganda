@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Logo } from '@/components/ui/Logo';
+import { STORE_BADGES } from '@/lib/app-links';
 
 // Single-color brand glyphs from simple-icons (24×24 viewBox). currentColor
 // inherits the footer text colour so monochrome hover stays consistent.
@@ -34,31 +35,6 @@ const SOCIALS = [
     name: 'TikTok',
     href: 'https://www.tiktok.com/@tekkauganda',
     path: 'M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5.8 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.84-.1Z',
-  },
-];
-
-// Both badges from a matching-design SVG set with identical 3.375:1 aspect
-// ratios so they render at the same width when given the same height —
-// avoids the App-Store-vs-Google-Play visual imbalance you get with the
-// official assets straight from Apple and Google (different proportions).
-const STORE_BADGES = [
-  {
-    name: 'App Store',
-    href: 'https://apps.apple.com/ug/app/tekka-uganda/id6759387476',
-    src: '/images/store-badges/app-store.svg',
-    alt: 'Download on the App Store',
-    aria: 'Download Tekka Uganda on the App Store',
-    width: 135,
-    height: 40,
-  },
-  {
-    name: 'Google Play',
-    href: 'https://play.google.com/store/apps/details?id=com.tootiye.tekka',
-    src: '/images/store-badges/google-play.svg',
-    alt: 'Get it on Google Play',
-    aria: 'Get Tekka Uganda on Google Play',
-    width: 135,
-    height: 40,
   },
 ];
 
